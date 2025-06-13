@@ -18,6 +18,6 @@ Itens incluídos no repositório
 - Códigos-fonte do projeto  
 - ERS (Especificação de Requisitos de Software)  
 - Declaração de finalização (assinada e carimbada pela instituição)  
-- Registros fotográficos da entrega do projeto
+
 
 
