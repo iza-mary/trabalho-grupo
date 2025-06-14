@@ -1,0 +1,43 @@
+body, .sidebar {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: linear-gradient(180deg, #213449 0%, #17212C 100%);
+  color: #fff;
+  padding: 1rem 0;
+}
+
+.sidebar h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  padding-left: 1rem;
+}
+
+.sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  padding: 10px 1rem;
+  font-size: 1.1rem;
+  color: #358DD4;  /* cor azul clara */
+  text-decoration: none;
+  transition: background 0.3s, color 0.3s;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  background-color: rgba(53, 141, 212, 0.18);
+  border-radius: 5px;
+  color: #358DD4;
+}
+
+.sidebar .nav-link svg {
+  margin-right: 0.6rem;
+  font-size: 1.2rem;
+}
