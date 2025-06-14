@@ -1,0 +1,26 @@
+const mysql = require('mysql2/promise');
+
+const dbCondig = {
+    host: 'localhost',
+    user: 'root',
+    password: '1234',
+    database: 'sata',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+}
+
+const pool = mysql.createPool(dbCondig);
+
+const testConnection = async ()=> {
+    try {
+        const connection = await pool.getConnection();
+        console.log("Conectado com Sucesso!")
+        connection.release()
+    } catch (error) {
+        console.error("Erro ao se conectar com o banco de dados!", error.message);
+    }
+}
+
+testConnection();
+module.exports = pool;
