@@ -17,7 +17,12 @@ Itens incluídos no repositório
 - Vídeo de demonstração do projeto  
 - Códigos-fonte do projeto  
 - ERS (Especificação de Requisitos de Software)  
-- Declaração de finalização (assinada e carimbada pela instituição)  
+- Declaração de finalização (assinada e carimbada pela instituição)
+
+
+LINK DO VIDEO: 
+
+https://youtu.be/-lAW6MyMff4
 
 
 
