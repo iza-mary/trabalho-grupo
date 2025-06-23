@@ -1,0 +1,60 @@
+/* Container principal */
+.container-principal {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Linha do cabeçalho */
+.linha-cabecalho {
+  padding: 10px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Seções do formulário */
+.secao-formulario {
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.secao-formulario .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
+  font-weight: 500;
+}
+
+.secao-formulario .card-body {
+  padding: 20px;
+}
+
+/* Controles de formulário */
+.form-control, .form-select {
+  border-radius: 4px;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Botões */
+.btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .linha-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .linha-cabecalho .breadcrumb {
+    margin-top: 10px;
+  }
+}
