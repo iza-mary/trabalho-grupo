@@ -22,7 +22,4 @@ Itens incluídos no repositório
 
 LINK DO VIDEO: 
 
-https://youtu.be/w7Goja81PGo
-
-
-
+https://drive.google.com/file/d/1pTe2LXgiPZEq7w9AIsVvuiuZpFq7GZuA/view?usp=sharing
