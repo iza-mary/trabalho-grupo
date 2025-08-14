@@ -5,7 +5,6 @@
 - Fabrício Cezar Leite da Silva – 10482417224  
 - Felipe Galante Fernandes – 10482418132  
 - Felipe Prado Curcci – 10482418230  
-- Lucimara da Silva – 10482417799  
 - Maria Izabel Soares Rodrigues – 10482416951  
 
 DESCRIÇÃO
