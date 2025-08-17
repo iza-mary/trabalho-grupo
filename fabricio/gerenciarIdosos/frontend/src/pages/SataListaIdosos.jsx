@@ -26,6 +26,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import './SataListaIdosos.css';
 import idosoService from '../services/idosoService';
+import Lateral from '../components/Lateral';
 
 const SataListaIdosos = () => {
   const navigate = useNavigate();
@@ -96,8 +97,7 @@ const SataListaIdosos = () => {
         idoso.nome.toLowerCase().includes(termo) ||
         (idoso.cpf && idoso.cpf.toString().includes(termo)) ||
         (idoso.quarto && idoso.quarto.toLowerCase().includes(termo))
-      )
-    }
+  )}
     
     return true;
   });
@@ -125,23 +125,27 @@ const SataListaIdosos = () => {
 
   if (carregando) {
     return (
-      <Container fluid className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <Alert variant="info">Carregando dados...</Alert>
-      </Container>
+      <Lateral>
+        <Container fluid className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+          <Alert variant="info">Carregando dados...</Alert>
+        </Container>
+      </Lateral>
     );
   }
 
   if (erroCarregamento) {
     return (
-      <Container fluid className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <Alert variant="danger">{erroCarregamento}</Alert>
-      </Container>
+      <Lateral>
+        <Container fluid className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+          <Alert variant="danger">{erroCarregamento}</Alert>
+        </Container>
+      </Lateral>
     );
   }
 
   return (
-    <div className="d-flex">
-      <div className="conteudo-principal">
+    <Lateral>
+      <div className="content-area">
         <Container fluid>
           <Row className="mb-4 linha-cabecalho">
             <Col className="d-flex justify-content-between align-items-center">
@@ -167,15 +171,6 @@ const SataListaIdosos = () => {
               <Card className="mb-4">
                 <Card.Header className="d-flex justify-content-between align-items-center">
                   <h5 className="mb-0">Filtros e Busca</h5>
-                  <Button 
-                    variant="outline-secondary" 
-                    size="sm" 
-                    data-bs-toggle="collapse" 
-                    data-bs-target="#filtrosCollapse"
-                    aria-label="Mostrar/ocultar filtros"
-                  >
-                    <Funnel className="me-1" /> Filtros
-                  </Button>
                 </Card.Header>
                 <Card.Body className="collapse show" id="filtrosCollapse">
                   <Row>
@@ -294,7 +289,7 @@ const SataListaIdosos = () => {
                                     setIdosoSelecionado(idoso);
                                     setMostrarModalConfirmacao(true);
                                   }}
-                                  className="me-1"espaçamento
+                                  className="me-1"
                                 >
                                   <BoxArrowRight />
                                 </Button>
@@ -368,7 +363,7 @@ const SataListaIdosos = () => {
           </Modal>
         </Container>
       </div>
-    </div>
+    </Lateral>
   );
 };
 
