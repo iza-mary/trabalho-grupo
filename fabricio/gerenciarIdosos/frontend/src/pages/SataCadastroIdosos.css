@@ -5,6 +5,14 @@
   margin: 0 auto;
 }
 
+.content-area {
+  margin-left: 240px;
+  padding: 20px;
+  width: calc(100% - 240px);
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
 /* Linha do cabeçalho */
 .linha-cabecalho {
   padding: 10px 0;
@@ -49,6 +57,12 @@
 }
 
 @media (max-width: 768px) {
+  .content-area {
+    margin-left: 0;
+    width: 100%;
+    padding: 15px;
+  }
+
   .linha-cabecalho {
     flex-direction: column;
     align-items: flex-start;

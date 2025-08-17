@@ -3,7 +3,7 @@ const mysql = require('mysql2/promise');
 const dbCondig = {
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: 'admin123',
     database: 'sata',
     waitForConnections: true,
     connectionLimit: 10,

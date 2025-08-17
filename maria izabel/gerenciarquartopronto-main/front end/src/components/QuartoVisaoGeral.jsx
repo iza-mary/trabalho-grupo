@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button } from "react-bootstrap";
-import { BiTrash, BiEditAlt } from "react-icons/bi";
-import './QuartoGeral.css';
+import { Button, Card } from "react-bootstrap";
+import { Pencil, Trash, Eye } from "react-bootstrap-icons";
+import "../pages/GerenciarQuartos.css";
 
-const QuartoVisaoGeral = ({ quartos = [], onDelete, onEdit }) => {
+const QuartoVisaoGeral = ({ quartos = [], onDelete, onEdit, onView }) => {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const quartosPorPagina = 4;
 
@@ -11,7 +11,6 @@ const QuartoVisaoGeral = ({ quartos = [], onDelete, onEdit }) => {
     setPaginaAtual(1);
   }, [quartos]);
 
-  // Ordenar os quartos por número
   const quartosOrdenados = [...quartos].sort((a, b) => a.numero - b.numero);
   const totalPaginas = Math.ceil(quartosOrdenados.length / quartosPorPagina);
   const inicio = (paginaAtual - 1) * quartosPorPagina;
@@ -30,65 +29,64 @@ const QuartoVisaoGeral = ({ quartos = [], onDelete, onEdit }) => {
   };
 
   return (
-    <div className="quarto-box">
-      <div className="quarto-titulo px-3 py-2 border-bottom bg-light">
-        <h5 className="mb-0 fw-bold">Visão Geral dos Quartos</h5>
-      </div>
-
+    <div className="quarto-visao-container">
       <div className="quarto-grid">
         {quartosPaginados.map((quarto) => (
-          <div
-            key={quarto.id}
-            className={`quarto-card pequeno-card ${
-              quarto.status === "Disponível" ? "status-bar-verde" : "status-bar-vermelha"
-            }`}
-          >
-            <div className="quarto-info">
-              <h6 className="fw-bold">Quarto {quarto.numero ?? "-"}</h6>
-              <p><strong>Tipo:</strong> {quarto.tipo ?? "-"}</p>
-              <p>
-                <strong>Status:</strong>{" "}
-                <span
-                  className={`quarto-badge ${
-                    quarto.status === "Disponível" ? "status-disponivel" : "status-ocupado"
-                  }`}
-                >
+          <Card key={quarto.id} className="mb-3 me-3" style={{ minWidth: '280px' }}>
+            <Card.Body className={`${quarto.status === "Disponível" ? "border-start border-success border-4" : "border-start border-danger border-4"}`}>
+              <Card.Title>Quarto {quarto.numero ?? "-"}</Card.Title>
+              <Card.Text>
+                <strong>Tipo:</strong> {quarto.tipo ?? "-"}<br />
+                {" "}
+                <span className={`badge ${quarto.status === "Disponível" ? "bg-success" : "bg-danger"}`}>
                   {quarto.status ?? "-"}
-                </span>
-              </p>
-              <p><strong>Leitos:</strong> {(quarto.ocupados ?? 0) + "/" + (quarto.leitos ?? "-")}</p>
-            </div>
-            <div className="quarto-actions d-flex gap-2 justify-content-end">
-              <Button
-                size="sm"
-                variant="outline-primary"
-                title="Editar"
-                onClick={() => onEdit(quarto)}
-              >
-                <BiEditAlt />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline-danger"
-                title="Excluir"
-                onClick={() => onDelete(quarto.id)}
-              >
-                <BiTrash />
-              </Button>
-            </div>
-          </div>
+                </span><br />
+                <strong>Leitos:</strong> {(quarto.ocupados ?? 0)}/{quarto.leitos ?? "-"}<br />
+                <strong>Andar:</strong> {quarto.andar ?? "-"}º
+              </Card.Text>
+              <div className="botoes-acao">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  title="Editar"
+                  onClick={() => onEdit(quarto)}
+                  className="me-2"
+                >
+                  <Pencil />
+                </Button>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  title="Excluir"
+                  onClick={() => onDelete(quarto.id)}
+                  className="me-2"
+                >
+                  <Trash />
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  title="Detalhes"
+                  onClick={() => onView(quarto)}
+                >
+                  <Eye />
+                </Button>
+              </div>
+            </Card.Body>
+          </Card>
         ))}
       </div>
 
       {totalPaginas > 1 && (
-        <div className="quarto-paginacao d-flex justify-content-center gap-2 mt-3">
+        <div className="d-flex justify-content-center mt-3">
           <Button
             variant="outline-secondary"
             size="sm"
             onClick={paginaAnterior}
             disabled={paginaAtual === 1}
+            className="me-2"
           >
-            &laquo; Anterior
+            Anterior
           </Button>
           <Button
             variant="outline-secondary"
@@ -96,7 +94,7 @@ const QuartoVisaoGeral = ({ quartos = [], onDelete, onEdit }) => {
             onClick={proximaPagina}
             disabled={paginaAtual === totalPaginas}
           >
-            Próxima &raquo;
+            Próxima
           </Button>
         </div>
       )}

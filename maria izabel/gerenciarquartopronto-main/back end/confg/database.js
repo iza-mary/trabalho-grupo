@@ -4,7 +4,7 @@ const dbConfig = {
   host: 'localhost',
   port: 3306,
   user: 'root',
-  password: 'mysql123654',
+  password: 'admin123',
   database: 'quartos_db'
 };
 
