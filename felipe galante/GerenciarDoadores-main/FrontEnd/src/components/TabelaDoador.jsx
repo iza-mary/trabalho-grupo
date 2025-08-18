@@ -16,6 +16,7 @@ import {
   X
 } from 'react-bootstrap-icons';
 import './SataDoadores.css';
+import './tabelaDoadores.css';
 
 function TabelaDoadores({
   ativaModal,
@@ -36,7 +37,7 @@ function TabelaDoadores({
   };
 
   return (
-    <div className="content-area">
+    <div className="content-area container">
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <h4>Lista de Doadores</h4>

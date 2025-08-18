@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Button, Card, Form, Row, Col, Alert } from 'react-bootstrap';
 import { PlusCircle } from 'react-bootstrap-icons';
 import './SataDoadores.css';
+import "./formDoador.css";
 
 function FormDoador({ onSubmit, doadores }) {
   const [validated, setValidated] = useState(false);
@@ -252,7 +253,7 @@ function FormDoador({ onSubmit, doadores }) {
   }
 
   return (
-    <div className="content-area">
+    <div className="content-area container">
       <Card>
         <Card.Header>
           <h4>Cadastro de Doador</h4>
