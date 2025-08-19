@@ -259,7 +259,7 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
   };
 
   return (
-    <Modal show={show} onHide={() => ocultaModal(false)} size="lg">
+    <Modal show={show} onHide={() => ocultaModal(false)} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title>Editar Doador</Modal.Title>
       </Modal.Header>
@@ -267,7 +267,7 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
         <Form noValidate validated={validated} onSubmit={handleSubmit}>
           <Row>
             <Col md={6}>
-              <h5>Dados Pessoais</h5>
+              <h5 className="mb-3">Dados Pessoais</h5>
               <Form.Group className="mb-3" controlId="nome">
                 <Form.Label>Nome Completo</Form.Label>
                 <Form.Control
@@ -280,8 +280,8 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
                   {errors.nome}
                 </Form.Control.Feedback>
               </Form.Group>
-              <br />
-              <Form.Group controlId="cpf">
+
+              <Form.Group className="mb-3" controlId="cpf">
                 <Form.Label>CPF</Form.Label>
                 <Form.Control 
                   maxLength={14} 
@@ -293,8 +293,8 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
                 />
                 <Form.Control.Feedback type="invalid">{errors.cpf}</Form.Control.Feedback>
               </Form.Group>
-              <br />
-              <Form.Group controlId="telefone">
+
+              <Form.Group className="mb-3" controlId="telefone">
                 <Form.Label>Telefone</Form.Label>
                 <Form.Control 
                   maxLength={15} 
@@ -306,8 +306,8 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
                 />
                 <Form.Control.Feedback type="invalid">{errors.telefone}</Form.Control.Feedback>
               </Form.Group>
-              <br />
-              <Form.Group controlId="rg">
+
+              <Form.Group className="mb-3" controlId="rg">
                 <Form.Label>RG (Opcional)</Form.Label>
                 <Form.Control 
                   onChange={handleChangeRg} 
@@ -319,8 +319,8 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
                 />
                 <Form.Control.Feedback type="invalid">{errors.rg}</Form.Control.Feedback>
               </Form.Group>
-              <br />
-              <Form.Group controlId="email">
+
+              <Form.Group className="mb-3" controlId="email">
                 <Form.Label>E-mail (Opcional)</Form.Label>
                 <Form.Control 
                   onChange={handleChangeEmail} 
@@ -333,8 +333,8 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
               </Form.Group>
             </Col>
             <Col md={6}>
-              <h5>Endereço (Opcional)</h5>
-              <Form.Group controlId="cidade">
+              <h5 className="mb-3">Endereço (Opcional)</h5>
+              <Form.Group className="mb-3" controlId="cidade">
                 <Form.Label>Cidade</Form.Label>
                 <Form.Control 
                   onChange={handleChangeCidade} 
@@ -343,8 +343,8 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
                   type="text" 
                 />
               </Form.Group>
-              <br />
-              <Form.Group controlId="rua">
+
+              <Form.Group className="mb-3" controlId="rua">
                 <Form.Label>Rua</Form.Label>
                 <Form.Control 
                   onChange={handleChangeRua} 
@@ -355,8 +355,8 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
                 />
                 <Form.Control.Feedback type="invalid">{errors.rua}</Form.Control.Feedback>
               </Form.Group>
-              <br />
-              <Form.Group controlId="numero">
+
+              <Form.Group className="mb-3" controlId="numero">
                 <Form.Label>Número</Form.Label>
                 <Form.Control 
                   onChange={handleChangeNumero} 
@@ -365,8 +365,8 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
                   placeholder="99" 
                 />
               </Form.Group>
-              <br />
-              <Form.Group controlId="cep">
+
+              <Form.Group className="mb-3" controlId="cep">
                 <Form.Label>CEP</Form.Label>
                 <Form.Control 
                   isInvalid={!!errors.cep} 
@@ -378,14 +378,15 @@ function FormEditDoador({ doadores, show, ocultaModal, doador: doadorToEdit, onE
                 />
                 <Form.Control.Feedback type="invalid">{errors.cep}</Form.Control.Feedback>
               </Form.Group>
-              <br />
-              <Form.Group controlId="complemento">
+
+              <Form.Group className="mb-3" controlId="complemento">
                 <Form.Label>Complemento</Form.Label>
                 <Form.Control 
                   onChange={handleChangeComp} 
                   isInvalid={!!errors.complemento} 
                   value={doador.complemento} 
                   as="textarea" 
+                  rows={3}
                   placeholder="Andar 5, Ap 21, Bloco 3" 
                 />
                 <Form.Control.Feedback type="invalid">{errors.complemento}</Form.Control.Feedback>

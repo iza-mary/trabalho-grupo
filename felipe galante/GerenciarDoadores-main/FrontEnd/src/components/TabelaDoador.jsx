@@ -36,10 +36,10 @@ function TabelaDoadores({
   };
 
   return (
-    <div className="content-area">
+    <div className="content">
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
-          <h4>Lista de Doadores</h4>
+          <h4 className="mb-0">Lista de Doadores</h4>
           <InputGroup style={{ width: '300px' }}>
             <Form.Control
               type="text"
@@ -51,14 +51,14 @@ function TabelaDoadores({
               variant={termoBusca ? 'outline-danger' : 'outline-secondary'}
               onClick={() => { setTermoBusca(''); setTermos([]); }}
             >
-              {termoBusca ? <X /> : <Search />}
+              {termoBusca ? <X size={16} /> : <Search size={16} />}
             </Button>
           </InputGroup>
         </Card.Header>
         <Card.Body>
           <div className="table-responsive">
             {doadores.length === 0 ? (
-              <Alert variant="info">
+              <Alert variant="info" className="mb-0">
                 Nenhum doador encontrado
               </Alert>
             ) : (
@@ -83,29 +83,31 @@ function TabelaDoadores({
                           {doador.ativo ? 'Ativo' : 'Inativo'}
                         </Badge>
                       </td>
-                      <td className="botoes-acao">
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          title="Editar"
-                          onClick={() => { 
-                            ativaModal(true); 
-                            setDoadorEditar(doador); 
-                          }}
-                        >
-                          <Pencil />
-                        </Button>
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          title="Excluir"
-                          onClick={() => { 
-                            setDeletar(true); 
-                            handleDeletar(doador); 
-                          }}
-                        >
-                          <Trash />
-                        </Button>
+                      <td>
+                        <div className="botoes-acao">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            title="Editar"
+                            onClick={() => { 
+                              ativaModal(true); 
+                              setDoadorEditar(doador); 
+                            }}
+                          >
+                            <Pencil />
+                          </Button>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            title="Excluir"
+                            onClick={() => { 
+                              setDeletar(true); 
+                              handleDeletar(doador); 
+                            }}
+                          >
+                            <Trash />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -116,7 +118,7 @@ function TabelaDoadores({
         </Card.Body>
       </Card>
 
-      <Modal show={deletar} onHide={() => setDeletar(false)}>
+      <Modal show={deletar} onHide={() => setDeletar(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Exclusão</Modal.Title>
         </Modal.Header>
