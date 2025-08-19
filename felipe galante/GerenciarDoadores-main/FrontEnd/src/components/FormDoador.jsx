@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { Button, Card, Form, Row, Col, Alert } from 'react-bootstrap';
 import { PlusCircle } from 'react-bootstrap-icons';
 import './SataDoadores.css';
-import "./formDoador.css";
 
 function FormDoador({ onSubmit, doadores }) {
   const [validated, setValidated] = useState(false);
@@ -252,17 +251,17 @@ function FormDoador({ onSubmit, doadores }) {
     }
   }
 
-  return (
-    <div className="content-area container">
+   return (
+    <div className="content">
       <Card>
         <Card.Header>
-          <h4>Cadastro de Doador</h4>
+          <h4 className="mb-0">Cadastro de Doador</h4>
         </Card.Header>
         <Card.Body>
           <Form noValidate validated={validated} onSubmit={handleSubmit}>
             <Row>
               <Col md={6}>
-                <h5>Dados Pessoais</h5>
+                <h5 className="mb-3">Dados Pessoais</h5>
                 <Form.Group className="mb-3" controlId="nome">
                   <Form.Label>Nome Completo</Form.Label>
                   <Form.Control
@@ -276,8 +275,8 @@ function FormDoador({ onSubmit, doadores }) {
                     {errors.nome}
                   </Form.Control.Feedback>
                 </Form.Group>
-                <br />
-                <Form.Group controlId="cpf">
+
+                <Form.Group className="mb-3" controlId="cpf">
                   <Form.Label>CPF</Form.Label>
                   <Form.Control 
                     maxLength={14} 
@@ -289,8 +288,8 @@ function FormDoador({ onSubmit, doadores }) {
                   />
                   <Form.Control.Feedback type="invalid">{errors.cpf}</Form.Control.Feedback>
                 </Form.Group>
-                <br />
-                <Form.Group controlId="telefone">
+
+                <Form.Group className="mb-3" controlId="telefone">
                   <Form.Label>Telefone</Form.Label>
                   <Form.Control 
                     maxLength={15} 
@@ -302,8 +301,8 @@ function FormDoador({ onSubmit, doadores }) {
                   />
                   <Form.Control.Feedback type="invalid">{errors.telefone}</Form.Control.Feedback>
                 </Form.Group>
-                <br />
-                <Form.Group controlId="rg">
+
+                <Form.Group className="mb-3" controlId="rg">
                   <Form.Label>RG (Opcional)</Form.Label>
                   <Form.Control 
                     onChange={handleChangeRg} 
@@ -315,8 +314,8 @@ function FormDoador({ onSubmit, doadores }) {
                   />
                   <Form.Control.Feedback type="invalid">{errors.rg}</Form.Control.Feedback>
                 </Form.Group>
-                <br />
-                <Form.Group controlId="email">
+
+                <Form.Group className="mb-3" controlId="email">
                   <Form.Label>E-mail (Opcional)</Form.Label>
                   <Form.Control 
                     onChange={handleChangeEmail} 
@@ -329,8 +328,8 @@ function FormDoador({ onSubmit, doadores }) {
                 </Form.Group>
               </Col>
               <Col md={6}>
-                <h5>Endereço (Opcional)</h5>
-                <Form.Group controlId="cidade">
+                <h5 className="mb-3">Endereço (Opcional)</h5>
+                <Form.Group className="mb-3" controlId="cidade">
                   <Form.Label>Cidade</Form.Label>
                   <Form.Control 
                     onChange={handleChangeCidade} 
@@ -339,8 +338,8 @@ function FormDoador({ onSubmit, doadores }) {
                     type="text" 
                   />
                 </Form.Group>
-                <br />
-                <Form.Group controlId="rua">
+
+                <Form.Group className="mb-3" controlId="rua">
                   <Form.Label>Rua</Form.Label>
                   <Form.Control 
                     onChange={handleChangeRua} 
@@ -351,8 +350,8 @@ function FormDoador({ onSubmit, doadores }) {
                   />
                   <Form.Control.Feedback type="invalid">{errors.rua}</Form.Control.Feedback>
                 </Form.Group>
-                <br />
-                <Form.Group controlId="numero">
+
+                <Form.Group className="mb-3" controlId="numero">
                   <Form.Label>Número</Form.Label>
                   <Form.Control 
                     onChange={handleChangeNumero} 
@@ -361,8 +360,8 @@ function FormDoador({ onSubmit, doadores }) {
                     placeholder="99" 
                   />
                 </Form.Group>
-                <br />
-                <Form.Group controlId="cep">
+
+                <Form.Group className="mb-3" controlId="cep">
                   <Form.Label>CEP</Form.Label>
                   <Form.Control 
                     isInvalid={!!errors.cep} 
@@ -374,14 +373,15 @@ function FormDoador({ onSubmit, doadores }) {
                   />
                   <Form.Control.Feedback type="invalid">{errors.cep}</Form.Control.Feedback>
                 </Form.Group>
-                <br />
-                <Form.Group controlId="complemento">
+
+                <Form.Group className="mb-3" controlId="complemento">
                   <Form.Label>Complemento</Form.Label>
                   <Form.Control 
                     onChange={handleChangeComp} 
                     isInvalid={!!errors.complemento} 
                     value={doador.complemento} 
                     as="textarea" 
+                    rows={3}
                     placeholder="Andar 5, Ap 21, Bloco 3" 
                   />
                   <Form.Control.Feedback type="invalid">{errors.complemento}</Form.Control.Feedback>
