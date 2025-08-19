@@ -1,11 +1,11 @@
 const express = require("express");
-const DoadorController = require("../controllers/doadorController");
 const doadorController = require("../controllers/doadorController");
 
 const router = express.Router();
 
-router.get('/', DoadorController.getAll);
-router.get('/:id', DoadorController.getById);
+router.get('/', doadorController.getAll);
+router.get("/doacoes", doadorController.getAllByDoadorDoacao)
+router.get('/:id', doadorController.getById);
 router.post('/', doadorController.create);
 router.put("/:id", doadorController.update);
 router.delete("/:id", doadorController.delete);
