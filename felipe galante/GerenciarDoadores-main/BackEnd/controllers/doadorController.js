@@ -139,21 +139,6 @@ class DoadorController {
             })
         }
     }
-    
-    async getAllByDoadorDoacao(req, res) {
-        try {
-            const result = await DoadorRepository.findAllDoadorComDoacao();
-            res.json({
-                success: true,
-                data: result
-            })
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: error.message
-            })
-        }
-    }
 }
 
 module.exports = new DoadorController();
