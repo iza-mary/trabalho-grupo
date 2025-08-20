@@ -66,36 +66,37 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Lateral/>
-      <div className='content-area'>
-        {!mostraTabela ? (
-          <>
-            <Header ativaTabela={setMostraTabela}/>
-            <FormDoador doadores={cacheDoadores} onSubmit={handleSaveDoador}/>
-          </>
-        ) : (
-          <>
-            <HeaderTabela desativaTabela={setMostraTabela}/>
-            <TabelaDoadores 
-              setTermos={handleFiltrar} 
-              handleDeletar={handleDeletar} 
-              onDelete={handleDeletarDoador} 
-              setDoadorEditar={handleEditDoador} 
-              ativaModal={setMostraModal} 
-              doadores={doadores}
-            />
-            {mostraModal && (
-              <FormEditDoador 
-                doadores={cacheDoadores} 
-                onEdit={handleEditar} 
-                doador={doadorToEdit} 
-                ocultaModal={setMostraModal} 
-                show={mostraModal}
+      <Lateral> {/* Adicione o componente Lateral aqui */}
+        <div className='content-area'>
+          {!mostraTabela ? (
+            <>
+              <Header ativaTabela={setMostraTabela}/>
+              <FormDoador doadores={cacheDoadores} onSubmit={handleSaveDoador}/>
+            </>
+          ) : (
+            <>
+              <HeaderTabela desativaTabela={setMostraTabela}/>
+              <TabelaDoadores 
+                setTermos={handleFiltrar} 
+                handleDeletar={handleDeletar} 
+                onDelete={handleDeletarDoador} 
+                setDoadorEditar={handleEditDoador} 
+                ativaModal={setMostraModal} 
+                doadores={doadores}
               />
-            )}
-          </>
-        )}
-      </div>
+              {mostraModal && (
+                <FormEditDoador 
+                  doadores={cacheDoadores} 
+                  onEdit={handleEditar} 
+                  doador={doadorToEdit} 
+                  ocultaModal={setMostraModal} 
+                  show={mostraModal}
+                />
+              )}
+            </>
+          )}
+        </div>
+      </Lateral>
     </BrowserRouter>
   );
 }
