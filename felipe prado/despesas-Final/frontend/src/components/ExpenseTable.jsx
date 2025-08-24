@@ -1,6 +1,7 @@
 // components/ExpenseTable.jsx
 import React from "react";
 import { Table, Button, Badge } from "react-bootstrap";
+import { Pencil, Trash, Eye } from "react-bootstrap-icons";
 
 function ExpenseTable({ expenses, onDelete, onEdit }) {
   const getBadgeVariant = (tipo) => {
@@ -48,15 +49,24 @@ function ExpenseTable({ expenses, onDelete, onEdit }) {
                     onClick={() => onEdit(e)}
                     className="me-1"
                   >
-                    ✏️
+                    <Pencil size={14} />
                   </Button>
                   <Button
                     variant="outline-danger"
                     size="sm"
                     title="Excluir"
                     onClick={() => onDelete(e.id)}
+                    className="me-1"
                   >
-                    🗑️
+                    <Trash size={14} />
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    title="Detalhes"
+                    onClick={() => console.log("Visualizar detalhes", e.id)}
+                  >
+                    <Eye size={14} />
                   </Button>
                 </div>
               </td>

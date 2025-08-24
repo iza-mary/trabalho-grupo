@@ -21,13 +21,7 @@ function ExpenseForm({ expense, onAdd, onUpdate, onCancel }) {
         observacao: expense.observacao || ""
       });
     } else {
-      setForm({
-        descricao: "",
-        valor: "",
-        tipo: "",
-        data: "",
-        observacao: ""
-      });
+      clearForm();
     }
   }, [expense]);
 
@@ -42,13 +36,23 @@ function ExpenseForm({ expense, onAdd, onUpdate, onCancel }) {
     } else {
       onAdd(form);
     }
-    setForm({ descricao: "", valor: "", tipo: "", data: "", observacao: "" });
+    clearForm();
+  };
+
+  const clearForm = () => {
+    setForm({
+      descricao: "",
+      valor: "",
+      tipo: "",
+      data: "",
+      observacao: ""
+    });
   };
 
   return (
     <Form onSubmit={handleSubmit}>
       <Row>
-        <Col md={4}>
+        <Col md={6}>
           <Form.Group className="mb-3">
             <Form.Label>Descrição</Form.Label>
             <Form.Control
@@ -104,7 +108,10 @@ function ExpenseForm({ expense, onAdd, onUpdate, onCancel }) {
             />
           </Form.Group>
         </Col>
-        <Col md={2}>
+      </Row>
+      
+      <Row>
+        <Col md={10}>
           <Form.Group className="mb-3">
             <Form.Label>Observação</Form.Label>
             <Form.Control
@@ -112,11 +119,24 @@ function ExpenseForm({ expense, onAdd, onUpdate, onCancel }) {
               name="observacao"
               value={form.observacao}
               onChange={handleChange}
-              placeholder="Observações"
+              placeholder="Observações adicionais sobre a despesa"
             />
           </Form.Group>
         </Col>
+        <Col md={2} className="d-flex align-items-end">
+          <Form.Group className="mb-3 w-100">
+            <Button 
+              variant="outline-secondary" 
+              onClick={clearForm}
+              className="w-100"
+              type="button"
+            >
+              Limpar
+            </Button>
+          </Form.Group>
+        </Col>
       </Row>
+      
       <div className="d-flex justify-content-end">
         {expense && (
           <Button 

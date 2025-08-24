@@ -1,28 +1,31 @@
 // components/Filter.jsx
-import React, { useState } from "react";
-import { Row, Col, Form, Button } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Row, Col, Form, InputGroup, Button } from "react-bootstrap";
+import { Search, X } from "react-bootstrap-icons";
 
 function Filter({ onFilter }) {
-  const [filters, setFilters] = useState({ tipo: "", data: "" });
+  const [filters, setFilters] = useState({ 
+    tipo: "", 
+    data: "", 
+    pesquisa: "" 
+  });
+
+  useEffect(() => {
+    onFilter(filters);
+  }, [filters, onFilter]);
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onFilter(filters);
-  };
-
-  const handleClear = () => {
-    setFilters({ tipo: "", data: "" });
-    onFilter({ tipo: "", data: "" });
+  const handleClearSearch = () => {
+    setFilters({ ...filters, pesquisa: "" });
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form>
       <Row>
-        <Col md={4}>
+        <Col md={3}>
           <Form.Group className="mb-3">
             <Form.Label>Filtrar por Tipo</Form.Label>
             <Form.Select 
@@ -38,7 +41,7 @@ function Filter({ onFilter }) {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col md={3}>
           <Form.Group className="mb-3">
             <Form.Label>Filtrar por Data</Form.Label>
             <Form.Control 
@@ -49,13 +52,36 @@ function Filter({ onFilter }) {
             />
           </Form.Group>
         </Col>
-        <Col md={4} className="d-flex align-items-end">
-          <Button type="submit" variant="primary" className="me-2">
-            Aplicar Filtros
-          </Button>
-          <Button variant="outline-secondary" onClick={handleClear}>
-            Limpar
-          </Button>
+        <Col md={4}>
+          <Form.Group className="mb-3">
+            <Form.Label>Pesquisar</Form.Label>
+            <InputGroup>
+              <Form.Control 
+                type="text" 
+                name="pesquisa" 
+                value={filters.pesquisa} 
+                onChange={handleChange}
+                placeholder="Pesquisar por descrição ou observação..." 
+                style={{ fontSize: '0.9rem' }}
+              />
+              {filters.pesquisa && (
+                <Button 
+                  variant="outline-secondary" 
+                  onClick={handleClearSearch}
+                  title="Limpar pesquisa"
+                >
+                  <X size={14} />
+                </Button>
+              )}
+              <Button 
+                variant="outline-primary" 
+                title="Pesquisar"
+                disabled
+              >
+                <Search size={14} />
+              </Button>
+            </InputGroup>
+          </Form.Group>
         </Col>
       </Row>
     </Form>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import Lateral from './components/Lateral';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseTable from './components/ExpenseTable';
@@ -39,7 +39,7 @@ function App() {
     fetchExpenses();
   };
 
-  const handleFilter = ({ tipo, data }) => {
+  const handleFilter = ({ tipo, data, pesquisa }) => {
     let dataFiltrada = [...expenses];
 
     if (tipo) dataFiltrada = dataFiltrada.filter(e => e.tipo === tipo);
@@ -50,6 +50,14 @@ function App() {
         const eDataStr = eData.toISOString().slice(0, 10);
         return eDataStr === data;
       });
+    }
+
+    if (pesquisa) {
+      const termoPesquisa = pesquisa.toLowerCase();
+      dataFiltrada = dataFiltrada.filter(e => 
+        e.descricao.toLowerCase().includes(termoPesquisa) || 
+        (e.observacao && e.observacao.toLowerCase().includes(termoPesquisa))
+      );
     }
 
     setFiltered(dataFiltrada);
