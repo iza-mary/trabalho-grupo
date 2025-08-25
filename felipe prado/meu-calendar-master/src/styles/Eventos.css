@@ -1,0 +1,78 @@
+/* Eventos.css */
+.linha-cabecalho {
+  padding: 10px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 15px 20px;
+  font-weight: 500;
+}
+
+.event-card {
+  transition: all 0.3s;
+}
+
+.event-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.color-option {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.color-option.selected {
+  border-color: #000;
+}
+
+.botoes-acao {
+  display: flex;
+  gap: 5px;
+}
+
+.botoes-acao .btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.botoes-acao .btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.fc-event {
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .botoes-acao .btn {
+    margin-bottom: 5px;
+  }
+}
