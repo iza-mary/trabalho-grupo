@@ -2,14 +2,11 @@
 
  GRUPO 6
 
-- Fabrício Cezar Leite da Silva – 10482417224  
-- Felipe Galante Fernandes – 10482418132  
-- Felipe Prado Curcci – 10482418230  
-- Maria Izabel Soares Rodrigues – 10482416951  
-
-DESCRIÇÃO
-
-Desenvolvimento e apresentação das funções básicas do sistema **SATA** (Sistema para Automatização de Tarefas do Asilo), destinado ao **Asilo Vicentino - Nossa Senhora da Penha**.
+10482522112 - Diogo Seidi Kitahara
+10482417224 - Fabrício Cezar Leite da Silva
+10482418132 - Felipe Galante Fernandes
+10482416951 - Maria Izabel Soares Rodrigues
+10482418230 - Felipe Prado Curcci
 
 Itens incluídos no repositório
 
