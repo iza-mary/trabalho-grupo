@@ -17,7 +17,7 @@ const Lateral = ({ children }) => {
               className="nav-link d-flex align-items-center"
             >
               <BsHouseDoorFill className="me-2" size={20} />
-              Quartos
+              Doadores
             </Nav.Link>
           </Nav.Item>
         </Nav>
