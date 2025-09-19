@@ -36,7 +36,6 @@ class DoacaoController {
                 })
             }
             const newDoacao = await doacaoRepository.create(doacao)
-            console.log(newDoacao)
             res.status(201).json({
                 success: true,
                 data: newDoacao.toJSON(),

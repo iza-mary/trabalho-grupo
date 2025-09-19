@@ -7,7 +7,7 @@ class Doacao {
         this.data = data.data;
         this.tipo = data.tipo;
         this.obs = data.obs || null;
-        this.doador = data.doador || null;
+        this.doador = data.doador;
         this.idoso = data.idoso || null;
         this.evento = data.evento || null;
         this.doacao = this.tipo === "D" ? new DoacaoDinheiro(data) : new DoacaoProduto(data);
@@ -19,6 +19,12 @@ class Doacao {
 
         if (!this.data || this.data.trim().length === 0) {
             errors.push("Data é obrigatória!")
+        }
+        if (!this.tipo || this.tipo.trim().length === 0) {
+            errors.push("Tipo é obrigatório!")
+        }
+        if (!this.doador || isNaN(this.doador) || this.doador <= 0) {
+            errors.push("Doador é obrigatório e deve ser um número válido!")
         }
 
         const validTipo = ["D", "A", "O"];
