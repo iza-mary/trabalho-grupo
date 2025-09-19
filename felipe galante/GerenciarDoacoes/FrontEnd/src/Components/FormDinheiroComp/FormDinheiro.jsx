@@ -7,14 +7,12 @@ function FormDinheiro({ onSave }) {
     // Estados
     const [doaDinheiro, setDoaDinheiro] = useState({
         data: "",
-        tipo: "dinheiro",
-        item: "-",
-        valorquantidade: "",
-        destinatario: "",
+        tipo: "D",
+        obs: "",
+        idoso: "Instituição (Asilo Vicentino)",
         doador: "",
-        telefone: "",
         evento: "",
-        obs: ""
+        valor: 0
     });
     const [validated, setValidated] = useState(false);
     const [errors, setErrors] = useState({});
@@ -242,29 +240,16 @@ function FormDinheiro({ onSave }) {
                 <Col md={6}>
                     <Card className="mb-4">
                         <Card.Body>
-                            <Card.Title className="mb-4"><h5>Informações do Doador</h5></Card.Title>
+                            <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
                             <Form.Group className="mb-3" controlId="doador">
-                                <Form.Label>Nome do Doador (Opcional)</Form.Label>
+                                <Form.Label>Destinatário</Form.Label>
                                 <Form.Control onChange={handleChangeDoador}
                                     value={doaDinheiro.doador || ""}
                                     name="doador" type="text" />
                             </Form.Group>
-                            <Form.Group className="mb-3" controlId="telefone">
-                                <Form.Label>Telefone para Contato (Opcional)</Form.Label>
-                                <Form.Control
-                                    onChange={handleChangeTelefone}
-                                    value={doaDinheiro.telefone || ""}
-                                    name="telefone" type="tel"
-                                    maxLength={15}
-                                    isInvalid={!!errors.telefone}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.telefone}
-                                </Form.Control.Feedback>
-                            </Form.Group>
                             <Form.Group className="mb-3"
                                 controlId="evento">
-                                <Form.Label>Evento Relacionado (Opcional)</Form.Label>
+                                <Form.Label>Evento</Form.Label>
                                 <Form.Select onChange={handleChangeEvento}
                                     value={doaDinheiro.evento || ""} name="evento">
                                     <option value="">Nenhum evento relacionado</option>
