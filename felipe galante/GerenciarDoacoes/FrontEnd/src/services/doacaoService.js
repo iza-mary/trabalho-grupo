@@ -104,13 +104,30 @@ const remove = async (id) => {
     }
 }
 
+const getDoadorByName = async (nome) => {
+    try {
+        const response = await fetch(`http://localhost:3000/api/doadores/nome`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ nome })
+        })
+        const result = await handleResponse(response)
+        return result.data
+    } catch (error) {
+        console.error(`Erro ao buscar doador: ${error}`)
+    }
+}
+
 const doacoesService = {
     getAll,
     getById,
     update,
     add,
     remove,
-    getByFiltred
+    getByFiltred,
+    getDoadorByName
 }
 
 export default doacoesService;

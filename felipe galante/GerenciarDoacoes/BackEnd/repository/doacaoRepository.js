@@ -144,6 +144,16 @@ class DoacaoRepository {
             throw new Error(`Erro ao deletar doação: ${error.message}`);
         }
     }
+
+    async getDoadorByName(nome) {
+        try {
+            const [rows] = await db.execute("SELECT id, nome FROM doadores WHERE nome LIKE ?", [`%${nome}%`]);
+            if (rows.length === 0) return [];
+            return rows;
+        } catch (error) {
+            throw new Error("Erro ao buscar doador: " + error.message);
+        }
+    }
 }
 
 module.exports = new DoacaoRepository();

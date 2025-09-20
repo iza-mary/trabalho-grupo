@@ -13,7 +13,7 @@ class DoacaoController {
             } else {
                 doacoes = await doacaoRepository.findAll();
             }
-            
+
             res.json({
                 success: true,
                 data: doacoes.map(doa => doa.toJSON()),
@@ -74,20 +74,20 @@ class DoacaoController {
 
     async getByFiltred(req, res) {
         try {
-        const {tipo, data, destinatario, busca} = req.body;
-        let doacoes;
-        if (tipo || data || destinatario || busca) {
-            doacoes = await doacaoRepository.findByFiltred(tipo, data, destinatario, busca)
+            const { tipo, data, destinatario, busca } = req.body;
+            let doacoes;
+            if (tipo || data || destinatario || busca) {
+                doacoes = await doacaoRepository.findByFiltred(tipo, data, destinatario, busca)
+            }
+            res.json({
+                success: true,
+                data: doacoes.map(doa => doa.toJSON()),
+                total: doacoes.length
+            })
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
         }
-        res.json({
-            success: true,
-            data: doacoes.map(doa => doa.toJSON()),
-            total: doacoes.length
-        })
-    } catch(error) {
-        res.status(500).json({success: false, message: error.message});
-    }
-    
+
     }
 
     async update(req, res) {
@@ -150,6 +150,28 @@ class DoacaoController {
                 success: false,
                 message: error.message
             });
+        }
+    }
+
+    async getDoadorByName(req, res) {
+        try {
+            const { nome } = req.body;
+            const doador = await doacaoRepository.getDoadorByName(nome)
+            if (!doador) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Doador não encontrado"
+                })
+            }
+            res.json({
+                success: true,
+                data: doador
+            })
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message
+            })
         }
     }
 }

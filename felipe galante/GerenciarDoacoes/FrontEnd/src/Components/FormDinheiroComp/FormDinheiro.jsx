@@ -1,6 +1,7 @@
 import { Button, Card, Col, Form, Row, Alert } from "react-bootstrap";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import SelectDoador from "./SelectDoador";
 
 function FormDinheiro({ onSave }) {
 
@@ -9,7 +10,6 @@ function FormDinheiro({ onSave }) {
         data: "",
         tipo: "D",
         obs: "",
-        idoso: "Instituição (Asilo Vicentino)",
         doador: "",
         evento: "",
         valor: 0
@@ -17,6 +17,16 @@ function FormDinheiro({ onSave }) {
     const [validated, setValidated] = useState(false);
     const [errors, setErrors] = useState({});
     const [showAlert, setShowAlert] = useState(false);
+    const [selectedDoador, setSelectedDoador] = useState({
+        id: "",
+        nome: ""
+    });
+
+    useEffect(() => {
+        setDoaDinheiro(prev => ({
+            ...prev, doador: selectedDoador ? selectedDoador.id : ""
+        }))
+    }, [selectedDoador])
     // -----
     // Funções de manipulação de eventos
     const handleChangeData = (e) => {
@@ -37,7 +47,7 @@ function FormDinheiro({ onSave }) {
 
     const handleChangeValor = (e) => {
         const value = e.target.value.replace(/[a-zA-Z]/g, '');
-        setDoaDinheiro(prev => ({ ...prev, valorquantidade: parseFloat(value) }))
+        setDoaDinheiro(prev => ({ ...prev, valor: parseFloat(value) }))
         if (value && !isNaN(value) && parseFloat(value) >= 0) {
             setErrors((prev) => ({ ...prev, valor: null }));
         } else {
@@ -51,63 +61,11 @@ function FormDinheiro({ onSave }) {
         }
     }
 
-    const handleChamgeDestinatario = (e) => {
-        const value = e.target.value;
-        setDoaDinheiro(prev => ({
-            ...prev, destinatario: value
-        }))
-        if (value) {
-            setErrors((prev) => ({ ...prev, destinatario: null }));
-        } else {
-            if (value === "") {
-                setErrors((prev) => ({ ...prev, destinatario: "Por favor, selecione um destinatário" }));
-                setValidated(false);
-            } else {
-                setErrors((prev) => ({ ...prev, destinatario: null }));
-            }
-        }
-    }
-
     const handleChangeDoador = (e) => {
         const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
         setDoaDinheiro(prev => ({
             ...prev, doador: value
         }))
-    }
-
-    const handleChangeTelefone = (e) => {
-        const value = e.target.value;
-        const numeros = value.replace(/\D/g, '');
-
-        let formatado = value; // valor padrão: sem reformatar
-
-        if (e.nativeEvent.inputType !== 'deleteContentBackward') {
-            if (numeros.length <= 10) {
-                // (XX) XXXX-XXXX
-                formatado = numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-            } else {
-                // (XX) 9XXXX-XXXX
-                formatado = numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-            }
-        }
-        if (!formatado) {
-            setErrors(prev => ({ ...prev, telefone: null }));
-            setValidated(false);
-        }
-        else if (formatado.length !== 14 && formatado.length !== 15) {
-            setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
-            setValidated(false);
-        } else {
-            setErrors(prev => ({ ...prev, telefone: null }));
-            setValidated(false);
-        }
-
-        setDoaDinheiro(prev => ({
-            ...prev,
-            telefone: formatado
-        }));
-
-
     }
 
     const handleChangeObservacoes = (e) => {
@@ -134,8 +92,8 @@ function FormDinheiro({ onSave }) {
 
     const limpaForm = () => {
         setDoaDinheiro(prev => ({
-            ...prev, data: "", valorquantidade: "",
-            destinatario: "", doador: "", telefone: "", evento: "", obs: ""
+            ...prev, data: "", valor: "",
+            idoso: "", doador: "",evento: "", obs: ""
         }))
         setErrors({})
         setValidated(false)
@@ -156,24 +114,19 @@ function FormDinheiro({ onSave }) {
             newErrors.data = "A data não pode ser maior do que hoje";
             setValidated(false);
         }
-
-        if (!doaDinheiro.valorquantidade) {
+        if (!doaDinheiro.valor) {
             newErrors.valor = "O valor deve ser preenchido";
             setValidated(false);
         } else if (parseFloat(doaDinheiro.valor) < 0) {
             newErrors.valor = "Valor inválido";
             setValidated(false);
         }
-        if (!doaDinheiro.destinatario) {
-            newErrors.destinatario = "Por favor, selecione um destinatário";
+        if (!doaDinheiro.doador) {
+            newErrors.doador = "Por favor, insira um doador válido";
             setValidated(false);
         }
         if (doaDinheiro.obs !== "" && !isNaN(doaDinheiro.obs)) {
             newErrors.obs = "Texto inválido";
-            setValidated(false);
-        }
-        if (doaDinheiro.telefone.length !== 15 && doaDinheiro.telefone.length !== 14 && doaDinheiro.telefone !== "") {
-            newErrors.telefone = "Telefone Inválido"
             setValidated(false);
         }
         if (Object.keys(newErrors).length > 0) {
@@ -213,26 +166,15 @@ function FormDinheiro({ onSave }) {
                                 <Form.Label>Valor da Doação</Form.Label>
                                 <Form.Control type="number" step={0.01} placeholder="R$ 0,00" name="valor" required
                                     onChange={handleChangeValor}
-                                    value={doaDinheiro.valorquantidade || ""}
+                                    value={doaDinheiro.valor || ""}
                                     isInvalid={!!errors.valor}
                                 />
                                 <Form.Control.Feedback type="invalid">
                                     {errors.valor}
                                 </Form.Control.Feedback>
                             </Form.Group>
-                            <Form.Group className="mb-3" controlId="destinatario">
-                                <Form.Label>Destinatário</Form.Label>
-                                <Form.Select required name="destinatario" onChange={handleChamgeDestinatario}
-                                    value={doaDinheiro.destinatario || ""}
-                                    isInvalid={!!errors.destinatario}>
-                                    <option value="">Selecione o Destinatário</option>
-                                    <option >Instituição (Asilo Vicentino)</option>
-                                    <option >João da Silva (Quarto 12)</option>
-                                    <option >Maria Oliveira (Quarto 8)</option>
-                                </Form.Select>
-                                <Form.Control.Feedback type="invalid">
-                                    {errors.destinatario}
-                                </Form.Control.Feedback>
+                            <Form.Group className="mb-3" controlId="doador">
+                                <SelectDoador setDoador={setSelectedDoador} setErrors={setErrors} setValidated={setValidated} errors={errors}/>
                             </Form.Group>
                         </Card.Body>
                     </Card>
@@ -243,9 +185,8 @@ function FormDinheiro({ onSave }) {
                             <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
                             <Form.Group className="mb-3" controlId="doador">
                                 <Form.Label>Destinatário</Form.Label>
-                                <Form.Control onChange={handleChangeDoador}
-                                    value={doaDinheiro.doador || ""}
-                                    name="doador" type="text" />
+                                <Form.Control
+                                    name="idoso" type="text" />
                             </Form.Group>
                             <Form.Group className="mb-3"
                                 controlId="evento">
