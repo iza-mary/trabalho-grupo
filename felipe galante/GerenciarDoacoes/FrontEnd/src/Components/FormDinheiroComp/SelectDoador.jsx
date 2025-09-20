@@ -21,17 +21,15 @@ function SelectDoador({ setDoador, setErrors, setValidated, errors }) {
 
     const handleChangeBusca = (event) => {
         const value = event.target.value;
-        if (value.length === 0) {
+        if (value.length > 0) {
+            document.getElementById("doadorSelect").classList.add("show");
+            fetchDoadores(value);
+        } else {
+            document.getElementById("doadorSelect").classList.remove("show");
             setDoador(null);
             setListaDoadores([]);
             setErrors((prev) => ({ ...prev, doador: "Doador é obrigatório" }));
             setValidated(false);
-        }
-        fetchDoadores(value)
-        if (value.length > 0) {
-            document.getElementById("doadorSelect").classList.add("show");
-        } else {
-            document.getElementById("doadorSelect").classList.remove("show");
         }
     }
 

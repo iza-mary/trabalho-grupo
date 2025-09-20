@@ -61,13 +61,6 @@ function FormDinheiro({ onSave }) {
         }
     }
 
-    const handleChangeDoador = (e) => {
-        const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
-        setDoaDinheiro(prev => ({
-            ...prev, doador: value
-        }))
-    }
-
     const handleChangeObservacoes = (e) => {
         const value = e.target.value;
         setDoaDinheiro(prev => ({
