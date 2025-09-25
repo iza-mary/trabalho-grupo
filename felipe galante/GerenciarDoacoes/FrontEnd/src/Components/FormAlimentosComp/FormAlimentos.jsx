@@ -1,27 +1,42 @@
 import { Card, Col, Row, Form, Button, Alert } from "react-bootstrap";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import SelectDoador from "./SelectDoador";
 
 function FormAlimentos({ onSave }) {
 
   // Estados
   const [doaAlimentos, setDoaAlimentos] = useState({
     data: "",
-    tipo: "alimento",
-    item: "",
-    valorquantidade: "",
-    destinatario: "",
-    doador: "",
-    telefone: "",
+    tipo: "A",
+    doador: {
+      doadorId: 0,
+      nome: ""
+    },
     evento: "",
-    obs: ""
+    obs: "",
+    doacao: {
+      item: "",
+      qntd: 0
+    }
   });
 
   const [validated, setValidated] = useState(false);
   const [errors, setErrors] = useState({});
   const [showAlert, setShowAlert] = useState(false);
-  // Funções de manipulação de eventos
+  const [selectedDoador, setSelectedDoador] = useState({
+    doadorId: 0,
+    nome: ""
+  });
 
+  useEffect(() => {
+    setDoaAlimentos(prev => ({
+      ...prev, doador: { doadorId: selectedDoador.doadorId, nome: selectedDoador.nome }
+    }))
+  }, [selectedDoador])
+
+
+  // Funções de manipulação de eventos
   const handleChangleData = (e) => {
     const value = e.target.value;
     setDoaAlimentos(prev => ({ ...prev, data: value }))
@@ -40,7 +55,7 @@ function FormAlimentos({ onSave }) {
 
   const handleChangeItem = (e) => {
     const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
-    setDoaAlimentos(prev => ({ ...prev, item: value }))
+    setDoaAlimentos(prev => ({ ...prev, doacao: {...prev.doacao, item: value} }))
     if (value && isNaN(value)) {
       setErrors((prev) => ({ ...prev, item: null }));
     } else {
@@ -56,7 +71,7 @@ function FormAlimentos({ onSave }) {
 
   const handleChangeQuantidade = (e) => {
     const value = e.target.value.replace(/[a-zA-Z]/g, '');
-    setDoaAlimentos(prev => ({ ...prev, valorquantidade: parseInt(value) }))
+    setDoaAlimentos(prev => ({ ...prev, doacao: {...prev.doacao, qntd: parseInt(value)}}))
     if (value && !isNaN(value) && parseInt(value) >= 0) {
       setErrors((prev) => ({ ...prev, quantidade: null }));
     } else {
@@ -75,66 +90,6 @@ function FormAlimentos({ onSave }) {
   const handleChangeDescricao = (e) => {
     const value = e.target.value;
     setDoaAlimentos(prev => ({ ...prev, obs: value }))
-    if (value && isNaN(value)) {
-      setErrors((prev) => ({ ...prev, obs: null }));
-    } else {
-      if (value === "") {
-        setErrors((prev) => ({ ...prev, obs: "A descrição deve ser preenchida" }));
-        setValidated(false);
-      } else if (!isNaN(value)) {
-        setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
-        setValidated(false);
-      }
-    }
-  }
-  const handleChangeDestinatario = (e) => {
-    const value = e.target.value;
-    setDoaAlimentos(prev => ({ ...prev, destinatario: value }))
-    if (value && isNaN(value)) {
-      setErrors((prev) => ({ ...prev, destinatario: null }));
-    } else {
-      if (value === "") {
-        setErrors((prev) => ({ ...prev, destinatario: "Por favor, selecione um destinatário" }));
-        setValidated(false);
-      }
-    }
-  }
-
-  const handleChangeDoador = (e) => {
-    const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
-    setDoaAlimentos(prev => ({ ...prev, doador: value }))
-  }
-
-  const handleChangeTelefone = (e) => {
-    const value = e.target.value;
-    const numeros = value.replace(/\D/g, '');
-
-    let formatado = value; // valor padrão: sem reformatar
-
-    if (e.nativeEvent.inputType !== 'deleteContentBackward') {
-      if (numeros.length <= 10) {
-        // (XX) XXXX-XXXX
-        formatado = numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-      } else {
-        // (XX) 9XXXX-XXXX
-        formatado = numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-      }
-    }
-    if (!formatado) {
-            setErrors(prev => ({ ...prev, telefone: null }));
-        } 
-        else if (formatado.length !== 15 && formatado.length !== 14) {
-            setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
-            setValidated(false);
-        }
-        else {
-            setErrors(prev => ({ ...prev, telefone: null }));
-        }
-
-    setDoaAlimentos(prev => ({
-      ...prev,
-      telefone: formatado
-    }));
   }
 
   const handleChangeEvento = (e) => {
@@ -143,12 +98,23 @@ function FormAlimentos({ onSave }) {
   }
 
   const limpaForm = () => {
-        setDoaAlimentos(prev => ({...prev, data: "", valorquantidade: "", item : "",
-            destinatario: "", doador: "", telefone: "", evento: "", obs: ""
-        }))
-        setErrors({});
-        setValidated(false);
-    }
+    setDoaAlimentos(prev => ({
+      ...prev, data: "", 
+      doador: {
+        doadorId: 0, 
+        nome: ""
+      },
+        evento: "", 
+        obs: "",
+        doacao: {
+          item: "",
+          qntd: 0
+        }
+    }))
+    document.getElementsByName("doador")[0].value = ""
+    setErrors({});
+    setValidated(false);
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -165,33 +131,18 @@ function FormAlimentos({ onSave }) {
       newErrors.data = "A data não pode ser maior do que hoje";
       setValidated(false);
     }
-    if (!doaAlimentos.item) {
+    if (!doaAlimentos.doacao.item) {
       newErrors.item = "O item doado deve ser preenchido";
       setValidated(false);
-    } else if (!isNaN(doaAlimentos.item)) {
+    } else if (!isNaN(doaAlimentos.doacao.item)) {
       newErrors.item = "O item doado deve ser um texto válido";
       setValidated(false);
     }
-    if (!doaAlimentos.valorquantidade) {
+    if (!doaAlimentos.doacao.qntd) {
       newErrors.quantidade = "A quantidade deve ser preenchida";
       setValidated(false);
-    } else if (isNaN(doaAlimentos.valorquantidade) || parseInt(doaAlimentos.valorquantidade) < 0) {
+    } else if (isNaN(doaAlimentos.doacao.qntd) || parseInt(doaAlimentos.doacao.qntd) < 0) {
       newErrors.quantidade = "Quantidade inválida";
-      setValidated(false);
-    }
-    if (!doaAlimentos.obs) {
-      newErrors.obs = "A descrição deve ser preenchida";
-      setValidated(false);
-    } else if (!isNaN(doaAlimentos.obs)) {
-      newErrors.obs = "A descrição deve ser um texto válido";
-      setValidated(false);
-    }
-    if (!doaAlimentos.destinatario) {
-      newErrors.destinatario = "Por favor, selecione um destinatário";
-      setValidated(false);
-    }
-    if (doaAlimentos.telefone.length !== 15 && doaAlimentos.telefone.length !== 14 && doaAlimentos.telefone !== "") {
-      newErrors.telefone = "Telefone inválido"
       setValidated(false);
     }
     if (Object.keys(newErrors).length > 0) {
@@ -231,7 +182,7 @@ function FormAlimentos({ onSave }) {
               <Form.Group className="mb-3">
                 <Form.Label>Item Doado</Form.Label>
                 <Form.Control name="item" onChange={handleChangeItem}
-                  value={doaAlimentos.item || ""}
+                  value={doaAlimentos.doacao.item || ""}
                   isInvalid={!!errors.item}
                   type="text" required />
                 <Form.Control.Feedback type="invalid">
@@ -241,12 +192,38 @@ function FormAlimentos({ onSave }) {
               <Form.Group className="mb-3">
                 <Form.Label>Quantidade</Form.Label>
                 <Form.Control name="quantidade" onChange={handleChangeQuantidade}
-                  value={doaAlimentos.valorquantidade || ""}
+                  value={doaAlimentos.doacao.qntd || ""}
                   isInvalid={!!errors.quantidade}
                   type="number" required />
                 <Form.Control.Feedback type="invalid">
                   {errors.quantidade}
                 </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <SelectDoador setDoador={setSelectedDoador} setErrors={setErrors} errors={errors} setValidated={setValidated} />
+              </Form.Group>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card className="mb-4">
+            <Card.Body>
+              <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
+              <Form.Group className="mb-3">
+                <Form.Label>Destinatário</Form.Label>
+                <Form.Control name="doador" type="text"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Evento</Form.Label>
+                <Form.Select
+                  onChange={handleChangeEvento}
+                  value={doaAlimentos.evento || ""}
+                  name="evento">
+                  <option value="">Nenhum evento relacionado</option>
+                  <option >Bazar Beneficente - Abril 2023</option>
+                  <option >Campanha do Agasalho 2023</option>
+                </Form.Select>
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Observações/Descrição</Form.Label>
@@ -259,64 +236,12 @@ function FormAlimentos({ onSave }) {
                   {errors.obs}
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Destinatário</Form.Label>
-                <Form.Select name="destinatario" onChange={handleChangeDestinatario}
-                  value={doaAlimentos.destinatario || ""}
-                  isInvalid={!!errors.destinatario}
-                  required>
-                  <option value="">Selecione o Destinatário</option>
-                  <option >Instituição (Asilo Vicentino)</option>
-                  <option >João da Silva (Quarto 12)</option>
-                  <option >Maria Oliveira (Quarto 8)</option>
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">
-                  {errors.destinatario}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={6}>
-          <Card className="mb-4">
-            <Card.Body>
-              <Card.Title className="mb-4"><h5>Informações do Doador</h5></Card.Title>
-              <Form.Group className="mb-3">
-                <Form.Label>Nome do Doador (Opcional)</Form.Label>
-                <Form.Control name="doador" type="text"
-                  onChange={handleChangeDoador}
-                  value={doaAlimentos.doador || ""}
-                />
-              </Form.Group>
-              <Form.Group controlId="telefone" className="mb-3">
-                <Form.Label>Telefone para Contato (Opcional)</Form.Label>
-                <Form.Control name="telefone"
-                  onChange={handleChangeTelefone}
-                  value={doaAlimentos.telefone || ""}
-                  maxLength={15}
-                  isInvalid={!!errors.telefone}
-                  type="tel" />
-                  <Form.Control.Feedback type="invalid">
-                  {errors.telefone}
-                </Form.Control.Feedback>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Evento Relacionado (Opcional)</Form.Label>
-                <Form.Select
-                  onChange={handleChangeEvento}
-                  value={doaAlimentos.evento || ""}
-                  name="evento">
-                  <option value="">Nenhum evento relacionado</option>
-                  <option >Bazar Beneficente - Abril 2023</option>
-                  <option >Campanha do Agasalho 2023</option>
-                </Form.Select>
-              </Form.Group>
             </Card.Body>
           </Card>
         </Col>
       </Row>
       <div className="d-flex justify-content-end gap-2">
-        <Button variant="secondary" type="button" onClick={() => {limpaForm()}}>Limpar</Button>
+        <Button variant="secondary" type="button" onClick={() => { limpaForm() }}>Limpar</Button>
         <Button variant="primary" type="submit">Registrar Doação</Button>
       </div>
     </Form>

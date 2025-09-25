@@ -3,7 +3,7 @@ import { Form } from "react-bootstrap";
 import doacoesService from "../../services/doacaoService";
 
 
-function SelectDoador({ setDoador, setErrors, setValidated, errors } ) {
+function SelectDoador({ setDoador, setErrors, setValidated, errors, selectedDoadorEdit }) {
 
     const [listadoadores, setListaDoadores] = useState([])
 
@@ -39,16 +39,21 @@ function SelectDoador({ setDoador, setErrors, setValidated, errors } ) {
         }
     }
 
+    useEffect(() => {
+        document.getElementsByName("doador")[0].value = selectedDoadorEdit.nome;
+    }, [selectedDoadorEdit])
+
 
     const handleSelectDoador = (doador) => {
         document.getElementsByName("doador")[0].value = doador.nome;
         document.getElementById("doadorSelect").classList.remove("show");
-        setDoador(
-            {
+        setDoador(prev => ({
+            ...prev,
+            doador: {
                 doadorId: doador.id,
                 nome: doador.nome
             }
-        );
+        }));
     }
 
 

@@ -1,21 +1,28 @@
 import { Button, Card, Col, Form, Row, Alert, Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import SelectDoador from "./SelectDoador.jsx";
+import "./EditarDin.css"
 
-function FormEditarDin({ show, doacao, onEdit }) {
+function FormEditarDin({ show, doacaoEdit, onEdit }) {
     // Estados
     const [doaDinheiro, setDoaDinheiro] = useState({
         id: 0,
         data: "",
-        tipo: "dinheiro",
-        item: "-",
-        valorquantidade: "",
-        destinatario: "",
-        doador: "" || "",
-        telefone: "" || "",
+        tipo: "D",
+        doador: {
+            doadorId: 0,
+            nome: "" || ""
+        },
         evento: "" || "",
-        obs: "" || ""
+        obs: "" || "",
+        doacao: {
+            qntd: 0,
+            item: "-",
+            valor: 0
+        }
     });
+
     const [validated, setValidated] = useState(false);
     const [errors, setErrors] = useState({});
     const [showAlert, setShowAlert] = useState(false);
@@ -24,18 +31,23 @@ function FormEditarDin({ show, doacao, onEdit }) {
 
     useEffect(() => {
         setDoaDinheiro({
-            id: parseInt(doacao.id),
-            data: doacao.data.substring(0, 10),
-            tipo: doacao.tipo,
-            item: doacao.item,
-            valorquantidade: parseFloat(doacao.valorQuantidade),
-            destinatario: doacao.destinatario,
-            doador: doacao.doador || "",
-            telefone: doacao.telefone || "",
-            evento: doacao.evento || "",
-            obs: doacao.obs || ""
+            id: parseInt(doacaoEdit.id),
+            data: doacaoEdit.data.substring(0,10),
+            tipo: doacaoEdit.tipo,
+            doador: {
+                doadorId: doacaoEdit.doador.doadorId || 0,
+                nome: doacaoEdit.doador.nome || ""
+            },
+            evento: doacaoEdit.evento || "",
+            obs: doacaoEdit.obs || "",
+            doacao: doacaoEdit.tipo.toUpperCase() === "D" ? {
+                valor: parseFloat(doacaoEdit.doacao.valor) || 0,
+            } : {
+                qntd: parseInt(doacaoEdit.doacao.qntd) || 0,
+                item: doacaoEdit.doacao.item || "-",
+            }
         })
-    }, [doacao]);
+    }, [doacaoEdit]);
 
     // Funções de manipulação de eventos
     const handleChangeData = (e) => {
@@ -56,7 +68,7 @@ function FormEditarDin({ show, doacao, onEdit }) {
 
     const handleChangeValor = (e) => {
         const value = e.target.value.replace(/[a-zA-Z]/g, '');
-        setDoaDinheiro(prev => ({ ...prev, valorquantidade: parseFloat(value) }))
+        setDoaDinheiro(prev => ({ ...prev, doacao: { valor: parseFloat(value) } }))
         if (value && !isNaN(value) && parseFloat(value) >= 0) {
             setErrors((prev) => ({ ...prev, valor: null }));
         } else {
@@ -68,65 +80,6 @@ function FormEditarDin({ show, doacao, onEdit }) {
                 setValidated(false);
             }
         }
-    }
-
-    const handleChamgeDestinatario = (e) => {
-        const value = e.target.value;
-        setDoaDinheiro(prev => ({
-            ...prev, destinatario: value
-        }))
-        if (value) {
-            setErrors((prev) => ({ ...prev, destinatario: null }));
-        } else {
-            if (value === "") {
-                setErrors((prev) => ({ ...prev, destinatario: "Por favor, selecione um destinatário" }));
-                setValidated(false);
-            } else {
-                setErrors((prev) => ({ ...prev, destinatario: null }));
-            }
-        }
-    }
-
-    const handleChangeDoador = (e) => {
-        const value = e.target.value.replace(/[0-9]/g, '');
-        setDoaDinheiro(prev => ({
-            ...prev, doador: value
-        }))
-    }
-
-    const handleChangeTelefone = (e) => {
-        const value = e.target.value;
-        const numeros = value.replace(/\D/g, '');
-
-        let formatado = value; // valor padrão: sem reformatar
-
-        if (e.nativeEvent.inputType !== 'deleteContentBackward') {
-            if (numeros.length <= 10) {
-                // (XX) XXXX-XXXX
-                formatado = numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-            } else {
-                // (XX) 9XXXX-XXXX
-                formatado = numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-            }
-        }
-
-        if (!formatado) {
-            setErrors(prev => ({ ...prev, telefone: null }));
-            setValidated(false);
-        } 
-        else if (formatado.length !== 15 && formatado.length !== 14) {
-            setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
-            setValidated(false);
-        }
-        else {
-            setErrors(prev => ({ ...prev, telefone: null }));
-            setValidated(false);
-        }
-
-        setDoaDinheiro(prev => ({
-            ...prev,
-            telefone: formatado
-        }));
     }
 
     const handleChangeObservacoes = (e) => {
@@ -165,28 +118,17 @@ function FormEditarDin({ show, doacao, onEdit }) {
             newErrors.data = "A data não pode ser maior do que hoje";
             setValidated(false);
         }
-
-        if (!doaDinheiro.valorquantidade) {
+        if (!doaDinheiro.doacao.valor) {
             newErrors.valor = "O valor deve ser preenchido";
             setValidated(false);
-        } else if (parseFloat(doaDinheiro.valor) < 0) {
+        } else if (parseFloat(doaDinheiro.doacao.valor) < 0) {
             newErrors.valor = "Valor inválido";
-            setValidated(false);
-        }
-        if (!doaDinheiro.destinatario) {
-            newErrors.destinatario = "Por favor, selecione um destinatário";
             setValidated(false);
         }
         if (doaDinheiro.obs !== "" && !isNaN(doaDinheiro.obs)) {
             newErrors.obs = "Texto inválido";
             setValidated(false);
         }
-
-        if (doaDinheiro.telefone.length !== 15 && doaDinheiro.telefone.length !== 14 && doaDinheiro.telefone !== "") {
-            newErrors.telefone = "Telefone Inválido"
-            setValidated(false);
-        }
-
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
         } else {
@@ -204,6 +146,7 @@ function FormEditarDin({ show, doacao, onEdit }) {
     return (
 
         <Modal
+            id="modal"
             show={showModal}
             onHide={() => { setShowModal(false), show(true) }}
             dialogClassName="modal-90w"
@@ -237,7 +180,7 @@ function FormEditarDin({ show, doacao, onEdit }) {
                                         <Form.Label>Valor da Doação</Form.Label>
                                         <Form.Control type="number" step={0.01} placeholder="R$ 0,00" name="valor" required
                                             onChange={handleChangeValor}
-                                            value={doaDinheiro.valorquantidade || ""}
+                                            value={doaDinheiro.doacao.valor || ""}
                                             isInvalid={!!errors.valor}
                                         />
                                         <Form.Control.Feedback type="invalid">
@@ -245,17 +188,9 @@ function FormEditarDin({ show, doacao, onEdit }) {
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                     <Form.Group className="mb-3" controlId="destinatario">
-                                        <Form.Label>Destinatário</Form.Label>
-                                        <Form.Select required name="destinatario" onChange={handleChamgeDestinatario}
-                                            value={doaDinheiro.destinatario || ""}
-                                            isInvalid={!!errors.destinatario}>
-                                            <option value="">Selecione o Destinatário</option>
-                                            <option >Instituição (Asilo Vicentino)</option>
-                                            <option >João da Silva (Quarto 12)</option>
-                                            <option >Maria Oliveira (Quarto 8)</option>
-                                        </Form.Select>
+                                        <SelectDoador setDoador={setDoaDinheiro} setErrors={setErrors} setValidated={setValidated} errors={errors} selectedDoadorEdit={doaDinheiro.doador} />
                                         <Form.Control.Feedback type="invalid">
-                                            Por favor, selecione um destinatário.
+                                            Por favor, selecione um doador.
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                 </Card.Body>
@@ -264,38 +199,23 @@ function FormEditarDin({ show, doacao, onEdit }) {
                         <Col md={6}>
                             <Card className="mb-4">
                                 <Card.Body>
-                                    <Card.Title className="mb-4"><h5>Informações do Doador</h5></Card.Title>
+                                    <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
                                     <Form.Group className="mb-3" controlId="doador">
-                                        <Form.Label>Nome do Doador (Opcional)</Form.Label>
-                                        <Form.Control onChange={handleChangeDoador}
-                                            value={doaDinheiro.doador || ""}
-                                            name="doador" type="text" />
-                                    </Form.Group>
-                                    <Form.Group className="mb-3" controlId="telefone">
-                                        <Form.Label>Telefone para Contato (Opcional)</Form.Label>
-                                        <Form.Control
-                                            onChange={handleChangeTelefone}
-                                            value={doaDinheiro.telefone || ""}
-                                            name="telefone" type="tel"
-                                            maxLength={15}
-                                            isInvalid={!!errors.telefone}
-                                        />
-                                        <Form.Control.Feedback type="invalid">
-                                    {errors.telefone}
-                                </Form.Control.Feedback>
+                                        <Form.Label>Destinatário</Form.Label>
+                                        <Form.Control />
                                     </Form.Group>
                                     <Form.Group className="mb-3"
                                         controlId="evento">
-                                        <Form.Label>Evento Relacionado (Opcional)</Form.Label>
+                                        <Form.Label>Evento</Form.Label>
                                         <Form.Select onChange={handleChangeEvento}
-                                        value={doaDinheiro.evento || ""} name="evento">
+                                            value={doaDinheiro.evento || ""} name="evento">
                                             <option value="">Nenhum evento relacionado</option>
                                             <option >Bazar Beneficente - Abril 2023</option>
                                             <option >Campanha do Agasalho 2023</option>
                                         </Form.Select>
                                     </Form.Group>
                                     <Form.Group className="mb-3" controlId="observacoes">
-                                        <Form.Label>Observações (Opcional)</Form.Label>
+                                        <Form.Label>Observações</Form.Label>
                                         <Form.Control name="observacoes"
                                             onChange={handleChangeObservacoes}
                                             value={doaDinheiro.obs || ""}

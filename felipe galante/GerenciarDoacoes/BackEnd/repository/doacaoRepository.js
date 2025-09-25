@@ -4,11 +4,11 @@ const Doacao = require("../models/doacao");
 class DoacaoRepository {
     async findAll() {
         try {
-            const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador
+            const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador, ddr.nome
             , d.idoso, d.evento, 
             dd.id as dinheiroId, dd.valor, 
             dp.id as produtoId, dp.item, dp.qntd
-            FROM doacoes d LEFT JOIN doacaodinheiro dd ON d.id = dd.id 
+            FROM doacoes d LEFT JOIN doadores ddr ON d.doador = ddr.id LEFT JOIN doacaodinheiro dd ON d.id = dd.id 
             LEFT JOIN doacaoproduto dp ON d.id = dp.id`)
             return rows.map(rows => new Doacao(rows));
         } catch (error) {
@@ -82,11 +82,12 @@ class DoacaoRepository {
         const conn = await db.getConnection();
         try {
             await conn.beginTransaction();
-            const { data, tipo, obs, doador, idoso, evento } = doacaoData;
+            const { data, tipo, obs, idoso, evento } = doacaoData;
             const { item, qntd, valor } = doacaoData.doacao;
+            const {doadorId, nome} = doacaoData.doador
             if (tipo.toUpperCase() === "D") {
                 const [result] = await conn.execute(`INSERT INTO doacoes (
-                data, tipo, obs, doador, idoso, evento) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doador, idoso, evento]);
+                data, tipo, obs, doador, idoso, evento) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idoso, evento]);
                 const doacaoId = result.insertId;
                 await conn.execute(`INSERT INTO doacaodinheiro (id, valor) VALUES (?, ?)`, [doacaoId, valor]);
                 await conn.commit();
@@ -94,7 +95,7 @@ class DoacaoRepository {
                 return await this.findById(doacaoId);
             } else {
                 const [result] = await conn.execute(`INSERT INTO doacoes (
-                data, tipo, obs, doador, idoso, evento) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doador, idoso, evento]);
+                data, tipo, obs, doador, idoso, evento) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idoso, evento]);
                 const doacaoId = result.insertId;
                 await conn.execute(`INSERT INTO doacaoproduto (id, item, qntd) VALUES (?, ?, ?)`, [doacaoId, item, qntd]);
                 await conn.commit();
@@ -111,17 +112,18 @@ class DoacaoRepository {
         const conn = await db.getConnection();
         try {
             await conn.beginTransaction();
-            const { data, tipo, obs, doador, idoso, evento } = doacaoData;
+            const { data, tipo, obs, idoso, evento } = doacaoData;
             const { item, qntd, valor } = doacaoData.doacao;
+            const {doadorId, nome} = doacaoData.doador
             if (tipo.toUpperCase() === "D") {
                 await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento = ? WHERE id = ?`,
-                    [data, tipo, obs, doador, idoso, evento, id]);
+                    [data, tipo, obs, doadorId, idoso, evento, id]);
                 await conn.execute(`UPDATE doacaodinheiro SET valor = ? WHERE id = ?`, [valor, id]);
                 await conn.commit();
                 conn.release();
             } else {
                 await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento = ? WHERE id = ?`,
-                    [data, tipo, obs, doador, idoso, evento, id]);
+                    [data, tipo, obs, doadorId, idoso, evento, id]);
                 await conn.execute(`UPDATE doacaoproduto SET item = ?, qntd = ? WHERE id = ?`, [item, qntd, id]);
                 await conn.commit();
                 conn.release();

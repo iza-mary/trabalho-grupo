@@ -7,14 +7,14 @@ function DoacaoTipoBadge({tipo}) {
     }
 
     let variant;
-    const tipoLower = tipo.toLowerCase();
+    const tipoUpper = tipo.toUpperCase();
     
-    switch (tipoLower) {
-        case "alimento": variant = "warning"
+    switch (tipoUpper) {
+        case "A": variant = "warning"
             break;
-        case "dinheiro": variant = "success"
+        case "D": variant = "success"
         break
-        case "outros": variant = "secondary"
+        case "O": variant = "secondary"
         break;
         default:
             variant = "success"

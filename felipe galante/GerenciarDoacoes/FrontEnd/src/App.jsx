@@ -17,7 +17,6 @@ import FormEditarOutros from './Components/FormEditarOutrosComp/FormEditarOutros
 function App() {
   const [tipoDoacao, setTipoDoacao] = useState('money');
   const [mostraTabela, setMostraTabela] = useState(false);
-  const [doacoes, setDoacoes] = useState([]);
   const [doacaoToEdit, setDoacaoToEdit] = useState(null);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -27,11 +26,10 @@ function App() {
     destinatario : "todos",
     busca : ""
   })
-
-  const loadDoacoes = async () => {
-    const dados = await doacoesService.getAll();
-    setDoacoes(dados);
-  }
+  const [doacoes, setDoacoes] = useState([])
+  useEffect(() => {
+    console.log(doacoes)
+  }, [doacoes])
 
   const handleChangeEditando = (editando) => {
     if (editando === false) {
@@ -43,34 +41,47 @@ function App() {
     }
   }
 
-  const loadFiltredDoacoes = async (tipo, data, destinatario, busca) => {
-    const dados = await doacoesService.getByFiltred(tipo, data, destinatario, busca)
-    setDoacoes(dados);
-  }
-
-  useEffect(() => {
-    loadFiltredDoacoes(filtros)
-  }, [filtros])
-
-  useEffect(() => {
-    loadDoacoes()
-  }, [])
 
   const handleSaveDoacao = async (doacao) => {
-    const saved = await doacoesService.add(doacao)
-    setDoacoes([...doacoes, saved])
+    await doacoesService.add(doacao)
   }
 
   const handleEditDoacao = (doacao) => {
-    setDoacaoToEdit(doacao)
+    setDoacaoToEdit({
+      id: doacao.id,
+      data: doacao.data,
+      tipo: doacao.tipo,
+      evento: doacao.evento || "",
+      obs: doacao.obs || "",
+      doador: {
+        doadorId: doacao.doador.doadorId,
+        nome: doacao.doador.nome
+      },
+      doacao: {
+        valor: parseFloat(doacao.doacao.valor)
+      }
+    })
     setMostrarModal(true)
-  }
+  } 
 
   const editDoacao = async (doacao) => {
-    const edited = await doacoesService.update(doacao);
-    setDoacoes(prev =>
-      prev.map(d => d.id === edited.id ? edited : d)
-    );
+    await doacoesService.update(doacao);
+    setDoacoes(doacoes.map(d => d.id === doacao.id ? {
+      id: doacao.id,
+      data: doacao.data + "T03:00:00.000Z",
+      tipo: doacao.tipo,
+      doador: {
+        doadorId: doacao.doador.doadorId,
+        nome: doacao.doador.nome
+      },
+      evento: doacao.evento,
+      obs: doacao.obs,
+      doacao: {
+        qntd: doacao.doacao.qntd,
+        item: doacao.doacao.item,
+        valor: doacao.doacao.valor
+      }
+    } : d))
   }
 
   const handleDeleteDoacao = async (doacao) => {
@@ -114,16 +125,18 @@ function App() {
           <>
             <HeaderTabela selectTableDoa={setMostraTabela} selectTipo={setTipoDoacao} />
             <FiltroBusca onTipo={handleFiltrarTipo} onPeriodo={handleFiltrarPeriodo} onDestinatario={handleFiltrarDestin} onBusca={handleFiltrarBusca}/>
-            <TabelaDoacoes doacoes={doacoes} onDelete={handleDeleteDoacao} 
+            <TabelaDoacoes onDelete={handleDeleteDoacao} 
             onEdit={handleEditDoacao}
             doacao={doacaoToEdit}
             editando={handleChangeEditando}
+            setDoacoesApp={setDoacoes}
+            doacoesApp={doacoes}
             />
           </>
         )}
-        {mostrarModal && doacaoToEdit.tipo ==="dinheiro" && <FormEditarDin onEdit={editDoacao} show={handleChangeEditando} doacao={doacaoToEdit}></FormEditarDin>}
-        {mostrarModal && doacaoToEdit.tipo === "alimento" && <FormEditarAlim onEdit={editDoacao} show={handleChangeEditando} doacao={doacaoToEdit}></FormEditarAlim>}
-        {mostrarModal && doacaoToEdit.tipo ==="outros" && <FormEditarOutros onEdit={editDoacao} show={handleChangeEditando} doacao={doacaoToEdit}></FormEditarOutros>}
+        {mostrarModal && doacaoToEdit.tipo ==="D" && <FormEditarDin onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit}></FormEditarDin>}
+        {mostrarModal && doacaoToEdit.tipo === "A" && <FormEditarAlim onEdit={editDoacao} show={handleChangeEditando} doacao={doacaoToEdit}></FormEditarAlim>}
+        {mostrarModal && doacaoToEdit.tipo ==="O" && <FormEditarOutros onEdit={editDoacao} show={handleChangeEditando} doacao={doacaoToEdit}></FormEditarOutros>}
       </div>
     </BrowserRouter>
   )

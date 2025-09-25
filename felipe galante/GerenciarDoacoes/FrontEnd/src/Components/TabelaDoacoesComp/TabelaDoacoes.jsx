@@ -3,21 +3,43 @@ import { BiPencil, BiTrash } from 'react-icons/bi';
 import './tabeladoacoes.css';
 import DoacaoTipoBadge from './doacaoTipoBadge';
 import { useEffect, useState } from 'react';
+import doacoesService from '../../services/doacaoService';
 
-function TabelaDoacoes({ doacoes, onDelete, editando, onEdit, doacao: doacaoToEdit }) {
+function TabelaDoacoes({ onDelete, editando, onEdit, doacao: doacaoToEdit, setDoacoesApp, doacoesApp }) {
     const [doacao, setDoacao] = useState({
         id: "",
         data: "",
-        item: "",
         tipo: "",
-        valorquantidade: "",
-        destinatario: "",
-        doador: "",
-        telefone: "",
+        valor: "",
+        doador: {
+            doadorId: 0,
+            nome: ""
+        },
         evento: "",
-        obs: ""
+        obs: "",
+        doacao: {
+            valor: "",
+            qntd: "",
+            item: ""
+        }
     })
     const [showDelete, setShowDelete] = useState(false);
+    const [doacoes, setDoacoes] = useState([]);
+
+    const loadDoacoes = async () => {
+    const dados = await doacoesService.getAll();
+    setDoacoes(dados);
+    setDoacoesApp(dados);
+  }
+
+  useEffect(() => {
+    loadDoacoes();
+  }, []);
+  useEffect(() => {
+    if (doacoesApp.length > 0) {
+        setDoacoes(doacoesApp)
+    }
+  }, [doacoesApp])
 
     const [paginaAtual, setPaginaAtual] = useState(1);
     const itensPorPagina = 10
@@ -83,14 +105,19 @@ function TabelaDoacoes({ doacoes, onDelete, editando, onEdit, doacao: doacaoToEd
             setDoacao({
                 id: doacaoToEdit.id,
                 data: doacaoToEdit.data || "",
-                item: doacaoToEdit.item || "",
                 tipo: doacaoToEdit.tipo || "",
-                valorquantidade: doacaoToEdit.valorquantidade || "",
-                destinatario: doacaoToEdit.destinatario || "",
-                doador: doacaoToEdit.doador || "",
-                telefone: doacaoToEdit.telefone || "",
+                doador: {
+                    doadorId: doacaoToEdit.doador.doadorId || "",
+                    nome: doacaoToEdit.doador.nome || ""
+                },
                 evento: doacaoToEdit.evento || "",
-                obs: doacaoToEdit.obs || ""
+                obs: doacaoToEdit.obs || "",
+                doacao: doacaoToEdit.tipo.toUpperCase() === "D" ? {
+                        valor: doacaoToEdit.doacao.valor || "",
+                    } : {
+                        qntd: doacaoToEdit.doacao.qntd || "",
+                        item: doacaoToEdit.doacao.item || ""
+                    }
             })
         }
     }, [doacaoToEdit])
@@ -131,9 +158,8 @@ function TabelaDoacoes({ doacoes, onDelete, editando, onEdit, doacao: doacaoToEd
                                         <th>Item</th>
                                         <th>Tipo</th>
                                         <th>Valor/Quant</th>
-                                        <th>Destinatário</th>
+                                        <th>Idoso</th>
                                         <th>Doador</th>
-                                        <th>Telefone</th>
                                         <th>Evento</th>
                                         <th>Desc/Obs</th>
                                         <th>Ações</th>
@@ -142,33 +168,32 @@ function TabelaDoacoes({ doacoes, onDelete, editando, onEdit, doacao: doacaoToEd
 
                                 <tbody>
                                     {
-                                        doacoesPaginaAtual.map((doacao) => (
-                                            <tr key={doacao.id}>
+                                        doacoesPaginaAtual.map((d) => (
+                                            <tr key={d.id}>
                                                 <td>
-                                                    {formatDate(doacao.data)}
+                                                    {formatDate(d.data)}
                                                 </td>
-                                                <td>{doacao.item}</td>
+                                                <td>{d.doacao.item || '-'}</td>
                                                 <td>
-                                                    <DoacaoTipoBadge tipo={doacao.tipo}></DoacaoTipoBadge>
+                                                    <DoacaoTipoBadge tipo={d.tipo}></DoacaoTipoBadge>
                                                 </td>
-                                                {doacao.tipo.toLowerCase() === "dinheiro" ? (
-                                                    <td>{formatCurrency(doacao.valorQuantidade)}</td>
+                                                {d.tipo.toUpperCase() === "D" ? (
+                                                    <td>{formatCurrency(d.doacao.valor)}</td>
                                                 ) : (
-                                                    <td>{parseInt(doacao.valorQuantidade)}</td>
+                                                    <td>{parseInt(d.doacao.qntd)}</td>
                                                 )}
-                                                <td>{doacao.destinatario}</td>
-                                                <td>{doacao.doador}</td>
-                                                <td>{doacao.telefone}</td>
+                                                <td>{d.idoso ?? '-'}</td>
+                                                <td>{d.doador.nome}</td>
                                                 <td>
-                                                    {doacao.evento}
+                                                    {d.evento ?? '-'}
                                                 </td>
-                                                <td>{doacao.obs}</td>
+                                                <td>{d.obs ?? '-'}</td>
                                                 <td>
                                                     <div className='d-flex'>
-                                                        <Button className='action-btns' title='Editar' size='sm' onClick={() => { onEdit(doacao), editando(false) }} variant='outline-warning'>
+                                                        <Button className='action-btns' title='Editar' size='sm' onClick={() => { onEdit(d), editando(false) }} variant='outline-warning'>
                                                             <BiPencil></BiPencil>
                                                         </Button>
-                                                        <Button className='action-btns' title='Excluir' size='sm' onClick={() => { setShowDelete(true), handleDelete(doacao) }} variant='outline-danger'>
+                                                        <Button className='action-btns' title='Excluir' size='sm' onClick={() => { setShowDelete(true), handleDelete(d) }} variant='outline-danger'>
                                                             <BiTrash></BiTrash>
                                                         </Button>
                                                     </div>

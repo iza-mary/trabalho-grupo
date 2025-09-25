@@ -1,5 +1,6 @@
 const DoacaoDinheiro = require("./doacaoDinheiro");
 const DoacaoProduto = require("./doacaoProduto");
+const Doador = require("./doador");
 
 class Doacao {
     constructor(data) {
@@ -7,7 +8,7 @@ class Doacao {
         this.data = data.data;
         this.tipo = data.tipo;
         this.obs = data.obs || null;
-        this.doador = data.doador;
+        this.doador = new Doador(data)
         this.idoso = data.idoso || null;
         this.evento = data.evento || null;
         this.doacao = this.tipo === "D" ? new DoacaoDinheiro(data) : new DoacaoProduto(data);
@@ -23,7 +24,7 @@ class Doacao {
         if (!this.tipo || this.tipo.trim().length === 0) {
             errors.push("Tipo é obrigatório!")
         }
-        if (!this.doador || isNaN(this.doador) || this.doador <= 0) {
+        if (!this.doador.doadorId || isNaN(this.doador.doadorId) || this.doador.doadorId <= 0) {
             errors.push("Doador é obrigatório e deve ser um número válido!")
         }
 
@@ -43,7 +44,7 @@ class Doacao {
             tipo: this.tipo,
             obs: this.obs,
             idoso: this.idoso,
-            doador: this.doador,
+            doador: this.doador.toJSON(),
             evento: this.evento,
             doacao: this.doacao.toJSON()
         }

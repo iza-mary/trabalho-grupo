@@ -3,7 +3,7 @@ import { Form } from "react-bootstrap";
 import doacoesService from "../../services/doacaoService";
 
 
-function SelectDoador({ setDoador, setErrors, setValidated, errors } ) {
+function SelectDoador({ setDoador, setErrors, setValidated, errors }) {
 
     const [listadoadores, setListaDoadores] = useState([])
 
@@ -26,13 +26,10 @@ function SelectDoador({ setDoador, setErrors, setValidated, errors } ) {
             fetchDoadores(value);
         } else {
             document.getElementById("doadorSelect").classList.remove("show");
-            setDoador(prev => ({
-                ...prev,
-                doador: {
-                    doadorId: 0,
-                    nome: ""
-                }
-            }));
+            setDoador({
+                doadorId: 0,
+                nome: ""
+            })
             setListaDoadores([]);
             setErrors((prev) => ({ ...prev, doador: "Doador é obrigatório" }));
             setValidated(false);
@@ -48,7 +45,7 @@ function SelectDoador({ setDoador, setErrors, setValidated, errors } ) {
                 doadorId: doador.id,
                 nome: doador.nome
             }
-        );
+        )
     }
 
 

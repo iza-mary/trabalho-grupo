@@ -10,7 +10,10 @@ function FormDinheiro({ onSave }) {
         data: "",
         tipo: "D",
         obs: "",
-        doador: "",
+        doador: {
+            doadorId: 0,
+            nome: ""
+        },
         evento: "",
         valor: 0
     });
@@ -18,13 +21,13 @@ function FormDinheiro({ onSave }) {
     const [errors, setErrors] = useState({});
     const [showAlert, setShowAlert] = useState(false);
     const [selectedDoador, setSelectedDoador] = useState({
-        id: "",
+        doadorId: "",
         nome: ""
     });
-
+    
     useEffect(() => {
         setDoaDinheiro(prev => ({
-            ...prev, doador: selectedDoador ? selectedDoador.id : ""
+            ...prev, doador: {doadorId: selectedDoador.doadorId, nome: selectedDoador.nome}
         }))
     }, [selectedDoador])
     // -----
@@ -84,13 +87,22 @@ function FormDinheiro({ onSave }) {
     }
 
     const limpaForm = () => {
-        setDoaDinheiro(prev => ({
-            ...prev, data: "", valor: "",
-            idoso: "", doador: "",evento: "", obs: ""
-        }))
+        setDoaDinheiro({
+        data: "",
+        tipo: "D",
+        obs: "",
+        doador: {
+            doadorId: 0,
+            nome: ""
+        },
+        evento: "",
+        valor: 0
+        })
+        document.getElementsByName("doador")[0].value = ""
         setErrors({})
         setValidated(false)
     }
+
 
     const handleSubmit = (e) => {
         e.preventDefault();

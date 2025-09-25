@@ -1,8 +1,7 @@
 class DoacaoProduto {
     constructor(data) {
-        this.id = data.id || null;
-        this.item = data.item || null;
-        this.qntd = data.qntd || null;
+        this.item = data.item || data.doacao.item;
+        this.qntd = data.qntd || data.doacao.qntd;
     }
 
     validate() {
@@ -17,9 +16,8 @@ class DoacaoProduto {
 
     toJSON() {
         return {
-            produtoId: this.id,
             item: this.item,
-            quantidade: this.quantidade
+            qntd: this.qntd
         }
     }
 }
