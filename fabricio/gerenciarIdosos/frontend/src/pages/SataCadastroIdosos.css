@@ -10,7 +10,15 @@
   padding: 20px;
   width: calc(100% - 240px);
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: transparent;
+  position: relative;
+  z-index: 0; /* fica atrás dos filhos */
+}
+
+/* Garantir que o conteúdo fique acima do wrapper */
+.content-area > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Linha do cabeçalho */

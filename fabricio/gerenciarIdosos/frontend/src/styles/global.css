@@ -1,0 +1,20 @@
+:root {
+  --div-bg: #f8f9fa;
+  --div-text: #212529;
+}
+
+/* Texto padrão para todas as divs */
+div { color: var(--div-text); }
+
+/* Padroniza o fundo das divs sem impactar componentes críticos */
+div:not(.sidebar):not(.modal-content):not(.card):not(.dropdown-menu):not(.navbar):not(.offcanvas):not(.toast) {
+  background-color: var(--div-bg);
+}
+
+/* Não aplicar fundo claro dentro da sidebar */
+.sidebar div { background-color: transparent !important; }
+
+/* Mantém contraste adequado dentro de componentes Bootstrap comuns */
+.card, .modal-content, .dropdown-menu, .toast {
+  color: var(--div-text);
+}

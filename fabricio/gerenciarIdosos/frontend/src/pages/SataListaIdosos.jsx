@@ -20,7 +20,7 @@ import {
   Trash, 
   Eye,
   X,
-  Hospital,
+  Building,
   BoxArrowRight
 } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
@@ -71,6 +71,23 @@ const SataListaIdosos = () => {
     }
   };
 
+  const handleDarBaixa = async () => {
+    try {
+      // Atualizar status do idoso para "nao_internado"
+      await idosoService.updateStatus(idosoSelecionado.id, 'nao_internado');
+      
+      // Recarregar a lista de idosos
+      const dados = await idosoService.getAll();
+      setIdosos(dados);
+      
+      setMostrarModalConfirmacao(false);
+      alert('Baixa realizada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao dar baixa:', error);
+      alert('Erro ao dar baixa. Tente novamente.');
+    }
+  };
+
   const calcularIdade = (dataNascimento) => {
     if (!dataNascimento) return 0;
     const hoje = new Date();
@@ -84,10 +101,10 @@ const SataListaIdosos = () => {
   };
 
   const idososFiltrados = idosos.filter(idoso => {
-    if (filtroStatus === 'internado' && !idoso.dataEntrada) {
+    if (filtroStatus === 'internado' && idoso.status !== 'internado') {
       return false;
     }
-    if (filtroStatus === 'nao_internado' && idoso.dataEntrada) {
+    if (filtroStatus === 'nao_internado' && idoso.status === 'internado') {
       return false;
     }
     
@@ -96,8 +113,9 @@ const SataListaIdosos = () => {
       return (
         idoso.nome.toLowerCase().includes(termo) ||
         (idoso.cpf && idoso.cpf.toString().includes(termo)) ||
-        (idoso.quarto && idoso.quarto.toLowerCase().includes(termo))
-  )}
+        (idoso.cidade && idoso.cidade.toLowerCase().includes(termo))
+      );
+    }
     
     return true;
   });
@@ -155,8 +173,16 @@ const SataListaIdosos = () => {
                   variant="primary"
                   onClick={() => navigate('/cadastro')}
                   aria-label="Cadastrar novo idoso"
+                  className="me-2"
                 >
                   <PlusCircle className="me-1" /> Novo Idoso
+                </Button>
+                <Button 
+                  variant="success"
+                  onClick={() => navigate('/internacoes')}
+                  aria-label="Gerenciar internações"
+                >
+                  <Building className="me-1" /> Internações
                 </Button>
               </div>
             </Col>
@@ -206,7 +232,7 @@ const SataListaIdosos = () => {
                       <InputGroup>
                         <Form.Control 
                           type="text" 
-                          placeholder="Nome, CPF ou quarto..."
+                          placeholder="Nome, CPF ou cidade..."
                           value={termoBusca}
                           onChange={(e) => setTermoBusca(e.target.value)}
                           aria-label="Campo de busca"
@@ -214,6 +240,7 @@ const SataListaIdosos = () => {
                         <Button 
                           variant={termoBusca ? 'outline-danger' : 'outline-secondary'}
                           onClick={() => setTermoBusca('')}
+                          title={termoBusca ? 'Limpar busca' : 'Buscar'}
                           aria-label={termoBusca ? 'Limpar busca' : 'Buscar'}
                         >
                           {termoBusca ? <X /> : <Search />}
@@ -252,10 +279,10 @@ const SataListaIdosos = () => {
                               <td>{idoso.cidade}</td>
                               <td>
                                 <Badge 
-                                  bg={idoso.dataEntrada ? 'info' : 'secondary'}
+                                  bg={idoso.status === 'internado' ? 'info' : 'secondary'}
                                   className="status-badge"
                                 >
-                                  {idoso.dataEntrada ? 'Internado' : 'Não Internado'}
+                                  {idoso.status === 'internado' ? 'Internado' : 'Não Internado'}
                                 </Badge>
                               </td>
                               <td className="botoes-acao">
@@ -268,32 +295,34 @@ const SataListaIdosos = () => {
                                 >
                                   <Pencil />
                                 </Button>
-                                {!idoso.dataEntrada && (
+                                
+                                {/* Mostrar botão de internação OU botão de baixa */}
+                                {idoso.status !== 'internado' ? (
                                   <Button 
                                     variant="outline-info" 
                                     size="sm" 
-                                    title="Adicionar Internação"
-                                    aria-label={`Adicionar internação para ${idoso.nome}`}
-                                    onClick={() => navigate(`/editar/${idoso.id}/internacao`)}
+                                    title="Internação"
+                                    aria-label={`Internação para ${idoso.nome}`}
+                                    onClick={() => navigate('/internacoes?idosoId=' + idoso.id)}
                                   >
-                                    <Hospital />
+                                    <Building />
+                                  </Button>
+                                ) : (
+                                  <Button 
+                                    variant="outline-warning" 
+                                    size="sm" 
+                                    title="Dar Baixa"
+                                    aria-label={`Dar baixa para ${idoso.nome}`}
+                                    onClick={() => {
+                                      setIdosoSelecionado(idoso);
+                                      setMostrarModalConfirmacao(true);
+                                    }}
+                                    className="me-1"
+                                  >
+                                    <BoxArrowRight />
                                   </Button>
                                 )}
-                                {idoso.dataEntrada && (
-                                <Button 
-                                  variant="outline-warning" 
-                                  size="sm" 
-                                  title="Dar Baixa"
-                                  aria-label={`Dar baixa para ${idoso.nome}`}
-                                  onClick={() => {
-                                    setIdosoSelecionado(idoso);
-                                    setMostrarModalConfirmacao(true);
-                                  }}
-                                  className="me-1"
-                                >
-                                  <BoxArrowRight />
-                                </Button>
-                              )}
+                                
                                 <Button 
                                   variant="outline-danger" 
                                   size="sm" 
@@ -354,13 +383,12 @@ const SataListaIdosos = () => {
               <Button variant="secondary" onClick={() => setMostrarModalConfirmacao(false)}>
                 Cancelar
               </Button>
-              <Button variant="warning" onClick={() => {
-                setMostrarModalConfirmacao(false);
-              }}>
+              <Button variant="warning" onClick={handleDarBaixa}>
                 Confirmar Baixa
               </Button>
             </Modal.Footer>
           </Modal>
+
         </Container>
       </div>
     </Lateral>

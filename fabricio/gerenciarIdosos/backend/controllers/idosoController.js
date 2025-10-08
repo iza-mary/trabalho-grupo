@@ -182,6 +182,52 @@ class IdosoController {
         }
     }
 
+    // Adicione este método ao IdosoController
+async updateStatus(req, res) {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        
+        // Validação do status
+        if (!['internado', 'nao_internado'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Status inválido. Use "internado" ou "nao_internado"'
+            });
+        }
+        
+        // Atualizar apenas o status
+        const [result] = await db.execute(
+            'UPDATE idosos SET status = ?, data_atualizacao = NOW() WHERE id = ?',
+            [status, id]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Idoso não encontrado'
+            });
+        }
+        
+        // Buscar o idoso atualizado
+        const [rows] = await db.execute('SELECT * FROM idosos WHERE id = ?', [id]);
+        const idosoAtualizado = new Idoso(rows[0]);
+        
+        res.json({
+            success: true,
+            data: idosoAtualizado.toJSON(),
+            message: 'Status atualizado com sucesso'
+        });
+    } catch (error) {
+        console.error("Erro no updateStatus:", error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao atualizar status',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+}
+
     // Remove um idoso
     async delete(req, res) {
         try {

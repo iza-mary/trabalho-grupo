@@ -22,12 +22,9 @@ class Idoso {
     this.complemento = data.complemento || null;
     this.cidade = data.cidade || 'Cidade não informada';
     this.estadoId = data.estadoId || 1;
-    this.estado = data.estado || 'SP'; // Adicionado para mapeamento
+    this.estado = data.estado || 'SP';
     this.cep = data.cep || '00000-000';
     this.status = ['internado', 'nao_internado'].includes(data.status) ? data.status : 'nao_internado';
-    this.dataEntrada = this.parseDate(data.dataEntrada);
-    this.quarto = data.quarto || null;
-    this.cama = data.cama || null;
     this.observacoes = data.observacoes || null;
     this.dataCadastro = this.parseDate(data.dataCadastro);
     this.dataAtualizacao = this.parseDate(data.dataAtualizacao);
@@ -154,10 +151,9 @@ class Idoso {
         estado: this.estado,
         cep: this.cep,
         status: this.status,
-        dataEntrada: this.dataEntrada ? this.dataEntrada.toISOString().split('T')[0] : null,
-        quarto: this.quarto,
-        cama: this.cama,
-        observacoes: this.observacoes
+        observacoes: this.observacoes,
+        dataCadastro: this.dataCadastro ? this.dataCadastro.toISOString().split('T')[0] : null,
+        dataAtualizacao: this.dataAtualizacao ? this.dataAtualizacao.toISOString().split('T')[0] : null
     };
   }
 }

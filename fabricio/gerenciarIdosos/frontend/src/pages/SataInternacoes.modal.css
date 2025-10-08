@@ -1,0 +1,74 @@
+/* Ajuste de tamanho semelhante ao cadastro de idosos */
+.modal-internacao-grande {
+  /* Mais compacto e centralizado, semelhante à largura da tabela */
+  max-width: 960px !important;
+  width: 90% !important;
+  margin: 1.25rem auto !important;
+}
+
+/* Estilização do conteúdo para ficar mais parecido com os cards do cadastro */
+.modal-internacao-conteudo {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.modal-internacao-conteudo .modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-internacao-conteudo .modal-body {
+  padding: 1.25rem; /* espaço interno similar aos formulários */
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .modal-internacao-grande {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 1rem 10px !important;
+  }
+}
+
+.modal-internacao-conteudo .form-label {
+  font-weight: 600; /* rótulos mais destacados, como no cadastro */
+}
+
+.modal-internacao-conteudo .form-control,
+.modal-internacao-conteudo .form-select {
+  border-radius: 6px;
+}
+
+/* Elevar z-index do modal e do backdrop acima da sidebar */
+.modal-internacao {
+  z-index: 2000 !important;
+}
+
+.modal-internacao-backdrop {
+  z-index: 1990 !important;
+}
+.modal-internacao {
+  /* Confinar o modal à área de conteúdo, sem cobrir a sidebar */
+  position: fixed;
+  left: 240px !important;
+  width: calc(100% - 240px) !important;
+  z-index: 2000 !important;
+}
+
+.modal-internacao-backdrop {
+  /* Backdrop apenas na área de conteúdo */
+  position: fixed;
+  left: 240px !important;
+  width: calc(100% - 240px) !important;
+  z-index: 1990 !important;
+}
+
+@media (max-width: 768px) {
+  .modal-internacao,
+  .modal-internacao-backdrop {
+    left: 0 !important;
+    width: 100% !important;
+  }
+}

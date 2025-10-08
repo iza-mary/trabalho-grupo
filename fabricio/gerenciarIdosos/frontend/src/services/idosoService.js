@@ -108,12 +108,37 @@ const remove = async (id) => {
     }
 };
 
+const updateStatus = async (id, status) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/${id}/status`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({
+                status: status
+            }),
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erro ao atualizar status');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error("Erro ao atualizar status:", error);
+        throw error;
+    }
+};
+
 const idosoService = {
     getAll,
     getById,
     update,
     add,
-    remove
+    remove,
+    updateStatus
 };
 
 export default idosoService;

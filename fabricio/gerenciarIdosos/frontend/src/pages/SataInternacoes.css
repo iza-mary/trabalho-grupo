@@ -1,0 +1,171 @@
+/* Área de conteúdo principal */
+.content-area {
+  margin-left: 240px;
+  padding: 20px;
+  width: calc(100% - 240px);
+  min-height: 100vh;
+  background-color: transparent;
+  position: relative;
+  z-index: 0; /* fica atrás dos filhos */
+}
+
+/* Garantir que o conteúdo fique acima do wrapper */
+.content-area > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Linha do cabeçalho */
+.linha-cabecalho {
+  padding: 10px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Cards de internação */
+.internacao-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.internacao-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.internacao-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
+  font-weight: 500;
+}
+
+.internacao-card .card-body {
+  padding: 20px;
+}
+
+.internacao-card .card-footer {
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  padding: 15px 20px;
+}
+
+/* Informações da internação */
+.internacao-info .info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.internacao-info .info-item:last-child {
+  margin-bottom: 0;
+}
+
+.internacao-info .info-item svg {
+  flex-shrink: 0;
+}
+
+/* Badge de status */
+.status-badge {
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
+/* Card de filtros */
+.card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
+  font-weight: 500;
+}
+
+/* Botões */
+.btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Controles de formulário */
+.form-control, .form-select {
+  border-radius: 4px;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Modal customizations */
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #eee;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .content-area {
+    margin-left: 0;
+    width: 100%;
+    padding: 15px;
+  }
+
+  .linha-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .linha-cabecalho > div {
+    margin-top: 10px;
+  }
+
+  .internacao-card {
+    margin-bottom: 15px;
+  }
+
+  .internacao-info .info-item {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .content-area {
+    padding: 10px;
+  }
+
+  .internacao-card .card-header,
+  .internacao-card .card-body,
+  .internacao-card .card-footer {
+    padding: 15px;
+  }
+
+  .linha-cabecalho h2 {
+    font-size: 1.5rem;
+  }
+
+  .linha-cabecalho .btn {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}

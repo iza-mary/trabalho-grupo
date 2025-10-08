@@ -14,7 +14,8 @@ import {
 import { 
   PersonFill, 
   HouseFill,
-  Hospital
+  Hospital,
+  FileEarmarkText
 } from 'react-bootstrap-icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import './SataCadastroIdosos.css';
@@ -26,6 +27,7 @@ import {
   formatarCEP
 } from './validacoes';
 import idosoService from '../services/idosoService';
+import internacaoService from '../services/internacaoService';
 import Lateral from '../components/Lateral';
 
 const estadosBrasileiros = [
@@ -71,6 +73,8 @@ const SataCadastroIdosos = () => {
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [mostrarModalConfirmacao, setMostrarModalConfirmacao] = useState(false);
+  const [quartosDisponiveis, setQuartosDisponiveis] = useState([]);
+  const [camasDisponiveis, setCamasDisponiveis] = useState([]);
 
   useEffect(() => {
     if (estaEditando) {
@@ -102,6 +106,22 @@ const SataCadastroIdosos = () => {
     }
   }, [estaEditando, id]);
 
+  // Carregar quartos disponíveis quando estiver editando internação
+  useEffect(() => {
+    const carregarQuartos = async () => {
+      try {
+        const quartos = await internacaoService.buscarQuartosDisponiveis();
+        setQuartosDisponiveis(quartos);
+      } catch (error) {
+        console.error('Erro ao carregar quartos disponíveis:', error);
+        setQuartosDisponiveis([]);
+      }
+    };
+    if (editandoInternacao) {
+      carregarQuartos();
+    }
+  }, [editandoInternacao]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -118,6 +138,32 @@ const SataCadastroIdosos = () => {
       ...formData,
       [name]: valorFormatado
     });
+  };
+
+  const carregarCamasPorQuarto = async (quartoId) => {
+    try {
+      if (!quartoId) {
+        setCamasDisponiveis([]);
+        return;
+      }
+      const camas = await internacaoService.buscarCamasDisponiveis(quartoId);
+      setCamasDisponiveis(camas);
+    } catch (error) {
+      console.error('Erro ao carregar camas disponíveis:', error);
+      setCamasDisponiveis([]);
+    }
+  };
+
+  const handleChangeInternacao = async (e) => {
+    const { name, value } = e.target;
+    if (name === 'quarto') {
+      setFormData(prev => ({ ...prev, quarto: value, cama: '' }));
+      await carregarCamasPorQuarto(value);
+    } else if (name === 'cama') {
+      setFormData(prev => ({ ...prev, cama: value }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const salvarDadosBasicos = async () => {
@@ -197,18 +243,28 @@ const SataCadastroIdosos = () => {
       <div className="content-area">
         <Container fluid className="container-principal">
           <Row className="mb-4 linha-cabecalho">
-            <Col className="d-flex justify-content-between align-items-center">
-              <h2>
-                {editandoInternacao ? 'Editar Internação' : 
-                 estaEditando ? 'Editar Idoso' : 'Cadastro de Idoso'}
-              </h2>
-              <Breadcrumb>
-                <Breadcrumb.Item href="/">Idosos</Breadcrumb.Item>
-                <Breadcrumb.Item active>
-                  {editandoInternacao ? 'Editar Internação' : 
-                   estaEditando ? 'Edição' : 'Novo Cadastro'}
-                </Breadcrumb.Item>
-              </Breadcrumb>
+            <Col>
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <h2 className="mb-0 d-flex align-items-center">
+                    {!editandoInternacao && !estaEditando && (
+                      <FileEarmarkText className="me-2" />
+                    )}
+                    {editandoInternacao ? 'Editar Internação' : 
+                     estaEditando ? 'Editar Idoso' : 'Cadastro de Idoso'}
+                  </h2>
+                </div>
+                <div>
+                  <Button 
+                    variant="secondary"
+                    onClick={() => navigate('/idosos')}
+                    className="d-flex align-items-center"
+                    title="Ir para lista de idosos"
+                  >
+                    Lista de Idosos
+                  </Button>
+                </div>
+              </div>
             </Col>
           </Row>
 
@@ -466,28 +522,46 @@ const SataCadastroIdosos = () => {
                     </Col>
                     <Col md={4} className="mb-3">
                       <Form.Label>Quarto</Form.Label>
-                      <Form.Control
-                        type="text"
+                      <Form.Select
                         name="quarto"
                         value={formData.quarto}
-                        onChange={handleChange}
+                        onChange={handleChangeInternacao}
                         isInvalid={!!errosInternacao.quarto}
                         required
-                      />
+                      >
+                        <option value="">Selecione um quarto</option>
+                        {quartosDisponiveis.map(quarto => (
+                          <option key={quarto.id} value={quarto.id}>
+                            Quarto {quarto.numero} (Capacidade: {quarto.capacidade})
+                          </option>
+                        ))}
+                      </Form.Select>
                       <Form.Control.Feedback type="invalid">
                         {errosInternacao.quarto}
                       </Form.Control.Feedback>
                     </Col>
                     <Col md={4} className="mb-3">
                       <Form.Label>Cama</Form.Label>
-                      <Form.Control
-                        type="text"
+                      <Form.Select
                         name="cama"
                         value={formData.cama}
-                        onChange={handleChange}
+                        onChange={handleChangeInternacao}
                         isInvalid={!!errosInternacao.cama}
                         required
-                      />
+                        disabled={!formData.quarto}
+                      >
+                        <option value="">
+                          {!formData.quarto ? 'Selecione um quarto primeiro' : 'Selecione uma cama'}
+                        </option>
+                        {camasDisponiveis.map(cama => (
+                          <option key={cama} value={cama}>Cama {cama}</option>
+                        ))}
+                      </Form.Select>
+                      {formData.quarto && camasDisponiveis.length === 0 && (
+                        <Form.Text className="text-warning">
+                          Nenhuma cama disponível neste quarto
+                        </Form.Text>
+                      )}
                       <Form.Control.Feedback type="invalid">
                         {errosInternacao.cama}
                       </Form.Control.Feedback>
