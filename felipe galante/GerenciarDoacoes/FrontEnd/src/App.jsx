@@ -87,7 +87,6 @@ function App() {
 
   const handleDeleteDoacao = async (doacao) => {
     await doacoesService.remove(parseInt(doacao.id));
-    await loadDoacoes();
     alert("Doação excluída com sucesso!")
   }
 
@@ -137,7 +136,7 @@ function App() {
         )}
         {mostrarModal && doacaoToEdit.tipo ==="D" && <FormEditarDin onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit}></FormEditarDin>}
         {mostrarModal && doacaoToEdit.tipo === "A" && <FormEditarAlim onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit}></FormEditarAlim>}
-        {mostrarModal && doacaoToEdit.tipo ==="O" && <FormEditarOutros onEdit={editDoacao} show={handleChangeEditando} doacao={doacaoToEdit}></FormEditarOutros>}
+        {mostrarModal && doacaoToEdit.tipo ==="O" && <FormEditarOutros onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit}></FormEditarOutros>}
       </div>
     </BrowserRouter>
   )

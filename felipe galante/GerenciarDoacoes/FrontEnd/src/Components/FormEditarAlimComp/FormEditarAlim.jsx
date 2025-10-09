@@ -2,51 +2,52 @@ import { Button, Card, Col, Form, Row, Alert, Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import SelectDoador from "./SelectDoador";
+import './EditarAlim.css'
 
-function FormEditarAlim ( {show, doacaoEdit, onEdit} ) {
+function FormEditarAlim({ show, doacaoEdit, onEdit }) {
 
-    const [doaAlimentos , setDoaAlimentos] = useState({
-      id: 0,
-        data: "",
-        tipo: "A",
-        doador: {
-            doadorId: 0,
-            nome: "" || ""
-        },
-        evento: "" || "",
-        obs: "" || "",
-        doacao: {
-            qntd: 0,
-            item: "" || ""
-        }
+  const [doaAlimentos, setDoaAlimentos] = useState({
+    id: 0,
+    data: "",
+    tipo: "A",
+    doador: {
+      doadorId: 0,
+      nome: "" || ""
+    },
+    evento: "" || "",
+    obs: "" || "",
+    doacao: {
+      qntd: 0,
+      item: "" || ""
+    }
+  })
+
+  const [validated, setValidated] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showAlert, setShowAlert] = useState(false);
+  const [showModal, setShowModal] = useState(true);
+
+  useEffect(() => {
+    setDoaAlimentos({
+      id: parseInt(doacaoEdit.id),
+      data: doacaoEdit.data.substring(0, 10),
+      tipo: doacaoEdit.tipo,
+      doador: {
+        doadorId: doacaoEdit.doador.doadorId || 0,
+        nome: doacaoEdit.doador.nome || ""
+      },
+      evento: doacaoEdit.evento || "",
+      obs: doacaoEdit.obs || "",
+      doacao: doacaoEdit.tipo.toUpperCase() === "D" ? {
+        valor: parseFloat(doacaoEdit.doacao.valor) || 0,
+      } : {
+        qntd: parseInt(doacaoEdit.doacao.qntd) || 0,
+        item: doacaoEdit.doacao.item || "-",
+      }
     })
+  }, [doacaoEdit]);
 
-    const [validated, setValidated] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [showAlert, setShowAlert] = useState(false);
-    const [showModal, setShowModal] = useState(true);
-
-    useEffect(() => {
-        setDoaAlimentos({
-            id: parseInt(doacaoEdit.id),
-            data: doacaoEdit.data.substring(0,10),
-            tipo: doacaoEdit.tipo,
-            doador: {
-                doadorId: doacaoEdit.doador.doadorId || 0,
-                nome: doacaoEdit.doador.nome || ""
-            },
-            evento: doacaoEdit.evento || "",
-            obs: doacaoEdit.obs || "",
-            doacao: doacaoEdit.tipo.toUpperCase() === "D" ? {
-                valor: parseFloat(doacaoEdit.doacao.valor) || 0,
-            } : {
-                qntd: parseInt(doacaoEdit.doacao.qntd) || 0,
-                item: doacaoEdit.doacao.item || "-",
-            }
-        })
-    }, [doacaoEdit]);
-
-    const handleChangleData = (e) => {
+  const handleChangleData = (e) => {
     const value = e.target.value;
     setDoaAlimentos(prev => ({ ...prev, data: value }))
     if (value && new Date(value) < new Date()) {
@@ -64,10 +65,12 @@ function FormEditarAlim ( {show, doacaoEdit, onEdit} ) {
 
   const handleChangeItem = (e) => {
     const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
-    setDoaAlimentos(prev => ({ ...prev, doacao: {
-      ...prev.doacao,
-      item: value
-    }}))
+    setDoaAlimentos(prev => ({
+      ...prev, doacao: {
+        ...prev.doacao,
+        item: value
+      }
+    }))
     if (value && isNaN(value)) {
       setErrors((prev) => ({ ...prev, item: null }));
     } else {
@@ -83,10 +86,12 @@ function FormEditarAlim ( {show, doacaoEdit, onEdit} ) {
 
   const handleChangeQuantidade = (e) => {
     const value = e.target.value.replace(/[a-zA-Z]/g, '');
-    setDoaAlimentos(prev => ({ ...prev, doacao: {
-      ...prev.doacao,
-      qntd: parseInt(value)
-    }}))
+    setDoaAlimentos(prev => ({
+      ...prev, doacao: {
+        ...prev.doacao,
+        qntd: parseInt(value)
+      }
+    }))
     if (value && !isNaN(value) && parseInt(value) >= 0) {
       setErrors((prev) => ({ ...prev, quantidade: null }));
     } else {
@@ -135,15 +140,15 @@ function FormEditarAlim ( {show, doacaoEdit, onEdit} ) {
     }
 
     if (!formatado) {
-            setErrors(prev => ({ ...prev, telefone: null }));
-        } 
-        else if (formatado.length !== 15 && formatado.length !== 14) {
-            setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
-            setValidated(false);
-        }
-        else {
-            setErrors(prev => ({ ...prev, telefone: null }));
-        }
+      setErrors(prev => ({ ...prev, telefone: null }));
+    }
+    else if (formatado.length !== 15 && formatado.length !== 14) {
+      setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
+      setValidated(false);
+    }
+    else {
+      setErrors(prev => ({ ...prev, telefone: null }));
+    }
 
     setDoaAlimentos(prev => ({
       ...prev,
@@ -205,116 +210,104 @@ function FormEditarAlim ( {show, doacaoEdit, onEdit} ) {
     };
   }
 
-    return (
-        <Modal
-        show={showModal}
-            onHide={() => { setShowModal(false), show(true) }}
-            dialogClassName="modal-90w"
-            aria-labelledby="example-custom-modal-styling-title">
-            <Modal.Header closeButton>
-                <Modal.Title id="example-custom-modal-styling-title">
-                    Editar Doação
-                </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
+  return (
+    <Modal
+      show={showModal}
+      onHide={() => { setShowModal(false), show(true) }}
+      dialogClassName="modal-90w"
+      aria-labelledby="example-custom-modal-styling-title">
+      <Modal.Header closeButton>
+        <Modal.Title id="example-custom-modal-styling-title">
+          Editar Doação
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
         <Form noValidate validated={validated} onSubmit={handleSubmit}>
-      <Alert variant="success" show={showAlert}> <b> <FaCheckCircle></FaCheckCircle> </b> Doação atualizada com sucesso! </Alert>
-      <Row>
-        <Col md={6}>
-          <Card className="mb-4">
-            <Card.Body>
-              <Card.Title className="mb-4"><h5>Informações da Doação</h5></Card.Title>
-              <Form.Group className="mb-3" >
-                <Form.Label>Data da Doação</Form.Label>
-                <Form.Control type="date" name="data" onChange={handleChangleData}
-                  value={doaAlimentos.data || ""}
-                  isInvalid={!!errors.data}
-                  required />
-                <Form.Control.Feedback type="invalid">
-                  {errors.data}
-                </Form.Control.Feedback>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Item Doado</Form.Label>
-                <Form.Control name="item" onChange={handleChangeItem}
-                  value={doaAlimentos.doacao.item || ""}
-                  isInvalid={!!errors.item}
-                  type="text" required />
-                <Form.Control.Feedback type="invalid">
-                  {errors.item}
-                </Form.Control.Feedback>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Quantidade</Form.Label>
-                <Form.Control name="quantidade" onChange={handleChangeQuantidade}
-                  value={doaAlimentos.doacao.qntd || ""}
-                  isInvalid={!!errors.quantidade}
-                  type="number" required />
-                <Form.Control.Feedback type="invalid">
-                  {errors.quantidade}
-                </Form.Control.Feedback>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <SelectDoador setDoador={setDoaAlimentos} setErrors={setErrors} setValidated={setValidated} errors={errors} selectedDoadorEdit={doaAlimentos.doador}/>
-              </Form.Group>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={6}>
-          <Card className="mb-4">
-            <Card.Body>
-              <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
-              <Form.Group className="mb-3">
-                <Form.Label>Destinatário</Form.Label>
-                <Form.Control name="destinatario" type="text"
-                />
-              </Form.Group>
-              <Form.Group controlId="telefone" className="mb-3">
-                <Form.Label>Telefone para Contato</Form.Label>
-                <Form.Control name="telefone"
-                  onChange={handleChangeTelefone}
-                  value={doaAlimentos.telefone || ""}
-                  maxLength={15}
-                  isInvalid={!!errors.telefone}
-                  type="tel" />
-                  <Form.Control.Feedback type="invalid">
-                  {errors.telefone}
-                </Form.Control.Feedback>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Evento Relacionado</Form.Label>
-                <Form.Select
-                  onChange={handleChangeEvento}
-                  value={doaAlimentos.evento || ""}
-                  name="evento">
-                  <option value="">Nenhum evento relacionado</option>
-                  <option >Bazar Beneficente - Abril 2023</option>
-                  <option >Campanha do Agasalho 2023</option>
-                </Form.Select>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Observações/Descrição</Form.Label>
-                <Form.Control
-                  onChange={handleChangeDescricao}
-                  value={doaAlimentos.obs || ""}
-                  isInvalid={!!errors.obs}
-                  name="obs" as="textarea" rows={3} />
-                <Form.Control.Feedback type="invalid">
-                  {errors.obs}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      <div className="d-flex justify-content-end gap-2">
-        <Button variant="secondary" type="button" onClick={() => {setShowModal(false), show(true)}}>Cancelar</Button>
-        <Button variant="warning" style={{color: "white"}} type="submit">Atualizar Doação</Button>
-      </div>
-    </Form>
-            </Modal.Body>
-        </Modal>
-    );
+          <Alert variant="success" show={showAlert}> <b> <FaCheckCircle></FaCheckCircle> </b> Doação atualizada com sucesso! </Alert>
+          <Row>
+            <Col md={6}>
+              <Card className="mb-4">
+                <Card.Body>
+                  <Card.Title className="mb-4"><h5>Informações da Doação</h5></Card.Title>
+                  <Form.Group className="mb-3" >
+                    <Form.Label>Data da Doação</Form.Label>
+                    <Form.Control type="date" name="data" onChange={handleChangleData}
+                      value={doaAlimentos.data || ""}
+                      isInvalid={!!errors.data}
+                      required />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.data}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Item Doado</Form.Label>
+                    <Form.Control name="item" onChange={handleChangeItem}
+                      value={doaAlimentos.doacao.item || ""}
+                      isInvalid={!!errors.item}
+                      type="text" required />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.item}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Quantidade</Form.Label>
+                    <Form.Control name="quantidade" onChange={handleChangeQuantidade}
+                      value={doaAlimentos.doacao.qntd || ""}
+                      isInvalid={!!errors.quantidade}
+                      type="number" required />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.quantidade}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <SelectDoador setDoador={setDoaAlimentos} setErrors={setErrors} setValidated={setValidated} errors={errors} selectedDoadorEdit={doaAlimentos.doador} />
+                  </Form.Group>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card className="mb-4">
+                <Card.Body>
+                  <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Destinatário</Form.Label>
+                    <Form.Control name="destinatario" type="text"
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Evento Relacionado</Form.Label>
+                    <Form.Select
+                      onChange={handleChangeEvento}
+                      value={doaAlimentos.evento || ""}
+                      name="evento">
+                      <option value="">Nenhum evento relacionado</option>
+                      <option >Bazar Beneficente - Abril 2023</option>
+                      <option >Campanha do Agasalho 2023</option>
+                    </Form.Select>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Observações/Descrição</Form.Label>
+                    <Form.Control
+                      onChange={handleChangeDescricao}
+                      value={doaAlimentos.obs || ""}
+                      isInvalid={!!errors.obs}
+                      name="obs" as="textarea" rows={3} />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.obs}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          <div className="d-flex justify-content-end gap-2">
+            <Button variant="secondary" type="button" onClick={() => { setShowModal(false), show(true) }}>Cancelar</Button>
+            <Button variant="warning" style={{ color: "white" }} type="submit">Atualizar Doação</Button>
+          </div>
+        </Form>
+      </Modal.Body>
+    </Modal>
+  );
 }
 
 export default FormEditarAlim;
