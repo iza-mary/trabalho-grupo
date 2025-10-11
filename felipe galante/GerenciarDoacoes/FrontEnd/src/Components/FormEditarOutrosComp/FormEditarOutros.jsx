@@ -3,9 +3,10 @@ import SelectEvento from "../Shared/SelectEvento";
 import SelectIdoso from "../Shared/SelectIdoso";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import SelectDoador from './SelectDoador.jsx'
+import './EditarOutros.css'
 
-
-function FormEditarOutros({ show, onEdit, doacao }) {
+function FormEditarOutros({ show, onEdit, doacaoEdit }) {
     const [doaOutros, setDoaOutros] = useState({
         id: 0,
         data: "",
@@ -37,7 +38,7 @@ function FormEditarOutros({ show, onEdit, doacao }) {
             evento: doacao.evento || "",
             obs: doacao.obs || ""
         })
-    }, [doacao]);
+    }, [doacaoEdit]);
 
     const handleChangleData = (e) => {
         const value = e.target.value;
@@ -57,7 +58,10 @@ function FormEditarOutros({ show, onEdit, doacao }) {
 
     const handleChangeItem = (e) => {
         const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
-        setDoaOutros(prev => ({ ...prev, item: value }))
+        setDoaOutros(prev => ({ ...prev, doacao: {
+            ...prev.doacao,
+            item: value
+        } }))
         if (value && isNaN(value)) {
             setErrors((prev) => ({ ...prev, item: null }));
         } else {
@@ -159,34 +163,18 @@ function FormEditarOutros({ show, onEdit, doacao }) {
             newErrors.data = "A data não pode ser maior do que hoje";
             setValidated(false);
         }
-        if (doaOutros.item === "") {
+        if (doaOutros.doacao.item === "") {
             newErrors.item = "O item doado deve ser preenchido";
             setValidated(false);
-        } else if (!isNaN(doaOutros.item)) {
+        } else if (!isNaN(doaOutros.doacao.item)) {
             newErrors.item = "O item doado deve ser um texto válido";
             setValidated(false);
         }
-        if (doaOutros.valorquantidade === "") {
+        if (doaOutros.doacao.qntd === "") {
             newErrors.quantidade = "A quantidade deve ser preenchida";
             setValidated(false);
-        } else if (isNaN(doaOutros.valorquantidade) || doaOutros.valorquantidade <= 0) {
+        } else if (isNaN(doaOutros.doacao.qntd) || doaOutros.doacao.qntd <= 0) {
             newErrors.quantidade = "Quantidade inválida";
-            setValidated(false);
-        }
-        if (doaOutros.obs === "") {
-            newErrors.obs = "A descrição deve ser preenchida";
-            setValidated(false);
-        } else if (!isNaN(doaOutros.obs)) {
-            newErrors.obs = "A descrição deve ser um texto válido";
-            setValidated(false);
-        }
-        if (doaOutros.destinatario === "") {
-            newErrors.destinatario = "O destinatário deve ser preenchido";
-            setValidated(false);
-        }
-
-        if (doaOutros.telefone.length !== 15 && doaOutros.telefone.length !== 14 && doaOutros.telefone !== "") {
-            newErrors.telefone = "Telefone inválido"
             setValidated(false);
         }
 
@@ -237,7 +225,7 @@ function FormEditarOutros({ show, onEdit, doacao }) {
                                     <Form.Group className="mb-3">
                                         <Form.Label>Item Doado</Form.Label>
                                         <Form.Control name="item" onChange={handleChangeItem}
-                                            value={doaOutros.item || ""}
+                                            value={doaOutros.doacao.item || ""}
                                             isInvalid={!!errors.item}
                                             type="text" required />
                                         <Form.Control.Feedback type="invalid">
@@ -247,7 +235,7 @@ function FormEditarOutros({ show, onEdit, doacao }) {
                                     <Form.Group className="mb-3">
                                         <Form.Label>Quantidade</Form.Label>
                                         <Form.Control name="quantidade" onChange={handleChangeQuantidade}
-                                            value={doaOutros.valorquantidade || ""}
+                                            value={doaOutros.doacao.qntd || ""}
                                             isInvalid={!!errors.quantidade}
                                             type="number" required />
                                         <Form.Control.Feedback type="invalid">
@@ -280,9 +268,9 @@ function FormEditarOutros({ show, onEdit, doacao }) {
                         <Col md={6}>
                             <Card className="mb-4">
                                 <Card.Body>
-                                    <Card.Title className="mb-4"><h5>Informações do Doador</h5></Card.Title>
+                                    <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Nome do Doador (Opcional)</Form.Label>
+                                        <Form.Label>Destinatário</Form.Label>
                                         <Form.Control
                                             onChange={handleChangeDoador}
                                             value={doaOutros.doador || ""}

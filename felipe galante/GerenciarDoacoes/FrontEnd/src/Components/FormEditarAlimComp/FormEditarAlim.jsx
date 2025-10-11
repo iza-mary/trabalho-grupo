@@ -3,7 +3,10 @@ import SelectEvento from "../Shared/SelectEvento";
 import SelectIdoso from "../Shared/SelectIdoso";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import SelectDoador from "./SelectDoador";
+import './EditarAlim.css'
 
+function FormEditarAlim({ show, doacaoEdit, onEdit }) {
 
 function FormEditarAlim ( {show, doacao, onEdit} ) {
 
@@ -20,10 +23,10 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
         obs: ""
     })
 
-    const [validated, setValidated] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [showAlert, setShowAlert] = useState(false);
-    const [showModal, setShowModal] = useState(true);
+  const [validated, setValidated] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showAlert, setShowAlert] = useState(false);
+  const [showModal, setShowModal] = useState(true);
 
     useEffect(() => {
         setDoaAlimentos({
@@ -40,7 +43,7 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
         })
     }, [doacao]);
 
-    const handleChangleData = (e) => {
+  const handleChangleData = (e) => {
     const value = e.target.value;
     setDoaAlimentos(prev => ({ ...prev, data: value }))
     if (value && new Date(value) < new Date()) {
@@ -58,7 +61,12 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
 
   const handleChangeItem = (e) => {
     const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
-    setDoaAlimentos(prev => ({ ...prev, item: value }))
+    setDoaAlimentos(prev => ({
+      ...prev, doacao: {
+        ...prev.doacao,
+        item: value
+      }
+    }))
     if (value && isNaN(value)) {
       setErrors((prev) => ({ ...prev, item: null }));
     } else {
@@ -129,15 +137,15 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
     }
 
     if (!formatado) {
-            setErrors(prev => ({ ...prev, telefone: null }));
-        } 
-        else if (formatado.length !== 15 && formatado.length !== 14) {
-            setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
-            setValidated(false);
-        }
-        else {
-            setErrors(prev => ({ ...prev, telefone: null }));
-        }
+      setErrors(prev => ({ ...prev, telefone: null }));
+    }
+    else if (formatado.length !== 15 && formatado.length !== 14) {
+      setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
+      setValidated(false);
+    }
+    else {
+      setErrors(prev => ({ ...prev, telefone: null }));
+    }
 
     setDoaAlimentos(prev => ({
       ...prev,
@@ -162,17 +170,17 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
       newErrors.data = "A data não pode ser maior do que hoje";
       setValidated(false);
     }
-    if (!doaAlimentos.item) {
+    if (!doaAlimentos.doacao.item) {
       newErrors.item = "O item doado deve ser preenchido";
       setValidated(false);
-    } else if (!isNaN(doaAlimentos.item)) {
+    } else if (!isNaN(doaAlimentos.doacao.item)) {
       newErrors.item = "O item doado deve ser um texto válido";
       setValidated(false);
     }
-    if (!doaAlimentos.valorquantidade) {
+    if (!doaAlimentos.doacao.qntd) {
       newErrors.quantidade = "A quantidade deve ser preenchida";
       setValidated(false);
-    } else if (isNaN(doaAlimentos.valorquantidade) || parseInt(doaAlimentos.valorquantidade) < 0) {
+    } else if (isNaN(doaAlimentos.doacao.qntd) || parseInt(doaAlimentos.doacao.qntd) < 0) {
       newErrors.quantidade = "Quantidade inválida";
       setValidated(false);
     }
@@ -183,15 +191,6 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
       newErrors.obs = "A descrição deve ser um texto válido";
       setValidated(false);
     }
-    if (!doaAlimentos.destinatario) {
-      newErrors.destinatario = "Por favor, selecione um destinatário";
-      setValidated(false);
-    }
-    if (doaAlimentos.telefone.length !== 15 && doaAlimentos.telefone.length !== 14 && doaAlimentos.telefone !== "") {
-      newErrors.telefone = "Telefone inválido"
-      setValidated(false);
-    }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
     } else {
@@ -205,18 +204,18 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
     };
   }
 
-    return (
-        <Modal
-        show={showModal}
-            onHide={() => { setShowModal(false), show(true) }}
-            dialogClassName="modal-90w"
-            aria-labelledby="example-custom-modal-styling-title">
-            <Modal.Header closeButton>
-                <Modal.Title id="example-custom-modal-styling-title">
-                    Editar Doação
-                </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
+  return (
+    <Modal
+      show={showModal}
+      onHide={() => { setShowModal(false), show(true) }}
+      dialogClassName="modal-90w"
+      aria-labelledby="example-custom-modal-styling-title">
+      <Modal.Header closeButton>
+        <Modal.Title id="example-custom-modal-styling-title">
+          Editar Doação
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
         <Form noValidate validated={validated} onSubmit={handleSubmit}>
       <Alert variant="success" show={showAlert}> <b> <FaCheckCircle></FaCheckCircle> </b> Doação atualizada com sucesso! </Alert>
       <Row>

@@ -114,6 +114,7 @@ function App() {
   } 
 
   const editDoacao = async (doacao) => {
+    console.log(doacao)
     await doacoesService.update(doacao);
     setDoacoes(doacoes.map(d => d.id === doacao.id ? {
       id: doacao.id,
@@ -136,7 +137,6 @@ function App() {
 
   const handleDeleteDoacao = async (doacao) => {
     await doacoesService.remove(parseInt(doacao.id));
-    await loadDoacoes();
     alert("Doação excluída com sucesso!")
   }
 
@@ -185,8 +185,8 @@ function App() {
           </>
         )}
         {mostrarModal && doacaoToEdit.tipo ==="D" && <FormEditarDin onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit}></FormEditarDin>}
-        {mostrarModal && doacaoToEdit.tipo === "A" && <FormEditarAlim onEdit={editDoacao} show={handleChangeEditando} doacao={doacaoToEdit}></FormEditarAlim>}
-        {mostrarModal && doacaoToEdit.tipo ==="O" && <FormEditarOutros onEdit={editDoacao} show={handleChangeEditando} doacao={doacaoToEdit}></FormEditarOutros>}
+        {mostrarModal && doacaoToEdit.tipo === "A" && <FormEditarAlim onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit}></FormEditarAlim>}
+        {mostrarModal && doacaoToEdit.tipo ==="O" && <FormEditarOutros onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit}></FormEditarOutros>}
       </div>
     </BrowserRouter>
   )
