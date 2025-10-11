@@ -144,7 +144,6 @@ function FormDinheiro({ onSave }) {
             onSave(doaDinheiro);
             setValidated(true);
             setShowAlert(true);
-            // Limpa o formulário após registrar com sucesso
             limpaForm();
             setTimeout(() => {
                 setShowAlert(false);

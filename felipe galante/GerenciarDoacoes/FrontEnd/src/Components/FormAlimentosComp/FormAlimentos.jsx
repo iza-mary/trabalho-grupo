@@ -115,9 +115,6 @@ function FormAlimentos({ onSave }) {
     }))
     document.getElementsByName("doador")[0].value = ""
     document.getElementsByName("idoso")[0].value = ""
-    if (document.getElementsByName("evento")[0]) {
-      document.getElementsByName("evento")[0].value = ""
-    }
     setErrors({});
     setValidated(false);
   }

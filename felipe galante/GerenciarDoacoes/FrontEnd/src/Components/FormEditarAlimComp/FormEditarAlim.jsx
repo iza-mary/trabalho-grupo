@@ -8,14 +8,14 @@ import './EditarAlim.css'
 
 function FormEditarAlim({ show, doacaoEdit, onEdit }) {
 
-function FormEditarAlim ( {show, doacao, onEdit} ) {
-
     const [doaAlimentos , setDoaAlimentos] = useState({
         id: 0,
         data: "",
         tipo: "alimento",
-        item: "-",
-        valorquantidade: "",
+        doacao: {
+          item: "",
+          qntd: ""
+        },
         destinatario: "",
         doador: "",
         telefone: "",
@@ -29,19 +29,22 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
   const [showModal, setShowModal] = useState(true);
 
     useEffect(() => {
+        if (!doacaoEdit) return;
         setDoaAlimentos({
-            id: parseInt(doacao.id),
-            data: doacao.data.substring(0, 10),
-            tipo: doacao.tipo,
-            item: doacao.item,
-            valorquantidade: (doacao.valorQuantidade !== undefined && doacao.valorQuantidade !== "") ? parseInt(doacao.valorQuantidade, 10) : "",
-            destinatario: doacao.destinatario,
-            doador: doacao.doador || "",
-            telefone: doacao.telefone || "",
-            evento: doacao.evento || "",
-            obs: doacao.obs || ""
+            id: parseInt(doacaoEdit.id),
+            data: (doacaoEdit.data || "").substring(0, 10),
+            tipo: doacaoEdit.tipo,
+            doacao: {
+              item: doacaoEdit.doacao?.item ?? "",
+              qntd: doacaoEdit.doacao?.qntd ?? ""
+            },
+            destinatario: doacaoEdit.idoso || "",
+            doador: doacaoEdit.doador?.nome || "",
+            telefone: doacaoEdit.telefone || "",
+            evento: doacaoEdit.evento || "",
+            obs: doacaoEdit.obs || ""
         })
-    }, [doacao]);
+    }, [doacaoEdit]);
 
   const handleChangleData = (e) => {
     const value = e.target.value;
@@ -83,7 +86,7 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
   const handleChangeQuantidade = (e) => {
     const value = e.target.value.replace(/[a-zA-Z]/g, '');
     const numeric = value === "" ? "" : parseInt(value, 10);
-    setDoaAlimentos(prev => ({ ...prev, valorquantidade: numeric }))
+    setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, qntd: numeric } }))
     if (value && !isNaN(value) && parseInt(value) >= 0) {
       setErrors((prev) => ({ ...prev, quantidade: null }));
     } else {
@@ -236,7 +239,7 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
               <Form.Group className="mb-3">
                 <Form.Label>Item Doado</Form.Label>
                 <Form.Control name="item" onChange={handleChangeItem}
-                  value={doaAlimentos.item || ""}
+                  value={doaAlimentos.doacao.item || ""}
                   isInvalid={!!errors.item}
                   type="text" required />
                 <Form.Control.Feedback type="invalid">
@@ -246,7 +249,7 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
               <Form.Group className="mb-3">
                 <Form.Label>Quantidade</Form.Label>
                 <Form.Control name="quantidade" onChange={handleChangeQuantidade}
-                  value={doaAlimentos.valorquantidade || ""}
+                  value={doaAlimentos.doacao.qntd || ""}
                   isInvalid={!!errors.quantidade}
                   type="number" required />
                 <Form.Control.Feedback type="invalid">

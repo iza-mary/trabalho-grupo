@@ -11,8 +11,10 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
         id: 0,
         data: "",
         tipo: "outros",
-        item: "-",
-        valorquantidade: "",
+        doacao: {
+            item: "",
+            qntd: ""
+        },
         destinatario: "",
         doador: "",
         telefone: "",
@@ -26,17 +28,20 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
     const [showModal, setShowModal] = useState(true);
 
     useEffect(() => {
+        if (!doacaoEdit) return;
         setDoaOutros({
-            id: parseInt(doacao.id),
-            data: doacao.data.substring(0, 10),
-            tipo: doacao.tipo,
-            item: doacao.item,
-            valorquantidade: (doacao.valorQuantidade !== undefined && doacao.valorQuantidade !== "") ? parseInt(doacao.valorQuantidade, 10) : "",
-            destinatario: doacao.destinatario,
-            doador: doacao.doador || "",
-            telefone: doacao.telefone || "",
-            evento: doacao.evento || "",
-            obs: doacao.obs || ""
+            id: parseInt(doacaoEdit.id),
+            data: (doacaoEdit.data || "").substring(0, 10),
+            tipo: doacaoEdit.tipo,
+            doacao: {
+                item: doacaoEdit.doacao?.item ?? "",
+                qntd: doacaoEdit.doacao?.qntd ?? ""
+            },
+            destinatario: doacaoEdit.idoso || "",
+            doador: doacaoEdit.doador?.nome || "",
+            telefone: doacaoEdit.telefone || "",
+            evento: doacaoEdit.evento || "",
+            obs: doacaoEdit.obs || ""
         })
     }, [doacaoEdit]);
 
@@ -78,7 +83,7 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
     const handleChangeQuantidade = (e) => {
         const value = e.target.value.replace(/[a-zA-Z]/g, '');
         const numeric = value === "" ? "" : parseInt(value, 10);
-        setDoaOutros(prev => ({ ...prev, valorquantidade: numeric }))
+        setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, qntd: numeric } }))
         if (value && !isNaN(value) && value > 0) {
             setErrors((prev) => ({ ...prev, quantidade: null }));
         } else {

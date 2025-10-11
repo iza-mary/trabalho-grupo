@@ -44,11 +44,6 @@ function App() {
     }
   };
 
-  const loadDoacoes = async () => {
-    const dados = await doacoesService.getAll();
-    setDoacoes(dados);
-  };
-
   useEffect(() => {
     const fetchFiltros = async () => {
       const filtrosBackend = {
