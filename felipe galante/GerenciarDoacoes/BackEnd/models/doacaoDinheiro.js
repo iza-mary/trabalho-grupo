@@ -1,6 +1,6 @@
 class DoacaoDinheiro {
     constructor(data) {
-        this.valor = data.valor || data.doacao.valor;
+        this.valor = (data?.valor ?? data?.doacao?.valor ?? null);
     }
 
     toJSON() {

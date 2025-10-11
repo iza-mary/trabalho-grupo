@@ -1,4 +1,6 @@
 import { Button, Card, Col, Form, Row, Alert, Modal } from "react-bootstrap";
+import SelectEvento from "../Shared/SelectEvento";
+import SelectIdoso from "../Shared/SelectIdoso";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 
@@ -12,10 +14,10 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
         item: "-",
         valorquantidade: "",
         destinatario: "",
-        doador: "" || "",
-        telefone: "" || "",
-        evento: "" || "",
-        obs: "" || ""
+        doador: "",
+        telefone: "",
+        evento: "",
+        obs: ""
     })
 
     const [validated, setValidated] = useState(false);
@@ -29,7 +31,7 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
             data: doacao.data.substring(0, 10),
             tipo: doacao.tipo,
             item: doacao.item,
-            valorquantidade: parseInt(doacao.valorQuantidade),
+            valorquantidade: (doacao.valorQuantidade !== undefined && doacao.valorQuantidade !== "") ? parseInt(doacao.valorQuantidade, 10) : "",
             destinatario: doacao.destinatario,
             doador: doacao.doador || "",
             telefone: doacao.telefone || "",
@@ -72,7 +74,8 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
 
   const handleChangeQuantidade = (e) => {
     const value = e.target.value.replace(/[a-zA-Z]/g, '');
-    setDoaAlimentos(prev => ({ ...prev, valorquantidade: parseInt(value) }))
+    const numeric = value === "" ? "" : parseInt(value, 10);
+    setDoaAlimentos(prev => ({ ...prev, valorquantidade: numeric }))
     if (value && !isNaN(value) && parseInt(value) >= 0) {
       setErrors((prev) => ({ ...prev, quantidade: null }));
     } else {
@@ -99,18 +102,6 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
         setValidated(false);
       } else if (!isNaN(value)) {
         setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
-        setValidated(false);
-      }
-    }
-  }
-  const handleChangeDestinatario = (e) => {
-    const value = e.target.value;
-    setDoaAlimentos(prev => ({ ...prev, destinatario: value }))
-    if (value && isNaN(value)) {
-      setErrors((prev) => ({ ...prev, destinatario: null }));
-    } else {
-      if (value === "") {
-        setErrors((prev) => ({ ...prev, destinatario: "Por favor, selecione um destinatário" }));
         setValidated(false);
       }
     }
@@ -154,10 +145,7 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
     }));
   }
 
-  const handleChangeEvento = (e) => {
-    const value = e.target.value;
-    setDoaAlimentos(prev => ({ ...prev, evento: value }))
-  }
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -278,19 +266,14 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Destinatário</Form.Label>
-                <Form.Select name="destinatario" onChange={handleChangeDestinatario}
-                  value={doaAlimentos.destinatario || ""}
-                  isInvalid={!!errors.destinatario}
-                  required>
-                  <option value="">Selecione o Destinatário</option>
-                  <option >Instituição (Asilo Vicentino)</option>
-                  <option >João da Silva (Quarto 12)</option>
-                  <option >Maria Oliveira (Quarto 8)</option>
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">
-                  {errors.destinatario}
-                </Form.Control.Feedback>
+                <SelectIdoso
+                  setIdoso={(idosoSel) => setDoaAlimentos(prev => ({ ...prev, destinatario: idosoSel?.nome || "" }))}
+                  setErrors={setErrors}
+                  setValidated={setValidated}
+                  errors={errors}
+                  errorKey="destinatario"
+                  selectedIdosoEdit={doaAlimentos.destinatario ? { id: 0, nome: doaAlimentos.destinatario } : null}
+                />
               </Form.Group>
             </Card.Body>
           </Card>
@@ -319,15 +302,13 @@ function FormEditarAlim ( {show, doacao, onEdit} ) {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Evento Relacionado (Opcional)</Form.Label>
-                <Form.Select
-                  onChange={handleChangeEvento}
-                  value={doaAlimentos.evento || ""}
-                  name="evento">
-                  <option value="">Nenhum evento relacionado</option>
-                  <option >Bazar Beneficente - Abril 2023</option>
-                  <option >Campanha do Agasalho 2023</option>
-                </Form.Select>
+                <SelectEvento
+                  setEvento={(eventoTitulo) => setDoaAlimentos(prev => ({ ...prev, evento: eventoTitulo }))}
+                  setErrors={setErrors}
+                  setValidated={setValidated}
+                  errors={errors}
+                  selectedEventoEdit={doaAlimentos.evento}
+                />
               </Form.Group>
             </Card.Body>
           </Card>

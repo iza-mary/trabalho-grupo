@@ -1,4 +1,6 @@
 import { Button, Card, Col, Form, Row, Alert, Modal } from "react-bootstrap";
+import SelectEvento from "../Shared/SelectEvento";
+import SelectIdoso from "../Shared/SelectIdoso";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 
@@ -11,10 +13,10 @@ function FormEditarOutros({ show, onEdit, doacao }) {
         item: "-",
         valorquantidade: "",
         destinatario: "",
-        doador: "" || "",
-        telefone: "" || "",
-        evento: "" || "",
-        obs: "" || ""
+        doador: "",
+        telefone: "",
+        evento: "",
+        obs: ""
     })
 
     const [validated, setValidated] = useState(false);
@@ -28,7 +30,7 @@ function FormEditarOutros({ show, onEdit, doacao }) {
             data: doacao.data.substring(0, 10),
             tipo: doacao.tipo,
             item: doacao.item,
-            valorquantidade: parseInt(doacao.valorQuantidade),
+            valorquantidade: (doacao.valorQuantidade !== undefined && doacao.valorQuantidade !== "") ? parseInt(doacao.valorQuantidade, 10) : "",
             destinatario: doacao.destinatario,
             doador: doacao.doador || "",
             telefone: doacao.telefone || "",
@@ -71,7 +73,8 @@ function FormEditarOutros({ show, onEdit, doacao }) {
 
     const handleChangeQuantidade = (e) => {
         const value = e.target.value.replace(/[a-zA-Z]/g, '');
-        setDoaOutros(prev => ({ ...prev, valorquantidade: parseInt(value) }))
+        const numeric = value === "" ? "" : parseInt(value, 10);
+        setDoaOutros(prev => ({ ...prev, valorquantidade: numeric }))
         if (value && !isNaN(value) && value > 0) {
             setErrors((prev) => ({ ...prev, quantidade: null }));
         } else {
@@ -96,19 +99,6 @@ function FormEditarOutros({ show, onEdit, doacao }) {
                 setValidated(false);
             } else if (!isNaN(value)) {
                 setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
-                setValidated(false);
-            }
-        }
-    }
-
-    const handleChangeDestinatario = (e) => {
-        const value = e.target.value;
-        setDoaOutros(prev => ({ ...prev, destinatario: value }))
-        if (value && isNaN(value)) {
-            setErrors((prev) => ({ ...prev, destinatario: null }));
-        } else {
-            if (value === "") {
-                setErrors((prev) => ({ ...prev, destinatario: "O destinatário deve ser preenchido" }));
                 setValidated(false);
             }
         }
@@ -152,10 +142,7 @@ function FormEditarOutros({ show, onEdit, doacao }) {
         })); // Atualiza o estado com o valor formatado
     }
 
-    const handleChangeEvento = (e) => {
-        const value = e.target.value;
-        setDoaOutros(prev => ({ ...prev, evento: value }));
-    }
+    
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -278,19 +265,14 @@ function FormEditarOutros({ show, onEdit, doacao }) {
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Destinatário</Form.Label>
-                                        <Form.Select name="destinatario" onChange={handleChangeDestinatario}
-                                            value={doaOutros.destinatario || ""}
-                                            isInvalid={!!errors.destinatario}
-                                            required>
-                                            <option value="">Selecione o Destinatário</option>
-                                            <option >Instituição (Asilo Vicentino)</option>
-                                            <option >João da Silva (Quarto 12)</option>
-                                            <option >Maria Oliveira (Quarto 8)</option>
-                                        </Form.Select>
-                                        <Form.Control.Feedback type="invalid">
-                                            {errors.destinatario}
-                                        </Form.Control.Feedback>
+                                        <SelectIdoso
+                                          setIdoso={(idosoSel) => setDoaOutros(prev => ({ ...prev, destinatario: idosoSel?.nome || "" }))}
+                                          setErrors={setErrors}
+                                          setValidated={setValidated}
+                                          errors={errors}
+                                          errorKey="destinatario"
+                                          selectedIdosoEdit={doaOutros.destinatario ? { id: 0, nome: doaOutros.destinatario } : null}
+                                        />
                                     </Form.Group>
                                 </Card.Body>
                             </Card>
@@ -320,15 +302,13 @@ function FormEditarOutros({ show, onEdit, doacao }) {
                                 </Form.Control.Feedback>
                                     </Form.Group>
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Evento Relacionado (Opcional)</Form.Label>
-                                        <Form.Select
-                                            onChange={handleChangeEvento}
-                                            value={doaOutros.evento || ""}
-                                            name="evento">
-                                            <option value="">Nenhum evento relacionado</option>
-                                            <option >Bazar Beneficente - Abril 2023</option>
-                                            <option >Campanha do Agasalho 2023</option>
-                                        </Form.Select>
+                                        <SelectEvento
+                                          setEvento={(eventoTitulo) => setDoaOutros(prev => ({ ...prev, evento: eventoTitulo }))}
+                                          setErrors={setErrors}
+                                          setValidated={setValidated}
+                                          errors={errors}
+                                          selectedEventoEdit={doaOutros.evento}
+                                        />
                                     </Form.Group>
                                 </Card.Body>
                             </Card>

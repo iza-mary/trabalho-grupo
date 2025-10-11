@@ -1,13 +1,13 @@
 class DoacaoProduto {
     constructor(data) {
-        this.item = data.item || data.doacao.item;
-        this.qntd = data.qntd || data.doacao.qntd;
+        this.item = (data?.item ?? data?.doacao?.item ?? null);
+        this.qntd = (data?.qntd ?? data?.doacao?.qntd ?? null);
     }
 
     validate() {
         const errors = [];
 
-        if (this.quantidade <= 0) {
+        if (!this.qntd || Number(this.qntd) <= 0) {
             errors.push("Quantidade inválida!");
         }
         

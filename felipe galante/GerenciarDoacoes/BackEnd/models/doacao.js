@@ -9,7 +9,8 @@ class Doacao {
         this.tipo = data.tipo;
         this.obs = data.obs || null;
         this.doador = new Doador(data)
-        this.idoso = data.idoso || null;
+        this.idosoId = data.idoso_id || data.idosoId || (data.idoso && data.idoso.id) || null;
+        this.idoso = data.idosoNome || (data.idoso && data.idoso.nome) || data.idoso || null;
         this.evento = data.evento || null;
         this.doacao = this.tipo === "D" ? new DoacaoDinheiro(data) : new DoacaoProduto(data);
     }
@@ -43,6 +44,7 @@ class Doacao {
             data: this.data,
             tipo: this.tipo,
             obs: this.obs,
+            idosoId: this.idosoId,
             idoso: this.idoso,
             doador: this.doador.toJSON(),
             evento: this.evento,

@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const db = require("./config/database");
 const DoadorRoutes = require("./routes/doadorRoutes");
 
 const app = express();

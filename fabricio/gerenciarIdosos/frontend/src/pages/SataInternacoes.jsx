@@ -147,6 +147,7 @@ const SataInternacoes = () => {
         idoso_id: novaInternacao.idosoId,
         quarto_id: novaInternacao.quartoId,
         cama: novaInternacao.cama,
+        data_entrada: novaInternacao.dataEntrada,
         motivo_entrada: 'Internação regular',
         observacoes: novaInternacao.observacoes
       };
@@ -547,6 +548,15 @@ const SataInternacoes = () => {
                         Nenhuma cama disponível neste quarto
                       </Form.Text>
                     )}
+                  </Col>
+                  <Col md={6} className="mb-3">
+                    <Form.Label>Data de Internação *</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={novaInternacao.dataEntrada}
+                      onChange={(e) => setNovaInternacao({ ...novaInternacao, dataEntrada: e.target.value })}
+                      required
+                    />
                   </Col>
                   <Col md={12} className="mb-3">
                     <Form.Label>Observações</Form.Label>

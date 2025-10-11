@@ -1,7 +1,10 @@
 import { Button, Card, Col, Form, Row, Alert } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import { BiPlusCircle } from "react-icons/bi";
 import SelectDoador from "./SelectDoador";
+import SelectIdoso from "../Shared/SelectIdoso";
+import SelectEvento from "../Shared/SelectEvento";
 
 function FormDinheiro({ onSave }) {
 
@@ -14,6 +17,7 @@ function FormDinheiro({ onSave }) {
             doadorId: 0,
             nome: ""
         },
+        idoso: { id: 0, nome: "" },
         evento: "",
         valor: 0
     });
@@ -79,12 +83,7 @@ function FormDinheiro({ onSave }) {
         }
     }
 
-    const handleChangeEvento = (e) => {
-        const value = e.target.value;
-        setDoaDinheiro(prev => ({
-            ...prev, evento: value
-        }))
-    }
+    
 
     const limpaForm = () => {
         setDoaDinheiro({
@@ -95,10 +94,14 @@ function FormDinheiro({ onSave }) {
             doadorId: 0,
             nome: ""
         },
+        idoso: { id: 0, nome: "" },
         evento: "",
         valor: 0
         })
         document.getElementsByName("doador")[0].value = ""
+        if (document.getElementsByName("idoso")[0]) {
+            document.getElementsByName("idoso")[0].value = ""
+        }
         setErrors({})
         setValidated(false)
     }
@@ -141,6 +144,8 @@ function FormDinheiro({ onSave }) {
             onSave(doaDinheiro);
             setValidated(true);
             setShowAlert(true);
+            // Limpa o formulário após registrar com sucesso
+            limpaForm();
             setTimeout(() => {
                 setShowAlert(false);
             }, 3000);
@@ -188,20 +193,16 @@ function FormDinheiro({ onSave }) {
                     <Card className="mb-4">
                         <Card.Body>
                             <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
-                            <Form.Group className="mb-3" controlId="doador">
-                                <Form.Label>Destinatário</Form.Label>
-                                <Form.Control
-                                    name="idoso" type="text" />
+                            <Form.Group className="mb-3" controlId="idoso">
+                                <SelectIdoso setIdoso={(idosoSel) => setDoaDinheiro(prev => ({...prev, idoso: idosoSel}))} setErrors={setErrors} setValidated={setValidated} errors={errors} />
                             </Form.Group>
-                            <Form.Group className="mb-3"
-                                controlId="evento">
-                                <Form.Label>Evento</Form.Label>
-                                <Form.Select onChange={handleChangeEvento}
-                                    value={doaDinheiro.evento || ""} name="evento">
-                                    <option value="">Nenhum evento relacionado</option>
-                                    <option >Bazar Beneficente - Abril 2023</option>
-                                    <option >Campanha do Agasalho 2023</option>
-                                </Form.Select>
+                            <Form.Group className="mb-3" controlId="evento">
+                                <SelectEvento
+                                  setEvento={(eventoTitulo) => setDoaDinheiro(prev => ({ ...prev, evento: eventoTitulo }))}
+                                  setErrors={setErrors}
+                                  setValidated={setValidated}
+                                  errors={errors}
+                                />
                             </Form.Group>
                             <Form.Group className="mb-3" controlId="observacoes">
                                 <Form.Label>Observações (Opcional)</Form.Label>
@@ -219,7 +220,10 @@ function FormDinheiro({ onSave }) {
             </Row>
             <div className="d-flex justify-content-end gap-2">
                 <Button variant="secondary" type="button" onClick={() => { limpaForm() }}>Limpar</Button>
-                <Button variant="primary" type="submit">Registrar Doação</Button>
+                <Button variant="primary" type="submit" className="d-flex align-items-center gap-2">
+                    <BiPlusCircle className="me-1" size={18} />
+                    Registrar Doação
+                </Button>
             </div>
         </Form>
     );

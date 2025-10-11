@@ -31,6 +31,50 @@ function App() {
     console.log(doacoes)
   }, [doacoes])
 
+  const mapTipoFiltro = (tipo) => {
+    switch (tipo) {
+      case 'dinheiro':
+        return 'D';
+      case 'alimento':
+        return 'A';
+      case 'outros':
+        return 'O';
+      default:
+        return 'todos';
+    }
+  };
+
+  const loadDoacoes = async () => {
+    const dados = await doacoesService.getAll();
+    setDoacoes(dados);
+  };
+
+  useEffect(() => {
+    const fetchFiltros = async () => {
+      const filtrosBackend = {
+        tipo: mapTipoFiltro(filtros.tipo),
+        data: filtros.data,
+        destinatario: filtros.destinatario,
+        busca: filtros.busca,
+      };
+      try {
+        const dados = await doacoesService.getByFiltred(filtrosBackend);
+        if (Array.isArray(dados)) {
+          setDoacoes(dados);
+        }
+      } catch (e) {
+        console.error('Erro ao filtrar doações', e);
+        try {
+          const dados = await doacoesService.getAll();
+          setDoacoes(dados);
+        } catch (err) {
+          console.error('Erro ao carregar doações sem filtro', err);
+        }
+      }
+    };
+    fetchFiltros();
+  }, [filtros]);
+
   const handleChangeEditando = (editando) => {
     if (editando === false) {
       setModoEdicao(true);
@@ -40,27 +84,32 @@ function App() {
       setMostrarModal(false);
     }
   }
-
+  
 
   const handleSaveDoacao = async (doacao) => {
-    await doacoesService.add(doacao)
+    const payload = doacao.tipo === 'D'
+      ? { ...doacao, doacao: { valor: parseFloat(doacao.valor ?? doacao.doacao?.valor ?? 0) } }
+      : doacao;
+    await doacoesService.add(payload)
   }
 
   const handleEditDoacao = (doacao) => {
-    setDoacaoToEdit({
+    const base = {
       id: doacao.id,
       data: doacao.data,
       tipo: doacao.tipo,
+      idoso: doacao.idoso || "",
       evento: doacao.evento || "",
       obs: doacao.obs || "",
       doador: {
         doadorId: doacao.doador.doadorId,
         nome: doacao.doador.nome
-      },
-      doacao: {
-        valor: parseFloat(doacao.doacao.valor)
       }
-    })
+    };
+    const byTipo = doacao.tipo === 'D'
+      ? { valor: parseFloat(doacao.doacao?.valor ?? 0) }
+      : { item: doacao.doacao?.item ?? "", qntd: doacao.doacao?.qntd ?? 0 };
+    setDoacaoToEdit({ ...base, doacao: byTipo })
     setMostrarModal(true)
   } 
 
@@ -70,6 +119,7 @@ function App() {
       id: doacao.id,
       data: doacao.data + "T03:00:00.000Z",
       tipo: doacao.tipo,
+      idoso: (doacao.idoso && doacao.idoso.nome) || doacao.idoso || "",
       doador: {
         doadorId: doacao.doador.doadorId,
         nome: doacao.doador.nome

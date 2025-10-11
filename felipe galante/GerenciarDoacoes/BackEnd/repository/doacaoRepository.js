@@ -4,77 +4,177 @@ const Doacao = require("../models/doacao");
 class DoacaoRepository {
     async findAll() {
         try {
-            const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador, ddr.nome
-            , d.idoso, d.evento, 
-            dd.id as dinheiroId, dd.valor, 
+            const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador,
+            d.idoso, d.idoso_id, d.evento,
+            dd.id as dinheiroId, dd.valor,
             dp.id as produtoId, dp.item, dp.qntd
-            FROM doacoes d LEFT JOIN doadores ddr ON d.doador = ddr.id LEFT JOIN doacaodinheiro dd ON d.id = dd.id 
+            FROM doacoes d
+            LEFT JOIN doacaodinheiro dd ON d.id = dd.id
             LEFT JOIN doacaoproduto dp ON d.id = dp.id`)
             return rows.map(rows => new Doacao(rows));
         } catch (error) {
-            throw new Error(`Erro ao buscar doação: ${error.message}`);
+            // Fallback para bancos ainda sem coluna idoso_id
+            try {
+                const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador,
+                d.idoso, NULL as idoso_id, d.evento,
+                dd.id as dinheiroId, dd.valor,
+                dp.id as produtoId, dp.item, dp.qntd
+                FROM doacoes d
+                LEFT JOIN doacaodinheiro dd ON d.id = dd.id
+                LEFT JOIN doacaoproduto dp ON d.id = dp.id`);
+                return rows.map(rows => new Doacao(rows));
+            } catch (fallbackErr) {
+                throw new Error(`Erro ao buscar doação: ${fallbackErr.message}`);
+            }
         }
     }
 
     async findById(id) {
         try {
             const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador
-            , d.idoso, d.evento, 
+            , d.idoso, d.idoso_id, i.nome as idosoNome, d.evento, 
             dd.id as dinheiroId, dd.valor, 
             dp.id as produtoId, dp.item, dp.qntd
-            FROM doacoes d LEFT JOIN doacaodinheiro dd ON d.id = dd.id
+            FROM doacoes d 
+            LEFT JOIN idosos i ON d.idoso_id = i.id
+            LEFT JOIN doacaodinheiro dd ON d.id = dd.id
             LEFT JOIN doacaoproduto dp ON d.id = dp.id
             WHERE d.id = ?`, [id]);
             if (rows.length === 0) return null;
             return new Doacao(rows[0])
         } catch (error) {
-            throw new Error(`Erro ao buscar doação: ${error.message}`);
+            // Fallback para bancos ainda sem coluna idoso_id
+            try {
+                const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador,
+                d.idoso, NULL as idoso_id, d.idoso as idosoNome, d.evento,
+                dd.id as dinheiroId, dd.valor,
+                dp.id as produtoId, dp.item, dp.qntd
+                FROM doacoes d
+                LEFT JOIN doacaodinheiro dd ON d.id = dd.id
+                LEFT JOIN doacaoproduto dp ON d.id = dp.id
+                WHERE d.id = ?`, [id]);
+                if (rows.length === 0) return null;
+                return new Doacao(rows[0]);
+            } catch (fallbackErr) {
+                throw new Error(`Erro ao buscar doação: ${fallbackErr.message}`);
+            }
         }
     }
 
     async findByFiltred(tipo = "todos", data = "todos", destinatario = "todos", busca = "") {
         try {
-            let where = []
+            const where = [];
+            const params = [];
+
             if (tipo !== "todos") {
-                where.push(`tipo = "${tipo}"`);
+                where.push("d.tipo = ?");
+                params.push(tipo);
             }
 
             if (data !== "todos") {
                 if (data === "hoje") {
-                    where.push(`DATE(data) = CURDATE()`);
+                    where.push("DATE(d.data) = CURDATE()");
                 } else if (data === "semana") {
-                    where.push(`YEARWEEK(data, 1) = YEARWEEK(CURDATE(), 1)`);
+                    where.push("YEARWEEK(d.data, 1) = YEARWEEK(CURDATE(), 1)");
                 } else if (data === "mes") {
-                    where.push(`YEAR(data) = YEAR(CURDATE()) AND MONTH(data) = MONTH(CURDATE())`);
+                    where.push("YEAR(d.data) = YEAR(CURDATE()) AND MONTH(d.data) = MONTH(CURDATE())");
                 } else if (data === "ano") {
-                    where.push(`YEAR(data) = YEAR(CURDATE())`);
+                    where.push("YEAR(d.data) = YEAR(CURDATE())");
                 }
             }
 
             if (destinatario !== "todos") {
                 if (destinatario === "instituicao") {
-                    where.push(`LOWER(destinatario) LIKE "%instituição%"`)
+                    // Suporta tanto o schema novo (idoso_id) quanto legado (texto em d.idoso) e variações com/sem acento
+                    where.push("(d.idoso_id IS NULL OR LOWER(d.idoso) LIKE ? OR LOWER(d.idoso) LIKE ?)");
+                    params.push("%instituição%", "%instituicao%");
                 } else if (destinatario === "idosos") {
-                    where.push(`LOWER(destinatario) LIKE "quarto"`)
+                    where.push("(d.idoso_id IS NOT NULL OR LOWER(d.idoso) LIKE ?)");
+                    params.push("%quarto%");
                 }
             }
 
-            if (busca !== "") {
-                where.push(`
-                    (
-                    LOWER(item) LIKE "%${busca}%" OR
-                    REPLACE(valorquantidade, ".", ",") LIKE "%${busca}%" OR
-                    LOWER(destinatario) LIKE "%${busca}%" OR
-                    LOWER(doador) LIKE "%${busca}%" OR 
-                    telefone LIKE "%${busca}%" OR
-                    LOWER(evento) LIKE "%${busca}%" OR
-                    LOWER(obs) LIKE "%${busca}%"
-                )`)
+            if (busca && busca.trim() !== "") {
+                const buscaParam = `%${busca.toLowerCase()}%`;
+                where.push(`(
+                    LOWER(dp.item) LIKE ? OR
+                    CAST(dp.qntd AS CHAR) LIKE ? OR
+                    CAST(dd.valor AS CHAR) LIKE ? OR
+                    LOWER(d.idoso) LIKE ? OR
+                    LOWER(d.evento) LIKE ? OR
+                    LOWER(d.obs) LIKE ?
+                )`);
+                params.push(buscaParam, buscaParam, buscaParam, buscaParam, buscaParam, buscaParam);
             }
-            const [rows] = await db.execute(`SELECT * FROM doacoes ${where.length > 0 ? " WHERE " + where.join(" AND ") : ""}`)
+
+            const sql = `SELECT d.id, d.data, d.tipo, d.obs, d.doador,
+            d.idoso, d.idoso_id, d.evento,
+            dd.id as dinheiroId, dd.valor,
+            dp.id as produtoId, dp.item, dp.qntd
+            FROM doacoes d
+            LEFT JOIN doacaodinheiro dd ON d.id = dd.id
+            LEFT JOIN doacaoproduto dp ON d.id = dp.id ${where.length > 0 ? " WHERE " + where.join(" AND ") : ""}`;
+            const [rows] = await db.execute(sql, params);
             return rows.map(rows => new Doacao(rows));
         } catch (error) {
-            throw new Error("Erro ao filtrar doações: " + error.message)
+            // Fallback sem referência à coluna idoso_id
+            try {
+                const where = [];
+                const params = [];
+
+                if (tipo !== "todos") {
+                    where.push("d.tipo = ?");
+                    params.push(tipo);
+                }
+
+                if (data !== "todos") {
+                    if (data === "hoje") {
+                        where.push("DATE(d.data) = CURDATE()");
+                    } else if (data === "semana") {
+                        where.push("YEARWEEK(d.data, 1) = YEARWEEK(CURDATE(), 1)");
+                    } else if (data === "mes") {
+                        where.push("YEAR(d.data) = YEAR(CURDATE()) AND MONTH(d.data) = MONTH(CURDATE())");
+                    } else if (data === "ano") {
+                        where.push("YEAR(d.data) = YEAR(CURDATE())");
+                    }
+                }
+
+                if (destinatario !== "todos") {
+                    if (destinatario === "instituicao") {
+                        // Variação com/sem acento para dados legados no campo texto
+                        where.push("(LOWER(d.idoso) LIKE ? OR LOWER(d.idoso) LIKE ?)");
+                        params.push("%instituição%", "%instituicao%");
+                    } else if (destinatario === "idosos") {
+                        where.push("LOWER(d.idoso) LIKE ?");
+                        params.push("%quarto%");
+                    }
+                }
+
+                if (busca && busca.trim() !== "") {
+                    const buscaParam = `%${busca.toLowerCase()}%`;
+                    where.push(`(
+                        LOWER(dp.item) LIKE ? OR
+                        CAST(dp.qntd AS CHAR) LIKE ? OR
+                        CAST(dd.valor AS CHAR) LIKE ? OR
+                        LOWER(d.idoso) LIKE ? OR
+                        LOWER(d.evento) LIKE ? OR
+                        LOWER(d.obs) LIKE ?
+                    )`);
+                    params.push(buscaParam, buscaParam, buscaParam, buscaParam, buscaParam, buscaParam);
+                }
+
+                const sql = `SELECT d.id, d.data, d.tipo, d.obs, d.doador,
+                d.idoso, NULL as idoso_id, d.evento,
+                dd.id as dinheiroId, dd.valor,
+                dp.id as produtoId, dp.item, dp.qntd
+                FROM doacoes d
+                LEFT JOIN doacaodinheiro dd ON d.id = dd.id
+                LEFT JOIN doacaoproduto dp ON d.id = dp.id ${where.length > 0 ? " WHERE " + where.join(" AND ") : ""}`;
+                const [rows] = await db.execute(sql, params);
+                return rows.map(rows => new Doacao(rows));
+            } catch (fallbackErr) {
+                throw new Error("Erro ao filtrar doações: " + fallbackErr.message)
+            }
         }
     }
 
@@ -82,12 +182,14 @@ class DoacaoRepository {
         const conn = await db.getConnection();
         try {
             await conn.beginTransaction();
-            const { data, tipo, obs, idoso, evento } = doacaoData;
+            const { data, tipo, obs, evento } = doacaoData;
             const { item, qntd, valor } = doacaoData.doacao;
             const {doadorId, nome} = doacaoData.doador
+            const idosoId = doacaoData.idoso?.id || doacaoData.idosoId || null;
+            const idosoNome = doacaoData.idoso?.nome || doacaoData.idoso || null;
             if (tipo.toUpperCase() === "D") {
                 const [result] = await conn.execute(`INSERT INTO doacoes (
-                data, tipo, obs, doador, idoso, evento) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idoso, evento]);
+                data, tipo, obs, doador, idoso, idoso_id, evento) VALUES ( ?, ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idosoNome, idosoId, evento]);
                 const doacaoId = result.insertId;
                 await conn.execute(`INSERT INTO doacaodinheiro (id, valor) VALUES (?, ?)`, [doacaoId, valor]);
                 await conn.commit();
@@ -95,7 +197,7 @@ class DoacaoRepository {
                 return await this.findById(doacaoId);
             } else {
                 const [result] = await conn.execute(`INSERT INTO doacoes (
-                data, tipo, obs, doador, idoso, evento) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idoso, evento]);
+                data, tipo, obs, doador, idoso, idoso_id, evento) VALUES ( ?, ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idosoNome, idosoId, evento]);
                 const doacaoId = result.insertId;
                 await conn.execute(`INSERT INTO doacaoproduto (id, item, qntd) VALUES (?, ?, ?)`, [doacaoId, item, qntd]);
                 await conn.commit();
@@ -103,8 +205,34 @@ class DoacaoRepository {
                 return await this.findById(doacaoId);
             }
         } catch (error) {
-            conn.rollback();
-            throw new Error(`Erro ao gravar doação: ${error.message}`);
+            // Fallback sem coluna idoso_id
+            try {
+                const { data, tipo, obs, evento } = doacaoData;
+                const { item, qntd, valor } = doacaoData.doacao;
+                const {doadorId} = doacaoData.doador
+                const idosoNome = doacaoData.idoso?.nome || doacaoData.idoso || null;
+                await conn.beginTransaction();
+                if (tipo.toUpperCase() === "D") {
+                    const [result] = await conn.execute(`INSERT INTO doacoes (
+                    data, tipo, obs, doador, idoso, evento) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idosoNome, evento]);
+                    const doacaoId = result.insertId;
+                    await conn.execute(`INSERT INTO doacaodinheiro (id, valor) VALUES (?, ?)`, [doacaoId, valor]);
+                    await conn.commit();
+                    conn.release();
+                    return await this.findById(doacaoId);
+                } else {
+                    const [result] = await conn.execute(`INSERT INTO doacoes (
+                    data, tipo, obs, doador, idoso, evento) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idosoNome, evento]);
+                    const doacaoId = result.insertId;
+                    await conn.execute(`INSERT INTO doacaoproduto (id, item, qntd) VALUES (?, ?, ?)`, [doacaoId, item, qntd]);
+                    await conn.commit();
+                    conn.release();
+                    return await this.findById(doacaoId);
+                }
+            } catch (fallbackErr) {
+                await conn.rollback();
+                throw new Error(`Erro ao gravar doação: ${fallbackErr.message}`);
+            }
         }
     }
 
@@ -112,25 +240,50 @@ class DoacaoRepository {
         const conn = await db.getConnection();
         try {
             await conn.beginTransaction();
-            const { data, tipo, obs, idoso, evento } = doacaoData;
+            const { data, tipo, obs, evento } = doacaoData;
             const { item, qntd, valor } = doacaoData.doacao;
             const {doadorId, nome} = doacaoData.doador
+            const idosoId = doacaoData.idoso?.id || doacaoData.idosoId || null;
+            const idosoNome = doacaoData.idoso?.nome || doacaoData.idoso || null;
             if (tipo.toUpperCase() === "D") {
-                await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento = ? WHERE id = ?`,
-                    [data, tipo, obs, doadorId, idoso, evento, id]);
+                await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, idoso_id = ?, evento = ? WHERE id = ?`,
+                    [data, tipo, obs, doadorId, idosoNome, idosoId, evento, id]);
                 await conn.execute(`UPDATE doacaodinheiro SET valor = ? WHERE id = ?`, [valor, id]);
                 await conn.commit();
                 conn.release();
             } else {
-                await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento = ? WHERE id = ?`,
-                    [data, tipo, obs, doadorId, idoso, evento, id]);
+                await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, idoso_id = ?, evento = ? WHERE id = ?`,
+                    [data, tipo, obs, doadorId, idosoNome, idosoId, evento, id]);
                 await conn.execute(`UPDATE doacaoproduto SET item = ?, qntd = ? WHERE id = ?`, [item, qntd, id]);
                 await conn.commit();
                 conn.release();
             }
             return await this.findById(id);
         } catch (error) {
-            throw new Error(`Erro ao atualizar doação: ${error.message}`);
+            // Fallback sem coluna idoso_id
+            try {
+                await conn.beginTransaction();
+                const { data, tipo, obs, evento } = doacaoData;
+                const { item, qntd, valor } = doacaoData.doacao;
+                const {doadorId} = doacaoData.doador
+                const idosoNome = doacaoData.idoso?.nome || doacaoData.idoso || null;
+                if (tipo.toUpperCase() === "D") {
+                    await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento = ? WHERE id = ?`,
+                        [data, tipo, obs, doadorId, idosoNome, evento, id]);
+                    await conn.execute(`UPDATE doacaodinheiro SET valor = ? WHERE id = ?`, [valor, id]);
+                    await conn.commit();
+                    conn.release();
+                } else {
+                    await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento = ? WHERE id = ?`,
+                        [data, tipo, obs, doadorId, idosoNome, evento, id]);
+                    await conn.execute(`UPDATE doacaoproduto SET item = ?, qntd = ? WHERE id = ?`, [item, qntd, id]);
+                    await conn.commit();
+                    conn.release();
+                }
+                return await this.findById(id);
+            } catch (fallbackErr) {
+                throw new Error(`Erro ao atualizar doação: ${fallbackErr.message}`);
+            }
         }
     }
 

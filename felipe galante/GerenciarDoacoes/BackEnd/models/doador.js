@@ -1,7 +1,8 @@
 class Doador {
     constructor(data) {
-        this.doadorId = data.doador.doadorId || data.doador;
-        this.nome = data.doador.nome || data.nome;
+        const doadorObj = (data && typeof data.doador === 'object') ? data.doador : null;
+        this.doadorId = (doadorObj?.doadorId ?? data?.doador ?? null);
+        this.nome = (doadorObj?.nome ?? data?.nome ?? null);
 }
 
     //Validações

@@ -2,6 +2,8 @@ import { Button, Card, Col, Form, Row, Alert, Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import SelectDoador from "./SelectDoador.jsx";
+import SelectIdoso from "../Shared/SelectIdoso";
+import SelectEvento from "../Shared/SelectEvento";
 import "./EditarDin.css"
 
 function FormEditarDin({ show, doacaoEdit, onEdit }) {
@@ -12,10 +14,11 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
         tipo: "D",
         doador: {
             doadorId: 0,
-            nome: "" || ""
+            nome: ""
         },
-        evento: "" || "",
-        obs: "" || "",
+        idoso: "",
+        evento: "",
+        obs: "",
         doacao: {
             qntd: 0,
             item: "-",
@@ -38,6 +41,7 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
                 doadorId: doacaoEdit.doador.doadorId || 0,
                 nome: doacaoEdit.doador.nome || ""
             },
+            idoso: doacaoEdit.idoso || "",
             evento: doacaoEdit.evento || "",
             obs: doacaoEdit.obs || "",
             doacao: doacaoEdit.tipo.toUpperCase() === "D" ? {
@@ -96,12 +100,7 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
         }
     }
 
-    const handleChangeEvento = (e) => {
-        const value = e.target.value;
-        setDoaDinheiro(prev => ({
-            ...prev, evento: value
-        }))
-    }
+    
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -200,19 +199,17 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
                             <Card className="mb-4">
                                 <Card.Body>
                                     <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
-                                    <Form.Group className="mb-3" controlId="doador">
-                                        <Form.Label>Destinatário</Form.Label>
-                                        <Form.Control />
+                                    <Form.Group className="mb-3" controlId="idoso">
+                                        <SelectIdoso setIdoso={(idosoSel) => setDoaDinheiro(prev => ({...prev, idoso: idosoSel}))} setErrors={setErrors} setValidated={setValidated} errors={errors} />
                                     </Form.Group>
-                                    <Form.Group className="mb-3"
-                                        controlId="evento">
-                                        <Form.Label>Evento</Form.Label>
-                                        <Form.Select onChange={handleChangeEvento}
-                                            value={doaDinheiro.evento || ""} name="evento">
-                                            <option value="">Nenhum evento relacionado</option>
-                                            <option >Bazar Beneficente - Abril 2023</option>
-                                            <option >Campanha do Agasalho 2023</option>
-                                        </Form.Select>
+                                    <Form.Group className="mb-3" controlId="evento">
+                                        <SelectEvento
+                                          setEvento={(eventoTitulo) => setDoaDinheiro(prev => ({ ...prev, evento: eventoTitulo }))}
+                                          setErrors={setErrors}
+                                          setValidated={setValidated}
+                                          errors={errors}
+                                          selectedEventoEdit={doaDinheiro.evento}
+                                        />
                                     </Form.Group>
                                     <Form.Group className="mb-3" controlId="observacoes">
                                         <Form.Label>Observações</Form.Label>

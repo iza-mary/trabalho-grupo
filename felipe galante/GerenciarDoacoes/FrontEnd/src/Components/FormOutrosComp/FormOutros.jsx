@@ -1,7 +1,10 @@
 import { Card, Col, Row, Form, Button, Alert } from "react-bootstrap";
 import { useEffect,useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import { BiPlusCircle } from "react-icons/bi";
 import SelectDoador from "./SelectDoador";
+import SelectIdoso from "../Shared/SelectIdoso";
+import SelectEvento from "../Shared/SelectEvento";
 
 function FormOutros({ onSave }) {
 
@@ -13,6 +16,7 @@ function FormOutros({ onSave }) {
       doadorId: 0,
       nome: ""
     },
+    idoso: { id: 0, nome: "" },
     evento: "",
     obs: "",
     doacao: {
@@ -98,16 +102,7 @@ function FormOutros({ onSave }) {
       }
     }
   }
-
-  const handleChangeDoador = (e) => {
-    const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
-    setDoaOutros(prev => ({ ...prev, doador: value }))
-  }
-
-  const handleChangeEvento = (e) => {
-    const value = e.target.value;
-    setDoaOutros(prev => ({ ...prev, evento: value }));
-  }
+  
 
   const limpaForm = () => {
         setDoaOutros(prev => ({...prev, data: "",
@@ -169,6 +164,8 @@ function FormOutros({ onSave }) {
       onSave(doaOutros)
       setValidated(true);
       setShowAlert(true);
+      // Limpa o formulário após registrar
+      limpaForm();
       setTimeout(() => {
         setShowAlert(false)
       }, 3000)
@@ -225,20 +222,20 @@ function FormOutros({ onSave }) {
             <Card.Body>
               <Card.Title className="mb-4"><h5>Informações Adicionais</h5></Card.Title>
               <Form.Group className="mb-3">
-                <Form.Label>Destinatário</Form.Label>
-                <Form.Control
-                  onChange={handleChangeDoador}/>
+                <SelectIdoso
+                  setIdoso={(idoso) => setDoaOutros(prev => ({ ...prev, idoso }))}
+                  setErrors={setErrors}
+                  setValidated={setValidated}
+                  errors={errors}
+                />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Evento Relacionado (Opcional)</Form.Label>
-                <Form.Select
-                  onChange={handleChangeEvento}
-                  value={doaOutros.evento || ""}
-                  name="evento">
-                  <option value="">Nenhum evento relacionado</option>
-                  <option >Bazar Beneficente - Abril 2023</option>
-                  <option >Campanha do Agasalho 2023</option>
-                </Form.Select>
+                <SelectEvento
+                  setEvento={(eventoTitulo) => setDoaOutros(prev => ({ ...prev, evento: eventoTitulo }))}
+                  setErrors={setErrors}
+                  setValidated={setValidated}
+                  errors={errors}
+                />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Observações/Descrição</Form.Label>
@@ -256,7 +253,10 @@ function FormOutros({ onSave }) {
       </Row>
       <div className="d-flex justify-content-end gap-2">
         <Button variant="secondary" type="button" onClick={() => {limpaForm()}}>Limpar</Button>
-        <Button variant="primary" type="submit">Registrar Doação</Button>
+        <Button variant="primary" type="submit" className="d-flex align-items-center gap-2">
+          <BiPlusCircle className="me-1" size={18} />
+          Registrar Doação
+        </Button>
       </div>
     </Form>
   );

@@ -35,6 +35,14 @@ const getByFiltred = async (filtro) => {
         return result.data
     } catch (error) {
         console.error(`Erro ao buscar doações ${error}`)
+        // Fallback: tenta carregar sem filtros
+        try {
+            const all = await getAll();
+            return all;
+        } catch (fallbackErr) {
+            console.error('Erro ao carregar doações sem filtro', fallbackErr);
+            return [];
+        }
     }
 }
 

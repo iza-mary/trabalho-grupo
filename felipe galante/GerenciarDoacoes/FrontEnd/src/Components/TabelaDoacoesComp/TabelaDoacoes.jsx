@@ -42,10 +42,30 @@ function TabelaDoacoes({ onDelete, editando, onEdit, doacao: doacaoToEdit, setDo
   }, [doacoesApp])
 
     const [paginaAtual, setPaginaAtual] = useState(1);
+    const [sortBy, setSortBy] = useState('data');
+    const [sortAsc, setSortAsc] = useState(true);
     const itensPorPagina = 10
     const indexUltimoItem = paginaAtual * itensPorPagina;
     const indexPrimeiroItem = indexUltimoItem - itensPorPagina;
-    const doacoesPaginaAtual = doacoes.slice(indexPrimeiroItem, indexUltimoItem)
+    const sortedDoacoes = [...doacoes].sort((a, b) => {
+        const getValue = (d, key) => {
+            if (key === 'data') return new Date(d.data).getTime();
+            if (key === 'item') return d.doacao.item?.toLowerCase() || '';
+            if (key === 'tipo') return d.tipo || '';
+            if (key === 'valor') return d.tipo.toUpperCase() === 'D' ? parseFloat(d.doacao.valor || 0) : parseInt(d.doacao.qntd || 0);
+            if (key === 'idoso') return d.idoso?.toLowerCase() || '';
+            if (key === 'doador') return d.doador?.nome?.toLowerCase() || '';
+            if (key === 'evento') return d.evento?.toLowerCase() || '';
+            if (key === 'obs') return d.obs?.toLowerCase() || '';
+            return '';
+        }
+        const va = getValue(a, sortBy);
+        const vb = getValue(b, sortBy);
+        if (va < vb) return sortAsc ? -1 : 1;
+        if (va > vb) return sortAsc ? 1 : -1;
+        return 0;
+    });
+    const doacoesPaginaAtual = sortedDoacoes.slice(indexPrimeiroItem, indexUltimoItem)
     const totalPaginas = Math.ceil(doacoes.length / itensPorPagina);
 
     useEffect(() => {
@@ -100,6 +120,16 @@ function TabelaDoacoes({ onDelete, editando, onEdit, doacao: doacaoToEdit, setDo
         return botoes;
     };
 
+    const handleSort = (key) => {
+        if (sortBy === key) {
+            setSortAsc(!sortAsc);
+        } else {
+            setSortBy(key);
+            setSortAsc(true);
+        }
+        setPaginaAtual(1);
+    };
+
     useEffect(() => {
         if (doacaoToEdit) {
             setDoacao({
@@ -151,17 +181,17 @@ function TabelaDoacoes({ onDelete, editando, onEdit, doacao: doacaoToEdit, setDo
                                 <p className='text-muted'>Nenhuma doação encontrada</p>
                             </div>
                         ) : (
-                            <Table>
+                            <Table striped hover responsive>
                                 <thead>
                                     <tr>
-                                        <th>Data</th>
-                                        <th>Item</th>
-                                        <th>Tipo</th>
-                                        <th>Valor/Quant</th>
-                                        <th>Idoso</th>
-                                        <th>Doador</th>
-                                        <th>Evento</th>
-                                        <th>Desc/Obs</th>
+                                        <th role="button" onClick={() => handleSort('data')}>Data</th>
+                                        <th role="button" onClick={() => handleSort('item')}>Item</th>
+                                        <th role="button" onClick={() => handleSort('tipo')}>Tipo</th>
+                                        <th role="button" onClick={() => handleSort('valor')}>Valor/Quant</th>
+                                        <th role="button" onClick={() => handleSort('idoso')}>Idoso</th>
+                                        <th role="button" onClick={() => handleSort('doador')}>Doador</th>
+                                        <th role="button" onClick={() => handleSort('evento')}>Evento</th>
+                                        <th role="button" onClick={() => handleSort('obs')}>Desc/Obs</th>
                                         <th>Ações</th>
                                     </tr>
                                 </thead>
@@ -189,7 +219,7 @@ function TabelaDoacoes({ onDelete, editando, onEdit, doacao: doacaoToEdit, setDo
                                                 </td>
                                                 <td>{d.obs ?? '-'}</td>
                                                 <td>
-                                                    <div className='d-flex'>
+                                                    <div className='botoes-acao d-flex'>
                                                         <Button className='action-btns' title='Editar' size='sm' onClick={() => { onEdit(d), editando(false) }} variant='outline-warning'>
                                                             <BiPencil></BiPencil>
                                                         </Button>

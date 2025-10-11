@@ -1,9 +1,9 @@
 const sql = require('mysql2/promise');
 const dbConfig = {
-    host : 'localhost',
-    user : 'root',
-    password: '1234',
-    database: "sata",
+    host: 'localhost',
+    user: 'root',
+    password: 'admin123',
+    database: 'sistema_idosos',
     waitForConnections : true,
     connectionLimit : 10,
     queueLimit : 0
