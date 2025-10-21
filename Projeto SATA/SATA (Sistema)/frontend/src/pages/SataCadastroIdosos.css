@@ -1,0 +1,90 @@
+/* ===============================================
+   Tema moderno e acessível — Cadastro de Idosos
+   =============================================== */
+
+/* Container principal */
+.container-principal {
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+}
+
+/* Remover padding padrão do Bootstrap em container-fluid */
+.container-principal.container-fluid {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.content-area {
+  padding: clamp(8px, 2vw, 16px);
+  width: 100%;
+  min-height: 100vh;
+  background: var(--page-bg);
+  color: var(--text);
+  position: relative;
+  z-index: 0;
+}
+
+/* Garantir que o conteúdo fique acima do wrapper */
+.content-area > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Linha do cabeçalho */
+.linha-cabecalho {
+  padding: var(--gap-3) 0 0;
+  margin: 0;
+  border-bottom: 1px solid transparent;
+}
+
+/* Seções do formulário */
+.secao-formulario {
+  background-color: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  margin-bottom: var(--gap-4);
+}
+
+.secao-formulario .card-header {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid var(--border);
+  padding: var(--gap-3) var(--gap-4);
+  font-weight: 600;
+}
+
+.secao-formulario .card-body { padding: var(--gap-4); }
+
+/* Controles de formulário */
+.form-control, .form-select { border-radius: 8px; }
+
+.form-control:focus, .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Botões */
+.btn { padding: 8px 16px; border-radius: 10px; font-weight: 600; }
+
+/* Ícone do título em azul, alinhado ao padrão de Internações */
+.linha-cabecalho h2 svg {
+  color: #0d6efd;
+}
+
+@media (max-width: 768px) {
+  .content-area {
+    margin-left: 0;
+    width: 100%;
+    padding: 10px;
+  }
+
+  .linha-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .linha-cabecalho .breadcrumb {
+    margin-top: 10px;
+  }
+}

@@ -1,0 +1,79 @@
+/* Shared UI styles for reusable components */
+.page-header {
+  padding: var(--gap-3) 0 0;
+  border-bottom: 1px solid transparent;
+  margin-bottom: var(--gap-4);
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Deixar ícones dos cabeçalhos azuis e consistentes */
+.page-header h2 svg {
+  color: var(--primary);
+}
+
+/* Botão roxo para ação de Movimentação - integra com variáveis do Bootstrap */
+.btn-mov-roxo {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #6f42c1;
+  --bs-btn-border-color: #6f42c1;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #5a32a3;
+  --bs-btn-hover-border-color: #5a32a3;
+  --bs-btn-focus-shadow-rgb: 111, 66, 193;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #4b268c;
+  --bs-btn-active-border-color: #4b268c;
+}
+/* Garantir aplicação em todos os estados (override direto) */
+.btn.btn-mov-roxo {
+  background-color: #6f42c1 !important;
+  border-color: #6f42c1 !important;
+  color: #fff !important;
+}
+.btn.btn-mov-roxo:hover,
+.btn.btn-mov-roxo:focus {
+  background-color: #5a32a3 !important;
+  border-color: #5a32a3 !important;
+  color: #fff !important;
+}
+.btn.btn-mov-roxo:active,
+.btn.btn-mov-roxo.active {
+  background-color: #4b268c !important;
+  border-color: #4b268c !important;
+}
+
+/* Estilo outline roxo para botão de ação na tabela */
+.btn-outline-purple {
+  --bs-btn-color: #800080;
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: #800080;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #800080; /* completamente roxo no hover */
+  --bs-btn-hover-border-color: #800080;
+  --bs-btn-focus-shadow-rgb: 128, 0, 128;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #800080;
+  --bs-btn-active-border-color: #800080;
+}
+/* Override direto para garantir consistência com Bootstrap */
+.btn.btn-outline-purple {
+  background-color: transparent;
+  color: #800080;
+  border-color: #800080;
+}
+.btn.btn-outline-purple:hover,
+.btn.btn-outline-purple:focus {
+  background-color: #800080;
+  color: #fff;
+  border-color: #800080;
+}
+.btn.btn-outline-purple:active,
+.btn.btn-outline-purple.active {
+  background-color: #800080;
+  color: #fff;
+  border-color: #800080;
+}

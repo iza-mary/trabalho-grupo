@@ -1,0 +1,206 @@
+/* ===============================================
+   Tema moderno e acessível — Internações
+   =============================================== */
+
+/* Área de conteúdo principal */
+.content-area {
+  padding: clamp(8px, 2vw, 16px);
+  min-height: 100vh;
+  background: var(--page-bg);
+  color: var(--text);
+  position: relative;
+  z-index: 0;
+}
+
+/* Garantir que o conteúdo fique acima do wrapper */
+.content-area > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Cabeçalho da página */
+.page-header {
+  padding: var(--gap-3) 0;
+  border-bottom: 1px solid transparent;
+}
+
+.page-title {
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  margin: 0;
+}
+
+.page-subtitle { color: var(--muted); margin: 4px 0 0; }
+
+.btn-action { border-radius: 10px; padding: 8px 14px; font-weight: 600; }
+
+/* Cards de internação */
+.internacao-card {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.internacao-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.internacao-card .card-header {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid var(--border);
+  padding: var(--gap-3) var(--gap-4);
+  font-weight: 600;
+}
+
+.internacao-card .card-body { padding: var(--gap-4); }
+
+.internacao-card .card-footer {
+  background-color: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: var(--gap-3) var(--gap-4);
+}
+
+/* Informações da internação */
+.internacao-info .info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.internacao-info .info-item:last-child {
+  margin-bottom: 0;
+}
+
+.internacao-info .info-item svg {
+  flex-shrink: 0;
+}
+
+/* Badge de status */
+.status-badge { font-size: 0.85rem; font-weight: 600; }
+
+/* Card de filtros */
+.card { border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+
+.card-header { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-bottom: 1px solid var(--border); padding: var(--gap-3) var(--gap-4); font-weight: 600; }
+
+/* Harmonizar cards com o menu lateral (borda azul sutil) */
+.card,
+.internacao-card,
+.filter-card,
+.stats-card {
+  border-color: rgba(13, 110, 253, 0.25);
+}
+
+.card-header,
+.internacao-card .card-header {
+  border-bottom-color: rgba(13, 110, 253, 0.25);
+}
+
+/* Ajuste no título e ícone do cabeçalho */
+.page-title svg { color: #0d6efd; }
+
+/* Ações do cabeçalho: espaçamento consistente */
+.linha-cabecalho { margin: 0; }
+.linha-cabecalho .btn { border-radius: 10px; }
+
+/* Botões */
+.btn { padding: 8px 16px; border-radius: 10px; font-weight: 600; }
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Controles de formulário */
+.form-control, .form-select { border-radius: 8px; }
+
+.form-control:focus, .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Modal customizations */
+.modal-header { background-color: #f8f9fa; border-bottom: 1px solid var(--border); }
+
+.modal-footer { background-color: #f8f9fa; border-top: 1px solid var(--border); }
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .content-area { padding: 10px; }
+
+  .linha-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .linha-cabecalho > div {
+    margin-top: 10px;
+  }
+
+  .internacao-card {
+    margin-bottom: 15px;
+  }
+
+  .internacao-info .info-item {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .content-area { padding: 8px; }
+
+  .internacao-card .card-header,
+  .internacao-card .card-body,
+  .internacao-card .card-footer {
+    padding: 15px;
+  }
+
+  .linha-cabecalho h2 {
+    font-size: 1.5rem;
+  }
+
+  .linha-cabecalho .btn {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}
+
+/* Containers ocupam toda a largura da área de conteúdo */
+.content-area > .container,
+.content-area > .container-fluid {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .content-area > .container,
+  .content-area > .container-fluid {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Tabela de internações */
+.internacoes-table th {
+  white-space: nowrap;
+}
+
+.internacoes-table td {
+  vertical-align: middle;
+}
+
+.internacoes-table .status-badge {
+  font-size: 0.8rem;
+}
