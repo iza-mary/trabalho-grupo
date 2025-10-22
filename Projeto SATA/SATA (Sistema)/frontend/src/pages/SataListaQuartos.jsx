@@ -7,6 +7,7 @@ import StandardTable from '../components/ui/StandardTable';
 import StatusBadge from '../components/ui/StatusBadge';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { quartoService } from '../services/quartoService';
 import './SataQuartos.css';
 
@@ -23,6 +24,14 @@ const SataListaQuartos = () => {
   const [excluindo, setExcluindo] = useState(false);
   const [mensagemExclusao, setMensagemExclusao] = useState(null);
   const [tipoMensagemExclusao, setTipoMensagemExclusao] = useState('success');
+  const { isAdmin } = useAuth();
+
+// Abre detalhes do quarto ao clicar na linha. Para Admin, navega para edição.
+const abrirDetalhes = (quarto) => {
+  if (!quarto) return;
+  if (!isAdmin) return;
+  navigate(`/quartos/editar/${quarto.id}`);
+};
 
   useEffect(() => {
     const carregar = async () => {
@@ -125,7 +134,13 @@ const SataListaQuartos = () => {
             title="Lista de Quartos"
             icon={<HouseDoor />}
             actions={
-              <Button variant="primary" onClick={() => navigate('/quartos/cadastro')} aria-label="Cadastrar novo quarto">
+              <Button
+                variant="primary"
+                onClick={() => navigate('/quartos/cadastro')}
+                aria-label="Cadastrar novo quarto"
+                className={`d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`}
+                disabled={!isAdmin}
+              >
                 <PlusCircle className="me-1" /> Novo Quarto
               </Button>
             }
@@ -200,7 +215,7 @@ const SataListaQuartos = () => {
                     </thead>
                     <tbody>
                       {quartosFiltrados.map((q) => (
-                        <tr key={q.id}>
+                        <tr key={q.id} role="button" onClick={() => abrirDetalhes(q)}>
                           <td>{q.numero}</td>
                           <td>{q.capacidade}</td>
                           <td>{q.descricao || '-'}</td>
@@ -211,7 +226,9 @@ const SataListaQuartos = () => {
                                 variant="outline-primary"
                                 title="Editar"
                                 ariaLabel={`Editar quarto ${q.numero}`}
-                                onClick={() => navigate(`/quartos/editar/${q.id}`)}
+                                disabled={!isAdmin}
+                                className={!isAdmin ? 'disabled-action' : ''}
+                                onClick={!isAdmin ? undefined : () => navigate(`/quartos/editar/${q.id}`)}
                               >
                                 <Pencil />
                               </ActionIconButton>
@@ -219,8 +236,9 @@ const SataListaQuartos = () => {
                                 variant="outline-danger"
                                 title="Excluir"
                                 ariaLabel={`Excluir quarto ${q.numero}`}
-                                className="ms-2"
-                                onClick={() => handleExcluirClick(q)}
+                                disabled={!isAdmin}
+                                className={!isAdmin ? 'disabled-action ms-2' : 'ms-2'}
+                                onClick={!isAdmin ? undefined : () => handleExcluirClick(q)}
                               >
                                 <Trash />
                               </ActionIconButton>

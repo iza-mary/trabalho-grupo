@@ -1,19 +1,21 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  BsHouseDoorFill,
-  BsPeopleFill,
-  BsCalendarEventFill,
-  BsList,
-  BsChevronLeft,
-  BsChevronRight
-} from "react-icons/bs";
-import { Building, HeartFill, GiftFill, CashStack, BoxSeam, BellFill } from "react-bootstrap-icons";
-import "./Navbar.css";
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { BsList, BsChevronLeft, BsChevronRight, BsHouseDoorFill, BsPeopleFill, BsCalendarEventFill, BsPersonFill, BsBoxArrowRight, BsKeyFill } from 'react-icons/bs';
+import { Building, HeartFill, GiftFill, CashStack, BoxSeam, BellFill } from 'react-bootstrap-icons';
+import { useAuth } from '../hooks/useAuth';
+import './Navbar.css';
 
-const Navbar = ({ children, disableSidebar = false }) => {
+const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
   const [open, setOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const closeOnNavigate = () => setOpen(false);
+
+  const handleLogout = async () => {
+    if (disableSidebar) return;
+    await logout();
+    navigate('/login');
+  };
 
   // Se a sidebar estiver desativada, garantir que não fique aberta
   useEffect(() => {
@@ -41,6 +43,15 @@ const Navbar = ({ children, disableSidebar = false }) => {
             {open ? <BsChevronLeft size={18} /> : <BsChevronRight size={18} />}
           </button>
         </div>
+
+        {sidebarExtra && (
+          <section className="sidebar-section" aria-label="Seção adicional do menu lateral">
+            <div className="sidebar-section-inner">
+              {sidebarExtra}
+            </div>
+          </section>
+        )}
+
         <ul className="nav-vertical">
           <li>
             <Link to="/quartos" className="nav-item" onClick={closeOnNavigate} aria-disabled={disableSidebar ? 'true' : 'false'} tabIndex={disableSidebar ? -1 : 0}>
@@ -96,7 +107,50 @@ const Navbar = ({ children, disableSidebar = false }) => {
               <CashStack className="me-2" size={18} /> <span className="label">Financeiro</span>
             </Link>
           </li>
+
+          {/* Conta: alterar senha */}
+          <li>
+            <Link to="/perfil" className="nav-item" onClick={closeOnNavigate} aria-disabled={disableSidebar ? 'true' : 'false'} tabIndex={disableSidebar ? -1 : 0}>
+              <BsKeyFill className="me-2" size={18} /> <span className="label">Alterar senha</span>
+            </Link>
+          </li>
         </ul>
+
+        {/* Área inferior fixa: info do usuário e botão sair */}
+        <div className="sidebar-bottom">
+          {/* Informações do usuário logado */}
+          <section className="sidebar-section" aria-label="Informações do usuário">
+            <div className="sidebar-section-inner" aria-live="polite">
+              {user ? (
+                <div className="user-summary">
+                  <div className="d-flex align-items-center gap-2">
+                    <BsPersonFill size={18} />
+                    <span><strong>{user.username}</strong></span>
+                  </div>
+                  <div className="text-muted small mt-1">
+                    Nível de acesso: {user.role}
+                  </div>
+                </div>
+              ) : (
+                <div className="user-summary">
+                  Não autenticado
+                </div>
+              )}
+            </div>
+          </section>
+
+          {user && (
+            <button
+              type="button"
+              className="nav-item mt-2"
+              onClick={handleLogout}
+              disabled={disableSidebar}
+              aria-disabled={disableSidebar ? 'true' : 'false'}
+            >
+              <BsBoxArrowRight className="me-2" size={18} /> <span className="label">Sair</span>
+            </button>
+          )}
+        </div>
       </aside>
 
       {/* Header de controle no mobile */}

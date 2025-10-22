@@ -29,6 +29,7 @@ import './SataListaIdosos.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import idosoService from '../services/idosoService';
 import Navbar from '../components/Navbar';
+import { useAuth } from '../hooks/useAuth';
 
 const SataListaIdosos = () => {
   const navigate = useNavigate();
@@ -41,6 +42,9 @@ const SataListaIdosos = () => {
   const [carregando, setCarregando] = useState(true);
   const [erroCarregamento, setErroCarregamento] = useState(null);
   const [idosos, setIdosos] = useState([]);
+  const { user, isAdmin } = useAuth();
+  const isFuncionarioOnly = !isAdmin && user?.role === 'Funcionário';
+  const disableActions = isFuncionarioOnly;
 
   useEffect(() => {
     const carregarIdosos = async () => {
@@ -63,6 +67,7 @@ const SataListaIdosos = () => {
   };
 
   const confirmarExclusao = async () => {
+    if (disableActions) return;
     try {
       await idosoService.remove(idosoSelecionado.id);
       const novosDados = idosos.filter(item => item.id !== idosoSelecionado.id);
@@ -74,14 +79,13 @@ const SataListaIdosos = () => {
   };
 
   const handleDarBaixa = async () => {
+    if (disableActions) return;
     try {
       // Atualizar status do idoso para "nao_internado"
       await idosoService.updateStatus(idosoSelecionado.id, 'nao_internado');
-      
       // Recarregar a lista de idosos
       const dados = await idosoService.getAll();
       setIdosos(dados);
-      
       setMostrarModalConfirmacao(false);
       alert('Baixa realizada com sucesso!');
     } catch (error) {
@@ -174,9 +178,10 @@ const SataListaIdosos = () => {
               <>
                 <Button 
                   variant="primary"
-                  onClick={() => navigate('/cadastro')}
+                  onClick={(e) => { if (disableActions) { e.preventDefault(); e.stopPropagation(); return; } navigate('/cadastro'); }}
                   aria-label="Cadastrar novo idoso"
-                  className="me-2"
+                  className={disableActions ? 'me-2 disabled-action' : 'me-2'}
+                  disabled={disableActions}
                 >
                   <PlusCircle className="me-1" /> Novo Idoso
                 </Button>
@@ -290,7 +295,9 @@ const SataListaIdosos = () => {
                                   size="sm"
                                   title="Editar"
                                   ariaLabel={`Editar ${idoso.nome}`}
-                                  onClick={() => navigate(`/editar/${idoso.id}`)}
+                                  onClick={() => { if (disableActions) return; navigate(`/editar/${idoso.id}`); }}
+                                  disabled={disableActions}
+                                  className={disableActions ? 'disabled-action' : undefined}
                                 >
                                   <Pencil />
                                 </ActionIconButton>
@@ -312,11 +319,9 @@ const SataListaIdosos = () => {
                                     size="sm"
                                     title="Dar Baixa"
                                     ariaLabel={`Dar baixa para ${idoso.nome}`}
-                                    onClick={() => {
-                                      setIdosoSelecionado(idoso);
-                                      setMostrarModalConfirmacao(true);
-                                    }}
-                                    className="me-1"
+                                    onClick={() => { if (disableActions) return; setIdosoSelecionado(idoso); setMostrarModalConfirmacao(true); }}
+                                    className={disableActions ? 'me-1 disabled-action' : 'me-1'}
+                                    disabled={disableActions}
                                   >
                                     <BoxArrowRight />
                                   </ActionIconButton>
@@ -327,7 +332,9 @@ const SataListaIdosos = () => {
                                   size="sm"
                                   title="Excluir"
                                   ariaLabel={`Excluir ${idoso.nome}`}
-                                  onClick={() => handleExcluirClick(idoso)}
+                                  onClick={() => { if (disableActions) return; handleExcluirClick(idoso); }}
+                                  disabled={disableActions}
+                                  className={disableActions ? 'disabled-action' : undefined}
                                 >
                                   <Trash />
                                 </ActionIconButton>
@@ -363,7 +370,7 @@ const SataListaIdosos = () => {
               <Button variant="secondary" onClick={() => setMostrarModalExclusao(false)}>
                 Cancelar
               </Button>
-              <Button variant="danger" onClick={confirmarExclusao}>
+              <Button variant="danger" onClick={confirmarExclusao} disabled={disableActions} className={disableActions ? 'disabled-action' : undefined}>
                 Excluir
               </Button>
             </Modal.Footer>
@@ -381,7 +388,7 @@ const SataListaIdosos = () => {
               <Button variant="secondary" onClick={() => setMostrarModalConfirmacao(false)}>
                 Cancelar
               </Button>
-              <Button variant="warning" onClick={handleDarBaixa}>
+              <Button variant="warning" onClick={handleDarBaixa} disabled={disableActions} className={disableActions ? 'disabled-action' : undefined}>
                 Confirmar Baixa
               </Button>
             </Modal.Footer>

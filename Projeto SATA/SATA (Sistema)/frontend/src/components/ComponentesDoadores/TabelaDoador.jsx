@@ -1,36 +1,13 @@
-import React, { useState } from 'react';
-import {
-  Button,
-  Card,
-  Alert,
-  Modal
-} from 'react-bootstrap';
-import StandardTable from '../ui/StandardTable';
-import {
-  Pencil,
-  Trash,
-  } from 'react-bootstrap-icons';
-import './SataDoadores.css';
+import { useState } from "react";
+import { Button, Alert, Card, Modal } from "react-bootstrap";
+import { Pencil, Trash } from "react-bootstrap-icons";
+import StandardTable from "../ui/StandardTable";
+import { formatDate } from "../../utils/dateUtils";
+import { useAuth } from '../../hooks/useAuth';
 
-function TabelaDoadores({
-  ativaModal,
-  doadores,
-  setDoadorEditar,
-  onDelete,
-  handleDeletar
-}) {
+function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handleDeletar }) {
   const [deletar, setDeletar] = useState(false);
-  const formatDate = (raw) => {
-    if (!raw) return '-';
-    try {
-      const d = typeof raw === 'string' ? new Date(raw) : raw;
-      if (!d || isNaN(d.getTime())) return '-';
-      return d.toLocaleDateString('pt-BR');
-    } catch {
-      return '-';
-    }
-  };
-  
+  const { isAdmin } = useAuth();
 
   return (
     <>
@@ -64,8 +41,10 @@ function TabelaDoadores({
                           <Button
                             variant="outline-primary"
                             size="sm"
-                            title="Editar"
-                            onClick={() => { 
+                            title={!isAdmin ? 'Apenas Administradores podem editar' : 'Editar'}
+                            disabled={!isAdmin}
+                            className={`me-1 ${!isAdmin ? 'disabled-action' : ''}`}
+                            onClick={!isAdmin ? undefined : () => { 
                               ativaModal(true); 
                               setDoadorEditar(doador); 
                             }}
@@ -75,8 +54,10 @@ function TabelaDoadores({
                           <Button
                             variant="outline-danger"
                             size="sm"
-                            title="Excluir"
-                            onClick={() => { 
+                            title={!isAdmin ? 'Apenas Administradores podem excluir' : 'Excluir'}
+                            disabled={!isAdmin}
+                            className={`${!isAdmin ? 'disabled-action' : ''}`}
+                            onClick={!isAdmin ? undefined : () => { 
                               setDeletar(true); 
                               handleDeletar(doador); 
                             }}
@@ -111,6 +92,9 @@ function TabelaDoadores({
               onDelete(); 
               setDeletar(false); 
             }}
+            disabled={!isAdmin}
+            title={!isAdmin ? 'Apenas Administradores podem confirmar exclusão' : 'Excluir'}
+            className={!isAdmin ? 'disabled-action' : ''}
           >
             Excluir
           </Button>

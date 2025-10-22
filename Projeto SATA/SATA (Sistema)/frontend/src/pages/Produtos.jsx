@@ -7,6 +7,7 @@ import { BoxSeam, PlusCircle, Funnel, Pencil, Trash, ArrowLeftRight } from 'reac
 import { listarProdutos, deletarProduto, movimentarProduto } from '../services/produtosService';
 import { Modal, Button } from 'react-bootstrap';
 import { categoriasProdutos } from './validacoesProdutos';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Produtos() {
   const [items, setItems] = useState([]);
@@ -22,6 +23,7 @@ export default function Produtos() {
   const [showFilters, setShowFilters] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   // Estado da movimentação de estoque
   const [showMovModal, setShowMovModal] = useState(false);
@@ -136,14 +138,19 @@ export default function Produtos() {
           icon={<BoxSeam />}
           actions={
             <>
-              <Link to="/produtos/novo" className="btn btn-primary d-inline-flex align-items-center">
+              <Link
+                to="/produtos/novo"
+                className={`btn btn-primary d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`}
+                onClick={!isAdmin ? (e) => e.preventDefault() : undefined}
+              >
                 <PlusCircle className="me-1" size={16} /> Novo Produto
               </Link>
               <button
                 type="button"
-                className="btn btn-mov-roxo d-inline-flex align-items-center ms-2"
-                onClick={() => abrirMovimentacao(null)}
+                className={`btn btn-mov-roxo d-inline-flex align-items-center ms-2 ${!isAdmin ? 'disabled-action' : ''}`}
+                onClick={!isAdmin ? undefined : () => abrirMovimentacao(null)}
                 title="Movimentar Estoque"
+                disabled={!isAdmin}
               >
                 <ArrowLeftRight className="me-1" size={16} /> Movimentar
               </button>
@@ -280,6 +287,9 @@ export default function Produtos() {
                             variant="outline-primary"
                             title="Editar"
                             ariaLabel="Editar produto"
+                            disabled={!isAdmin}
+                            className={!isAdmin ? 'disabled-action' : ''}
+                            onClick={!isAdmin ? (e) => e.preventDefault() : undefined}
                           >
                             <Pencil />
                           </ActionIconButton>
@@ -287,14 +297,19 @@ export default function Produtos() {
                             variant="outline-purple"
                             title="Movimentar"
                             ariaLabel="Movimentar estoque"
-                            onClick={() => abrirMovimentacao(p)}
+                            disabled={!isAdmin}
+                            className={!isAdmin ? 'disabled-action' : ''}
+                            onClick={!isAdmin ? undefined : () => abrirMovimentacao(p)}
                           >
                             <ArrowLeftRight />
-                          </ActionIconButton>
+                          </ActionIconButton
+                          >
                           <ActionIconButton
                             variant="outline-danger"
                             title="Excluir"
-                            onClick={async () => {
+                            disabled={!isAdmin}
+                            className={!isAdmin ? 'disabled-action' : ''}
+                            onClick={!isAdmin ? undefined : async () => {
                               if (!window.confirm('Confirma excluir este produto?')) return;
                               try {
                                 setError('');

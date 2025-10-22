@@ -33,10 +33,12 @@ import idosoService from '../services/idosoService.js';
 import { quartoService } from '../services/quartoService.js';
 import Navbar from '../components/Navbar';
 import SearchSelect from '../components/SearchSelect';
+import { useAuth } from '../hooks/useAuth';
 
 const SataInternacoes = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAdmin } = useAuth();
   const [internacoes, setInternacoes] = useState([]);
   const [idosos, setIdosos] = useState([]);
   const [quartosDisponiveis, setQuartosDisponiveis] = useState([]);
@@ -314,8 +316,10 @@ const SataInternacoes = () => {
               </Button>
               <Button 
                 variant="primary" 
-                onClick={() => setMostrarModalNova(true)}
-                className="btn-action"
+                onClick={() => isAdmin && setMostrarModalNova(true)}
+                className={`btn-action ${!isAdmin ? 'disabled-action' : ''}`}
+                disabled={!isAdmin}
+                title={!isAdmin ? 'Apenas Administradores podem criar internações' : 'Nova Internação'}
               >
                 <PlusCircle className="me-2" />
                 Nova Internação

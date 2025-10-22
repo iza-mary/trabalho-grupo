@@ -1,38 +1,33 @@
-const API_BASE_URL = 'http://localhost:3000/api/idosos';
+import api from './api';
 
-const handleResponse = async (response) => {
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    if (!data.success) {
-        throw new Error(data.message || 'Erro de requisição');
-    }
-    return data;
-};
+const resource = '/idosos';
 
 const getAll = async () => {
     try {
-        const response = await fetch(API_BASE_URL);
-        const result = await handleResponse(response);
-        return result.data || [];
+        const { data } = await api.get(resource);
+        if (!data?.success) throw new Error(data?.message || 'Erro de requisição');
+        return data.data || [];
     } catch (error) {
         console.error('Erro detalhado:', {
             message: error.message,
-            endpoint: API_BASE_URL,
-            stack: error.stack
+            endpoint: resource,
+            status: error?.response?.status
         });
+        if (error?.response?.status === 401) {
+            throw new Error('Não autenticado. Faça login novamente.');
+        }
         throw new Error('Serviço indisponível. Tente novamente mais tarde.');
     }
 };
 
 const getById = async (id) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/${id}`);
-        const result = await handleResponse(response);
-        
+        const { data } = await api.get(`${resource}/${id}`);
+        if (!data?.success) throw new Error(data?.message || 'Erro de requisição');
+        const result = data;
+
         console.log('Dados recebidos da API:', result.data);
-        
+
         return {
             ...result.data,
             rua: result.data.rua || '',
@@ -50,18 +45,9 @@ const getById = async (id) => {
 
 const add = async (idoso) => {
     try {
-        const response = await fetch(API_BASE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(idoso),
-        });
-        const result = await handleResponse(response);
-        
-        return {
-            ...result.data
-        };
+        const { data } = await api.post(resource, idoso);
+        if (!data?.success) throw new Error(data?.message || 'Erro ao adicionar');
+        return { ...data.data };
     } catch (error) {
         console.error('Erro ao adicionar idoso', error);
         throw error;
@@ -70,25 +56,16 @@ const add = async (idoso) => {
 
 const update = async (id, idoso) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ...idoso,
-                id: parseInt(id)
-            }),
+        const { data } = await api.put(`${resource}/${id}`, {
+            ...idoso,
+            id: parseInt(id)
         });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Erro ao atualizar');
-        }
-        
-        return await response.json();
+        if (!data?.success) throw new Error(data?.message || 'Erro ao atualizar');
+        return data;
     } catch (error) {
-        console.error("Erro no service:", { 
+        console.error('Erro no service:', {
             message: error.message,
-            payload: idoso 
+            payload: idoso
         });
         throw error;
     }
@@ -96,12 +73,9 @@ const update = async (id, idoso) => {
 
 const remove = async (id) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/${id}`, {
-            method: 'DELETE',
-        });
-        const result = await handleResponse(response);
-
-        return result.message;
+        const { data } = await api.delete(`${resource}/${id}`);
+        if (!data?.success) throw new Error(data?.message || 'Erro ao excluir');
+        return data?.message || 'Excluído com sucesso';
     } catch (error) {
         console.error(`Erro ao excluir idoso ${id}:`, error);
         throw error;
@@ -110,24 +84,11 @@ const remove = async (id) => {
 
 const updateStatus = async (id, status) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/${id}/status`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({
-                status: status
-            }),
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Erro ao atualizar status');
-        }
-        
-        return await response.json();
+        const { data } = await api.put(`${resource}/${id}/status`, { status });
+        if (!data?.success) throw new Error(data?.message || 'Erro ao atualizar status');
+        return data;
     } catch (error) {
-        console.error("Erro ao atualizar status:", error);
+        console.error('Erro ao atualizar status:', error);
         throw error;
     }
 };

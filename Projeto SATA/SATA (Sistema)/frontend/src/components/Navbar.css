@@ -199,6 +199,7 @@
 .sidebar.collapsed .nav-item .label { display: none; }
 .sidebar.collapsed .nav-item .me-2 { margin: 0 !important; }
 .sidebar.collapsed .brand { display: none; }
+.sidebar.collapsed .sidebar-section { display: none; }
 .sidebar.collapsed .nav-vertical { padding-left: 0; }
 .sidebar.collapsed .nav-item { margin-right: 0; }
 @media (min-width: 768px) {
@@ -242,3 +243,8 @@
 
 /* Backdrop para mobile */
 .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1099; }
+/* Ajustes solicitados: deslocamento da seção e cor azul do nível de acesso */
+.sidebar-section { margin-top: 16px; }
+.sidebar-section .user-summary .text-muted { color: #0d6efd !important; }
+.sidebar-bottom { margin-top: auto; padding-left: 6px; }
+.sidebar-bottom .sidebar-section-inner { margin-right: 8px; }

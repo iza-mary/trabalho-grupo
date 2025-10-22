@@ -1,7 +1,6 @@
 import "./sidebar.css";
 import { BiGift } from "react-icons/bi";
-import { Nav } from "react-bootstrap";
-
+import { Link } from "react-router-dom";
 
 function SideBar() {
   return (
@@ -9,11 +8,14 @@ function SideBar() {
       <div className="d-flex align-items-center mb-4">
         <h4 className="m-0">SATA</h4>
       </div>
-      <Nav className="flex-column">
-        <Nav.Item>
-          <Nav.Link href=""> <BiGift size={20} className="mb-1"/> Doações </Nav.Link>
-        </Nav.Item>
-      </Nav>
+      <ul className="list-unstyled m-0 p-0">
+        <li>
+          <Link to="/doacoes" className="nav-link d-flex align-items-center">
+            <BiGift size={20} className="mb-1 me-2" />
+            Doações
+          </Link>
+        </li>
+      </ul>
     </div>
   );
 };

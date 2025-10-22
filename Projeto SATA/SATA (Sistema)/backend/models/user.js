@@ -4,7 +4,7 @@ class User {
     this.username = (data.username || '').trim();
     this.password = data.password || null; // plain for validation only
     this.password_hash = data.password_hash || null; // stored
-    this.role = data.role || 'user';
+    this.role = data.role || 'Funcionário';
     this.created_at = data.created_at || null;
     this.updated_at = data.updated_at || null;
   }
@@ -16,7 +16,8 @@ class User {
       if (!this.password) errors.push('password é obrigatório');
       if (this.password && this.password.length < 6) errors.push('password deve ter pelo menos 6 caracteres');
     }
-    if (!['admin', 'user'].includes(this.role)) errors.push('role inválido');
+    const allowedRoles = ['Admin', 'Funcionário'];
+    if (!allowedRoles.includes(this.role)) errors.push('role inválido');
     return errors;
   }
 

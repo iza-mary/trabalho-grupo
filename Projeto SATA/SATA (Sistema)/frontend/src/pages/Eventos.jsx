@@ -13,6 +13,7 @@ import '../styles/Eventos.css';
 import StandardTable from '../components/ui/StandardTable';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { useAuth } from '../hooks/useAuth';
 
 // Importações de CSS do FullCalendar para garantir renderização correta
 
@@ -23,6 +24,7 @@ export default function Eventos() {
   const [showModal, setShowModal] = useState(false);
   const [modo, setModo] = useState('criar'); // criar | editar | visualizar
   const [eventoSelecionado, setEventoSelecionado] = useState(null);
+  const { isAdmin } = useAuth();
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -425,7 +427,8 @@ export default function Eventos() {
           <Button
             variant="primary"
             onClick={() => abrirCriar()}
-            className="d-inline-flex align-items-center"
+            className={`d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`}
+            disabled={!isAdmin}
           >
             <PlusCircle className="me-1" size={16} />
             Novo Evento
@@ -599,7 +602,7 @@ export default function Eventos() {
         <Modal.Body>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h6 className="mb-0">Agendados</h6>
-            <Button variant="primary" onClick={criarEventoNoDia} className="d-inline-flex align-items-center">
+            <Button variant="primary" onClick={criarEventoNoDia} className={`d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`} disabled={!isAdmin}>
               <PlusCircle className="me-1" size={16} /> Novo Evento
             </Button>
           </div>
@@ -637,7 +640,9 @@ export default function Eventos() {
                         size="sm"
                         title="Editar"
                         ariaLabel={`Editar ${ev.titulo}`}
-                        onClick={(e) => { e.stopPropagation(); setShowDiaModal(false); abrirEditar(ev); }}
+                        disabled={!isAdmin}
+                        className={!isAdmin ? 'disabled-action' : ''}
+                        onClick={!isAdmin ? undefined : (e) => { e.stopPropagation(); setShowDiaModal(false); abrirEditar(ev); }}
                       >
                         <Pencil />
                       </ActionIconButton>
@@ -646,8 +651,9 @@ export default function Eventos() {
                         size="sm"
                         title="Excluir"
                         ariaLabel={`Excluir ${ev.titulo}`}
-                        onClick={(e) => { e.stopPropagation(); abrirConfirmarExclusao(ev); }}
-                        className="ms-2"
+                        disabled={!isAdmin}
+                        className={!isAdmin ? 'disabled-action ms-2' : 'ms-2'}
+                        onClick={!isAdmin ? undefined : (e) => { e.stopPropagation(); abrirConfirmarExclusao(ev); }}
                       >
                         <Trash />
                       </ActionIconButton>
@@ -723,6 +729,8 @@ export default function Eventos() {
                             size="sm"
                             title="Editar"
                             ariaLabel={`Editar ${e.titulo}`}
+                            disabled={!isAdmin}
+                            className={!isAdmin ? 'disabled-action' : ''}
                             onClick={(ev) => { ev.stopPropagation(); abrirEditar(e); }}
                           >
                             <Pencil />
@@ -732,8 +740,9 @@ export default function Eventos() {
                             size="sm"
                             title="Excluir"
                             ariaLabel={`Excluir ${e.titulo}`}
+                            disabled={!isAdmin}
+                            className={!isAdmin ? 'disabled-action ms-2' : 'ms-2'}
                             onClick={(ev) => { ev.stopPropagation(); abrirConfirmarExclusao(e); }}
-                            className="ms-2"
                           >
                             <Trash />
                           </ActionIconButton>

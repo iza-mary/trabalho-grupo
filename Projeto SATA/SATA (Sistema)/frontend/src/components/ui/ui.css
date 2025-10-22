@@ -77,3 +77,9 @@
   color: #fff;
   border-color: #800080;
 }
+/* Estado visual para ações desabilitadas (visíveis porém não-interativas) */
+.disabled-action {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}

@@ -8,6 +8,7 @@ import Header from '../components/ComponentesDoadores/Header';
 import TabelaDoadores from '../components/ComponentesDoadores/TabelaDoador';
 import FormDoador from '../components/ComponentesDoadores/FormDoador';
 import FormEditDoador from '../components/ComponentesDoadores/FormEditDoador';
+import api from '../services/api';
 
 function SataDoadores() {
   const [carregando, setCarregando] = useState(true);
@@ -20,26 +21,68 @@ function SataDoadores() {
   const [doadorEditar, setDoadorEditar] = useState(null);
   const [doadorParaDeletar, setDoadorParaDeletar] = useState(null);
 
-  const API = 'http://localhost:3000/api/doadores';
 
   const carregarDoadores = async () => {
     try {
       setCarregando(true);
-      const res = await fetch(API);
-      if (!res.ok) throw new Error('Falha ao carregar doadores');
-      const result = await res.json();
-      if (result && result.success) {
-        const lista = Array.isArray(result.data) ? result.data : [];
-        setDoadores(lista);
-        setErro(null);
-      } else {
-        throw new Error(result?.message || 'Erro ao carregar doadores');
-      }
+      // Substitui fetch por axios com credenciais
+      const { data } = await api.get('/doadores');
+      if (!data?.success) throw new Error(data?.message || 'Erro ao carregar doadores');
+      const lista = Array.isArray(data?.data) ? data.data : [];
+      setDoadores(lista);
+      setErro(null);
     } catch (e) {
       console.error(e);
-      setErro(e.message);
+      // Mensagem amigável para 401
+      const status = e?.response?.status;
+      if (status === 401) {
+        setErro('Não autenticado. Faça login novamente.');
+      } else {
+        setErro(e.message || 'Falha ao carregar doadores');
+      }
     } finally {
       setCarregando(false);
+    }
+  };
+
+  const handleCriar = async (novoDoador) => {
+    try {
+      const { data } = await api.post('/doadores', novoDoador);
+      if (!data?.success) throw new Error(data?.message || 'Falha ao cadastrar doador');
+      await carregarDoadores();
+      setMostrarTabela(true);
+      alert('Doador cadastrado com sucesso!');
+    } catch (e) {
+      console.error(e);
+      alert(e.message || 'Falha ao cadastrar doador');
+    }
+  };
+
+  const handleEditar = async (doadorAtualizado) => {
+    try {
+      const { data } = await api.put(`/doadores/${doadorAtualizado.id}`, doadorAtualizado);
+      if (!data?.success) throw new Error(data?.message || 'Falha ao editar doador');
+      await carregarDoadores();
+      setMostrarModalEdicao(false);
+      setDoadorEditar(null);
+      alert('Doador atualizado com sucesso!');
+    } catch (e) {
+      console.error(e);
+      alert(e.message || 'Falha ao editar doador');
+    }
+  };
+
+  const handleDeletar = async () => {
+    try {
+      if (!doadorParaDeletar) return;
+      const { data } = await api.delete(`/doadores/${doadorParaDeletar.id}`);
+      if (!data?.success) throw new Error(data?.message || 'Falha ao excluir doador');
+      await carregarDoadores();
+      setDoadorParaDeletar(null);
+      alert('Doador excluído com sucesso!');
+    } catch (e) {
+      console.error(e);
+      alert(e.message || 'Falha ao excluir doador');
     }
   };
 
@@ -90,55 +133,9 @@ function SataDoadores() {
     return lista;
   }, [doadores, filtros, termos]);
 
-  const handleCriar = async (novoDoador) => {
-    try {
-      const res = await fetch(API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(novoDoador)
-      });
-      if (!res.ok) throw new Error('Falha ao cadastrar doador');
-      await carregarDoadores();
-      setMostrarTabela(true);
-      alert('Doador cadastrado com sucesso!');
-    } catch (e) {
-      console.error(e);
-      alert(e.message);
-    }
-  };
 
-  const handleEditar = async (doadorAtualizado) => {
-    try {
-      const res = await fetch(`${API}/${doadorAtualizado.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(doadorAtualizado)
-      });
-      if (!res.ok) throw new Error('Falha ao editar doador');
-      await carregarDoadores();
-      setMostrarModalEdicao(false);
-      setDoadorEditar(null);
-      alert('Doador atualizado com sucesso!');
-    } catch (e) {
-      console.error(e);
-      alert(e.message);
-    }
-  };
 
   const prepararDeletar = (d) => setDoadorParaDeletar(d);
-  const handleDeletar = async () => {
-    try {
-      if (!doadorParaDeletar) return;
-      const res = await fetch(`${API}/${doadorParaDeletar.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Falha ao excluir doador');
-      await carregarDoadores();
-      setDoadorParaDeletar(null);
-      alert('Doador excluído com sucesso!');
-    } catch (e) {
-      console.error(e);
-      alert(e.message);
-    }
-  };
 
   if (carregando) {
     return (

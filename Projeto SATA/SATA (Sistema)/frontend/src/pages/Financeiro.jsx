@@ -8,6 +8,7 @@ import { Button, Col, Form, Row, Spinner, Alert, Card, Badge, Modal } from 'reac
 import '../styles/financeiro.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import ActionIconButton from '../components/ui/ActionIconButton';
+import { useAuth } from '../hooks/useAuth';
 
 const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v || 0));
 
@@ -34,6 +35,8 @@ const Financeiro = () => {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [despesaParaExcluir, setDespesaParaExcluir] = useState(null);
   const [filter, setFilter] = useState({ tipo: 'todas', category: '', search: '', period: 'all', startDate: '', endDate: '' });
+
+  const { isAdmin } = useAuth();
 
   const loadDespesas = async () => {
     setLoading(true);
@@ -225,7 +228,7 @@ const Financeiro = () => {
           title="Financeiro"
           icon={<CashStack />}
           actions={
-            <Button variant="primary" onClick={handleOpenModal} disabled={loading} className="d-inline-flex align-items-center">
+            <Button variant="primary" onClick={isAdmin ? handleOpenModal : undefined} disabled={!isAdmin || loading} className={`d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`}>
               <PlusCircle className="me-1" />
               Nova transação
             </Button>
@@ -387,7 +390,9 @@ const Financeiro = () => {
                           size="sm"
                           title="Editar"
                           ariaLabel={`Editar ${d.descricao}`}
-                          onClick={() => handleEdit(d)}
+                          disabled={!isAdmin}
+                          className={!isAdmin ? 'disabled-action' : ''}
+                          onClick={!isAdmin ? undefined : () => handleEdit(d)}
                         >
                           <Pencil />
                         </ActionIconButton>
@@ -396,7 +401,9 @@ const Financeiro = () => {
                          size="sm"
                          title="Excluir"
                          ariaLabel={`Excluir ${d.descricao}`}
-                         onClick={() => abrirConfirmarExclusao(d)}
+                         disabled={!isAdmin}
+                         className={!isAdmin ? 'disabled-action' : ''}
+                         onClick={!isAdmin ? undefined : () => abrirConfirmarExclusao(d)}
                        >
                          <Trash size={16} />
                        </ActionIconButton>
@@ -527,7 +534,7 @@ const Financeiro = () => {
                 )}
               </Row>
               <div className="mt-3 d-flex gap-2">
-                <Button type="submit" variant="primary" disabled={loading}>
+                <Button type="submit" variant="primary" disabled={!isAdmin || loading}>
                   {loading ? (<><Spinner animation="border" size="sm" className="me-2" /> Salvando...</>) : (editId ? 'Atualizar' : 'Salvar')}
                 </Button>
                 <Button type="button" variant="outline-secondary" onClick={handleCloseModal} disabled={loading}>Cancelar</Button>
@@ -550,7 +557,7 @@ const Financeiro = () => {
           </Modal.Body>
           <Modal.Footer className="d-flex justify-content-end gap-2">
             <Button variant="secondary" onClick={fecharConfirmarExclusao} disabled={loading}>Cancelar</Button>
-            <Button variant="danger" onClick={confirmarExclusaoDespesa} disabled={loading}>Excluir</Button>
+            <Button variant="danger" onClick={isAdmin ? confirmarExclusaoDespesa : undefined} disabled={!isAdmin || loading}>Excluir</Button>
           </Modal.Footer>
         </Modal>
       </div>

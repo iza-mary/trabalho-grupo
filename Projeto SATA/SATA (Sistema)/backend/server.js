@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const { authenticate, roleAccessControl } = require('./middleware/authMiddleware');
 const idosoRouters = require('./routers/idosoRouters');
 const quartoRouters = require('./routers/quartoRouters');
 const internacaoRouters = require('./routers/internacaoRouters');
@@ -17,9 +19,17 @@ const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 // Middlewares
 app.use(cors({
     origin: ['http://localhost:5173', 'http://localhost:5174'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json());
+app.use(cookieParser());
+
+// Rotas de autenticação (sem proteção)
+app.use('/api/auth', authRouters);
+
+// Proteção global e controle de acesso por papel para demais rotas
+app.use('/api', authenticate, roleAccessControl);
 
 // Rotas
 app.use('/api/idosos', idosoRouters);
@@ -31,7 +41,6 @@ app.use('/api/eventos', eventoRouters);
 app.use('/api/financeiro', financeiroRouters);
 app.use('/api/produtos', produtoRouters);
 app.use('/api/notificacoes', notificacaoRouters);
-app.use('/api/auth', authRouters);
 
 app.get('/', (req, res) => {
     res.json({ message: 'API de Sistema de Asilo funcionando!' });
