@@ -89,16 +89,33 @@ const abrirDetalhes = (quarto) => {
 
   const confirmarExclusao = async () => {
     if (!quartoParaExcluir) return;
+    // Validação pré-exclusão no cliente: bloquear se status ocupado
+    if (String(quartoParaExcluir.status).toLowerCase() === 'ocupado') {
+      setTipoMensagemExclusao('warning');
+      setMensagemExclusao('Não é possível excluir quarto com pacientes internados');
+      setMostrarModalExclusao(false);
+      return;
+    }
     setExcluindo(true);
     try {
-      await quartoService.delete(quartoParaExcluir.id);
+      const resp = await quartoService.delete(quartoParaExcluir.id);
+      // Atualiza a lista removendo o quarto excluído
       setQuartos((prev) => prev.filter((q) => q.id !== quartoParaExcluir.id));
       setTipoMensagemExclusao('success');
-      setMensagemExclusao('Exclusão concluída com sucesso');
+      // Mensagem conforme especificação
+      const msg = resp?.message || 'Quarto excluído com sucesso';
+      setMensagemExclusao(msg);
     } catch (e) {
       console.error('Erro ao excluir quarto:', e);
-      setTipoMensagemExclusao('danger');
-      setMensagemExclusao('Ocorreu um erro durante a exclusão');
+      const status = e?.response?.status;
+      const msg = e?.response?.data?.message || 'Ocorreu um erro durante a exclusão';
+      if (status === 409) {
+        setTipoMensagemExclusao('warning');
+        setMensagemExclusao(msg || 'Não é possível excluir quarto com pacientes internados');
+      } else {
+        setTipoMensagemExclusao('danger');
+        setMensagemExclusao(msg);
+      }
     } finally {
       setExcluindo(false);
       setMostrarModalExclusao(false);
@@ -228,7 +245,10 @@ const abrirDetalhes = (quarto) => {
                                 ariaLabel={`Editar quarto ${q.numero}`}
                                 disabled={!isAdmin}
                                 className={!isAdmin ? 'disabled-action' : ''}
-                                onClick={!isAdmin ? undefined : () => navigate(`/quartos/editar/${q.id}`)}
+                                onClick={!isAdmin ? undefined : (e) => {
+                                  e.stopPropagation();
+                                  navigate(`/quartos/editar/${q.id}`);
+                                }}
                               >
                                 <Pencil />
                               </ActionIconButton>
@@ -238,7 +258,10 @@ const abrirDetalhes = (quarto) => {
                                 ariaLabel={`Excluir quarto ${q.numero}`}
                                 disabled={!isAdmin}
                                 className={!isAdmin ? 'disabled-action ms-2' : 'ms-2'}
-                                onClick={!isAdmin ? undefined : () => handleExcluirClick(q)}
+                                onClick={!isAdmin ? undefined : (e) => {
+                                  e.stopPropagation();
+                                  handleExcluirClick(q);
+                                }}
                               >
                                 <Trash />
                               </ActionIconButton>
@@ -261,19 +284,29 @@ const abrirDetalhes = (quarto) => {
                   {quartoParaExcluir && (
                     <p className="fw-bold">Quarto {quartoParaExcluir.numero}</p>
                   )}
+                  {quartoParaExcluir && String(quartoParaExcluir.status).toLowerCase() === 'ocupado' && (
+                    <Alert variant="warning" className="mt-2" role="alert">
+                      Não é possível excluir quarto com pacientes internados
+                    </Alert>
+                  )}
                 </Modal.Body>
                 <Modal.Footer>
                   <Button variant="secondary" onClick={() => setMostrarModalExclusao(false)}>
                     Cancelar
                   </Button>
-                  <Button variant="danger" onClick={confirmarExclusao} disabled={excluindo}>
+                  <Button 
+                    variant="danger" 
+                    onClick={confirmarExclusao} 
+                    disabled={excluindo || (quartoParaExcluir && String(quartoParaExcluir.status).toLowerCase() === 'ocupado')}
+                    title={quartoParaExcluir && String(quartoParaExcluir.status).toLowerCase() === 'ocupado' ? 'Quarto ocupado não pode ser excluído' : 'Excluir quarto'}
+                  >
                     {excluindo ? (
                       <>
                         <Spinner animation="border" size="sm" className="me-2" />
                         Excluindo...
                       </>
                     ) : (
-                      'Excluir'
+                      'Confirmar'
                     )}
                   </Button>
                 </Modal.Footer>

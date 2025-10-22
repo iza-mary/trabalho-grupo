@@ -2,6 +2,7 @@ class DoacaoProduto {
     constructor(data) {
         this.item = (data?.item ?? data?.doacao?.item ?? null);
         this.qntd = (data?.qntd ?? data?.doacao?.qntd ?? null);
+        this.unidade_medida = (data?.unidade_medida ?? data?.doacao?.unidade_medida ?? 'Unidade');
     }
 
     validate() {
@@ -17,7 +18,8 @@ class DoacaoProduto {
     toJSON() {
         return {
             item: this.item,
-            qntd: this.qntd
+            qntd: this.qntd,
+            unidade_medida: this.unidade_medida
         }
     }
 }

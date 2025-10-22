@@ -230,30 +230,63 @@ async updateStatus(req, res) {
 
     // Remove um idoso
     async delete(req, res) {
+        const conn = await db.getConnection();
         try {
             const { id } = req.params;
-            
-            // Tenta deletar o idoso
-            const deleted = await IdosoRepository.delete(id);
-            
-            if (deleted) {
-                // Se deletou com sucesso
-                res.json({
-                    success: true,
-                    message: 'Idoso excluído com sucesso'
-                });
-            } else {
-                // Se não encontrou o idoso para deletar
-                res.status(404).json({
-                    success: false,
-                    message: 'Idoso não encontrado'
-                });
+
+            // Verifica se o idoso existe
+            const idoso = await IdosoRepository.findById(id);
+            if (!idoso) {
+                conn.release();
+                return res.status(404).json({ success: false, message: 'Idoso não encontrado' });
             }
+
+            // Checa se há internação ativa
+            const [ativasRows] = await conn.execute('SELECT COUNT(*) AS cnt FROM internacoes WHERE idoso_id = ? AND status = "ativa"', [id]);
+            const ativas = Array.isArray(ativasRows) && ativasRows[0] ? Number(ativasRows[0].cnt) : 0;
+            if (ativas > 0) {
+                conn.release();
+                return res.status(409).json({ success: false, message: 'Não é possível excluir: existe internação ativa para este idoso.' });
+            }
+
+            // Conta internações totais (para log)
+            const [totRows] = await conn.execute('SELECT COUNT(*) AS cnt FROM internacoes WHERE idoso_id = ?', [id]);
+            const totalInternacoes = Array.isArray(totRows) && totRows[0] ? Number(totRows[0].cnt) : 0;
+
+            await conn.beginTransaction();
+
+            // Remove todas internações (finalizadas ou quaisquer) do idoso
+            await conn.execute('DELETE FROM internacoes WHERE idoso_id = ?', [id]);
+
+            // Desvincula doações do idoso (proteger dados: remove nome textual também)
+            await conn.execute('UPDATE doacoes SET idoso_id = NULL, idoso = NULL WHERE idoso_id = ?', [id]);
+
+            // Deleta o idoso
+            const [delRes] = await conn.execute('DELETE FROM idosos WHERE id = ?', [id]);
+            const ok = delRes && delRes.affectedRows > 0;
+
+            await conn.commit();
+            conn.release();
+
+            // Log de auditoria
+            try {
+                const { logDeletion } = require('../utils/auditLogger');
+                const actor = req.user ? { id: req.user.id, username: req.user.username, role: req.user.role } : null;
+                logDeletion({ entity: 'idoso', entityId: Number(id), actor, details: { internacoesRemovidas: totalInternacoes } });
+            } catch {}
+
+            if (ok) {
+                return res.json({ success: true, message: 'Idoso excluído com sucesso' });
+            }
+            return res.status(404).json({ success: false, message: 'Idoso não encontrado' });
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            try { await conn.rollback(); } catch {}
+            try { conn.release(); } catch {}
+            const msg = String(error?.message || '');
+            if (msg.includes('foreign key constraint fails') || msg.includes('ER_ROW_IS_REFERENCED')) {
+                return res.status(409).json({ success: false, message: 'Não é possível excluir: registros relacionados impedem a deleção.' });
+            }
+            return res.status(500).json({ success: false, message: error.message });
         }
     }
 }

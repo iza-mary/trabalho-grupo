@@ -18,7 +18,8 @@ import {
   Eye,
   Building,
   BoxArrowRight,
-  Clipboard
+  Clipboard,
+  ExclamationTriangleFill
 } from 'react-bootstrap-icons';
 import PageHeader from '../components/ui/PageHeader';
 import StandardTable from '../components/ui/StandardTable';
@@ -35,6 +36,9 @@ const SataListaIdosos = () => {
   const navigate = useNavigate();
   const [mostrarModalExclusao, setMostrarModalExclusao] = useState(false);
   const [mostrarModalConfirmacao, setMostrarModalConfirmacao] = useState(false);
+  const [mostrarModalAlertaInternado, setMostrarModalAlertaInternado] = useState(false);
+  const [mostrarModalAlertaRelacionamentos, setMostrarModalAlertaRelacionamentos] = useState(false);
+  const [mensagemAlertaRelacionamentos, setMensagemAlertaRelacionamentos] = useState('');
   const [idosoSelecionado, setIdosoSelecionado] = useState(null);
   const [filtroStatus, setFiltroStatus] = useState('');
   const [filtroOrdenacao, setFiltroOrdenacao] = useState('nome_asc');
@@ -63,6 +67,10 @@ const SataListaIdosos = () => {
 
   const handleExcluirClick = (idoso) => {
     setIdosoSelecionado(idoso);
+    if (idoso?.status === 'internado') {
+      setMostrarModalAlertaInternado(true);
+      return;
+    }
     setMostrarModalExclusao(true);
   };
 
@@ -75,6 +83,15 @@ const SataListaIdosos = () => {
       setMostrarModalExclusao(false);
     } catch (error) {
       console.error('Erro ao excluir idoso:', error);
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message || 'Erro ao excluir idoso. Tente novamente mais tarde.';
+      if (status === 409) {
+        setMensagemAlertaRelacionamentos(message);
+        setMostrarModalExclusao(false);
+        setMostrarModalAlertaRelacionamentos(true);
+        return;
+      }
+      alert(message);
     }
   };
 
@@ -307,9 +324,11 @@ const SataListaIdosos = () => {
                                   <ActionIconButton
                                     variant="outline-info" 
                                     size="sm"
-                                    title="Internação"
+                                    title={!isAdmin ? 'Apenas Administradores podem criar internações' : 'Internação'}
                                     ariaLabel={`Internação para ${idoso.nome}`}
-                                    onClick={() => navigate('/internacoes?idosoId=' + idoso.id)}
+                                    onClick={() => { if (disableActions) return; navigate('/internacoes?idosoId=' + idoso.id); }}
+                                    disabled={disableActions}
+                                    className={disableActions ? 'disabled-action' : undefined}
                                   >
                                     <Building />
                                   </ActionIconButton>
@@ -394,6 +413,42 @@ const SataListaIdosos = () => {
             </Modal.Footer>
           </Modal>
 
+          {/* Modal de alerta para exclusão de idoso internado */}
+          <Modal show={mostrarModalAlertaInternado} onHide={() => setMostrarModalAlertaInternado(false)} backdrop="static" keyboard={false} centered>
+            <Modal.Header>
+              <Modal.Title>Operação não permitida</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <div className="p-3 rounded border border-danger bg-danger-subtle d-flex align-items-start">
+                <ExclamationTriangleFill className="text-danger me-2" size={24} />
+                <div>
+                  <p className="mb-1">Não é possível excluir este idoso pois ele está atualmente internado. Por favor, atualize o status do idoso antes de tentar novamente.</p>
+                </div>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="danger" onClick={() => setMostrarModalAlertaInternado(false)}>OK</Button>
+            </Modal.Footer>
+          </Modal>
+
+          {/* Modal de alerta para exclusão bloqueada por relacionamentos */}
+          <Modal show={mostrarModalAlertaRelacionamentos} onHide={() => setMostrarModalAlertaRelacionamentos(false)} backdrop="static" keyboard={false} centered>
+            <Modal.Header>
+              <Modal.Title>Operação bloqueada</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <div className="p-3 rounded border border-danger bg-danger-subtle d-flex align-items-start">
+                <ExclamationTriangleFill className="text-danger me-2" size={24} />
+                <div>
+                  <p className="mb-1">{mensagemAlertaRelacionamentos || 'Não é possível excluir este idoso por existir vínculo com outros registros.'}</p>
+                  <p className="mb-0 small text-muted">Caso necessário, avalie remover ou desvincular registros relacionados (ex.: internações).</p>
+                </div>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="danger" onClick={() => setMostrarModalAlertaRelacionamentos(false)}>OK</Button>
+            </Modal.Footer>
+          </Modal>
         </Container>
       </div>
     </Navbar>

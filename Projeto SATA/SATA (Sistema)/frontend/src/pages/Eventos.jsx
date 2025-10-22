@@ -509,7 +509,9 @@ export default function Eventos() {
                             size="sm"
                             title="Editar"
                             ariaLabel={`Editar ${ev.titulo}`}
-                            onClick={(e) => { e.stopPropagation(); abrirEditar(ev); }}
+                            disabled={!isAdmin}
+                            className={!isAdmin ? 'disabled-action' : ''}
+                            onClick={!isAdmin ? undefined : (e) => { e.stopPropagation(); abrirEditar(ev); }}
                           >
                             <Pencil />
                           </ActionIconButton>
@@ -518,8 +520,9 @@ export default function Eventos() {
                             size="sm"
                             title="Excluir"
                             ariaLabel={`Excluir ${ev.titulo}`}
-                            onClick={(e) => { e.stopPropagation(); abrirConfirmarExclusao(ev); }}
-                            className="ms-2"
+                            disabled={!isAdmin}
+                            className={!isAdmin ? 'disabled-action ms-2' : 'ms-2'}
+                            onClick={!isAdmin ? undefined : (e) => { e.stopPropagation(); abrirConfirmarExclusao(ev); }}
                           >
                             <Trash />
                           </ActionIconButton>
@@ -912,13 +915,13 @@ export default function Eventos() {
           {modo === 'visualizar' ? (
             <div className="d-flex w-100 justify-content-between">
               <div>
-                <Button variant="outline-primary" onClick={() => abrirEditar(eventoSelecionado)}>
+                <Button variant="outline-primary" disabled={!isAdmin} className={!isAdmin ? 'disabled-action' : ''} onClick={!isAdmin ? undefined : () => abrirEditar(eventoSelecionado)} title={!isAdmin ? 'Apenas Administradores podem editar' : 'Editar'}>
                   <Pencil className="me-2" /> Editar
                 </Button>
               </div>
               <div className="d-flex gap-2">
                 <Button variant="outline-secondary" onClick={() => setShowModal(false)}>Fechar</Button>
-                <Button variant="danger" onClick={() => abrirConfirmarExclusao(eventoSelecionado)}>
+                <Button variant="danger" disabled={!isAdmin} className={!isAdmin ? 'disabled-action' : ''} onClick={!isAdmin ? undefined : () => abrirConfirmarExclusao(eventoSelecionado)} title={!isAdmin ? 'Apenas Administradores podem excluir' : 'Excluir'}>
                   <Trash className="me-2" /> Excluir
                 </Button>
               </div>
@@ -927,8 +930,13 @@ export default function Eventos() {
             <div className="d-flex w-100 justify-content-between">
               <Button variant="outline-secondary" onClick={limparForm}>Limpar</Button>
               <div className="d-flex gap-2">
-                <Button variant="outline-secondary" onClick={() => setShowModal(false)}>Cancelar</Button>
-                <Button variant="primary" onClick={salvar}>Salvar</Button>
+                <Button variant="primary" disabled={!isAdmin} className={!isAdmin ? 'disabled-action' : ''} onClick={!isAdmin ? undefined : salvar} title={!isAdmin ? 'Apenas Administradores podem salvar' : 'Salvar evento'}>
+                  Salvar
+                </Button>
+                <Button variant="outline-secondary" onClick={() => setShowModal(false)}>Fechar</Button>
+                <Button variant="danger" disabled={!isAdmin} className={!isAdmin ? 'disabled-action' : ''} onClick={!isAdmin ? undefined : () => abrirConfirmarExclusao(eventoSelecionado)} title={!isAdmin ? 'Apenas Administradores podem excluir' : 'Excluir'}>
+                  <Trash className="me-2" /> Excluir
+                </Button>
               </div>
             </div>
           )}
@@ -957,7 +965,7 @@ export default function Eventos() {
           <Button variant="secondary" onClick={() => setShowConfirmDelete(false)}>
             Cancelar
           </Button>
-          <Button variant="danger" onClick={confirmarExclusaoEvento}>
+          <Button variant="danger" onClick={isAdmin ? confirmarExclusaoEvento : undefined} disabled={!isAdmin} className={!isAdmin ? 'disabled-action' : ''} title={!isAdmin ? 'Apenas Administradores podem confirmar exclusão' : 'Excluir'}>
             Excluir
           </Button>
         </Modal.Footer>

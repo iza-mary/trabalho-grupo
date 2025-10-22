@@ -14,7 +14,8 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
         tipo: "alimento",
         doacao: {
           item: "",
-          qntd: ""
+          qntd: "",
+          unidade_medida: "Unidade"
         },
         destinatario: "",
         doador: "",
@@ -37,7 +38,8 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
             tipo: doacaoEdit.tipo,
             doacao: {
               item: doacaoEdit.doacao?.item ?? "",
-              qntd: doacaoEdit.doacao?.qntd ?? ""
+              qntd: doacaoEdit.doacao?.qntd ?? "",
+              unidade_medida: doacaoEdit.doacao?.unidade_medida ?? "Unidade"
             },
             destinatario: doacaoEdit.idoso || "",
             doador: doacaoEdit.doador?.nome || "",
@@ -102,6 +104,11 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
         }
       }
     }
+  }
+
+  const handleChangeUnidade = (e) => {
+    const value = e.target.value;
+    setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }))
   }
 
   const handleChangeDescricao = (e) => {
@@ -257,6 +264,17 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
                 <Form.Control.Feedback type="invalid">
                   {errors.quantidade}
                 </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Unidade da Quantidade</Form.Label>
+                <Form.Select name="unidade_medida" value={doaAlimentos.doacao.unidade_medida} onChange={handleChangeUnidade}>
+                  <option value="Unidade">Unidade</option>
+                  <option value="Kg">Kg</option>
+                  <option value="L">L</option>
+                  <option value="Pacote">Pacote</option>
+                  <option value="Caixa">Caixa</option>
+                  <option value="Outro">Outro</option>
+                </Form.Select>
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Observações/Descrição</Form.Label>

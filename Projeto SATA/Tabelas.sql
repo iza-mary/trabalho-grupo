@@ -192,6 +192,7 @@ CREATE TABLE `doacaoproduto` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `doacao_id` int(11) NOT NULL,
   `produto_id` int(11) NOT NULL,
+  `unidade_medida` enum('Unidade','Kg','L','Pacote','Caixa','Outro') NOT NULL DEFAULT 'Unidade',
   `quantidade` int(11) NOT NULL,
   `observacao` text DEFAULT NULL,
   `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -201,7 +202,7 @@ CREATE TABLE `doacaoproduto` (
   KEY `idx_doacaoproduto_produto_id` (`produto_id`),
   CONSTRAINT `fk_doacaoproduto_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_doacaoproduto_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
 
 -- 12. Usuários
 CREATE TABLE `users` (

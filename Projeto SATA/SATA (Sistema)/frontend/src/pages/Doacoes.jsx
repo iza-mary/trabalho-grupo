@@ -115,7 +115,8 @@ function Doacoes() {
           ? { valor: Number(doacao?.doacao?.valor ?? doacao?.valor ?? 0) }
           : {
               item: doacao?.doacao?.item ?? doacao?.item ?? '',
-              qntd: Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0)
+              qntd: Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0),
+              unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade'
             }
     };
 
@@ -140,7 +141,7 @@ function Doacoes() {
     const byTipo =
       doacao.tipo === 'D'
         ? { valor: parseFloat(doacao.doacao?.valor ?? 0) }
-        : { item: doacao.doacao?.item ?? '', qntd: doacao.doacao?.qntd ?? 0 };
+        : { item: doacao.doacao?.item ?? '', qntd: doacao.doacao?.qntd ?? 0, unidade_medida: doacao.doacao?.unidade_medida ?? 'Unidade' };
     setDoacaoToEdit({ ...base, doacao: byTipo });
     setMostrarModal(true);
   };
@@ -185,7 +186,8 @@ function Doacoes() {
           ? { valor: Number(doacao?.doacao?.valor ?? doacao?.valor ?? 0) }
           : {
               item: doacao?.doacao?.item ?? doacao?.item ?? '',
-              qntd: Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0)
+              qntd: Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0),
+              unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade'
             }
     };
 
@@ -210,7 +212,8 @@ function Doacoes() {
               doacao: {
                 qntd: payload.doacao.qntd,
                 item: payload.doacao.item,
-                valor: payload.doacao.valor
+                valor: payload.doacao.valor,
+                unidade_medida: payload.doacao.unidade_medida
               }
             }
           : d

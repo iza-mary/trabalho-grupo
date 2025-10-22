@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Container, Row, Col, Form, Button, Alert, Card } from 'react-bootstrap';
 import { useAuth } from '../hooks/useAuth';
 import PasswordField from '../components/ui/PasswordField';
+import Navbar from '../components/Navbar';
 
 export default function Perfil() {
   const { user, changePassword } = useAuth();
@@ -43,64 +44,70 @@ export default function Perfil() {
   };
 
   return (
-    <Container className="mt-4">
-      <Row className="justify-content-center">
-        <Col md={8} lg={6}>
-          <Card className="mb-4">
-            <Card.Body>
-              <Card.Title>Informações do Usuário</Card.Title>
-              <Card.Text>
-                <strong>Usuário:</strong> {user?.username || '-'}<br />
-                <strong>Nível de acesso:</strong> {user?.role || '-'}
-              </Card.Text>
-            </Card.Body>
-          </Card>
+    <Navbar>
+      <div className="content-area full-main">
+        <div className="d-flex flex-column justify-content-center" style={{ minHeight: 'inherit' }}>
+          <Container fluid>
+            <Row className="justify-content-center">
+              <Col md={8} lg={6}>
+                <Card className="mb-4">
+                  <Card.Body>
+                    <Card.Title>Informações do Usuário</Card.Title>
+                    <Card.Text>
+                      <strong>Usuário:</strong> {user?.username || '-'}<br />
+                      <strong>Nível de acesso:</strong> {user?.role || '-'}
+                    </Card.Text>
+                  </Card.Body>
+                </Card>
 
-          <h2 className="mb-3">Trocar senha</h2>
-          {status.message && (
-            <Alert variant={status.type} role="alert">
-              {status.message}
-            </Alert>
-          )}
-          <Form onSubmit={handleChangePassword} noValidate>
-            {/* Senha atual */}
-            <PasswordField
-              id="currentPassword"
-              label="Senha atual"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              autoComplete="current-password"
-              required={true}
-              ariaRequired={true}
-            />
-            {/* Nova senha */}
-            <PasswordField
-              id="newPassword"
-              label="Nova senha"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              autoComplete="new-password"
-              required={true}
-              ariaRequired={true}
-            />
-            {/* Confirmar nova senha */}
-            <PasswordField
-              id="confirmPassword"
-              label="Confirmar nova senha"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              autoComplete="new-password"
-              required={true}
-              ariaRequired={true}
-            />
-            <div className="d-grid">
-              <Button type="submit" variant="primary" disabled={submitting} aria-disabled={submitting}>
-                {submitting ? 'Atualizando...' : 'Atualizar senha'}
-              </Button>
-            </div>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+                <h2 className="mb-3">Trocar senha</h2>
+                {status.message && (
+                  <Alert variant={status.type} role="alert">
+                    {status.message}
+                  </Alert>
+                )}
+                <Form onSubmit={handleChangePassword} noValidate>
+                  {/* Senha atual */}
+                  <PasswordField
+                    id="currentPassword"
+                    label="Senha atual"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required={true}
+                    ariaRequired={true}
+                  />
+                  {/* Nova senha */}
+                  <PasswordField
+                    id="newPassword"
+                    label="Nova senha"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                    required={true}
+                    ariaRequired={true}
+                  />
+                  {/* Confirmar nova senha */}
+                  <PasswordField
+                    id="confirmPassword"
+                    label="Confirmar nova senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    required={true}
+                    ariaRequired={true}
+                  />
+                  <div className="d-grid">
+                    <Button type="submit" variant="primary" disabled={submitting} aria-disabled={submitting}>
+                      {submitting ? 'Atualizando...' : 'Atualizar senha'}
+                    </Button>
+                  </div>
+                </Form>
+              </Col>
+            </Row>
+          </Container>
+        </div>
+      </div>
+    </Navbar>
   );
 }

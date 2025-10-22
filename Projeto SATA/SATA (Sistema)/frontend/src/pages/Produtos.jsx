@@ -277,7 +277,7 @@ export default function Produtos() {
                     <tr key={p.id}>
                       <td>{p.nome}</td>
                       <td>{p.categoria}</td>
-                      <td className="text-end">{p.quantidade}</td>
+                      <td className="text-end">{p.quantidade} {p.unidade_medida || ''}</td>
                       <td className="text-end">{formatBRL(p.preco)}</td>
                       <td>
                         <div className="botoes-acao d-flex justify-content-center gap-2">

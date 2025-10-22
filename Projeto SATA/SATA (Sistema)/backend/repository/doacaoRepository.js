@@ -7,7 +7,7 @@ class DoacaoRepository {
             const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador,
             d.idoso, d.idoso_id, d.evento_id AS eventoId,
             dd.id as dinheiroId, dd.valor,
-            dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd,
+            dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd, dp.unidade_medida AS unidade_medida,
             dr.id as doadorId, dr.nome as doadorNome,
             e.titulo AS eventoTitulo
             FROM doacoes d
@@ -23,7 +23,7 @@ class DoacaoRepository {
                 const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador,
                 d.idoso, NULL as idoso_id, d.evento_id AS eventoId,
                 dd.id as dinheiroId, dd.valor,
-                dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd,
+                dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd, dp.unidade_medida AS unidade_medida,
                 dr.id as doadorId, dr.nome as doadorNome,
                 e.titulo AS eventoTitulo
                 FROM doacoes d
@@ -44,7 +44,7 @@ class DoacaoRepository {
             const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador,
             d.idoso, d.idoso_id, i.nome as idosoNome, d.evento_id AS eventoId,
             dd.id as dinheiroId, dd.valor,
-            dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd,
+            dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd, dp.unidade_medida AS unidade_medida,
             dr.id as doadorId, dr.nome as doadorNome,
             e.titulo AS eventoTitulo
             FROM doacoes d 
@@ -63,7 +63,7 @@ class DoacaoRepository {
                 const [rows] = await db.execute(`SELECT d.id, d.data, d.tipo, d.obs, d.doador,
                 d.idoso, NULL as idoso_id, d.idoso as idosoNome, d.evento_id AS eventoId,
                 dd.id as dinheiroId, dd.valor,
-                dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd,
+                dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd, dp.unidade_medida AS unidade_medida,
                 dr.id as doadorId, dr.nome as doadorNome,
                 e.titulo AS eventoTitulo
                 FROM doacoes d
@@ -136,7 +136,7 @@ class DoacaoRepository {
             const sql = `SELECT d.id, d.data, d.tipo, d.obs, d.doador,
             d.idoso, d.idoso_id, d.evento_id AS eventoId,
             dd.id as dinheiroId, dd.valor,
-            dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd,
+            dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd, dp.unidade_medida AS unidade_medida,
             dr.id as doadorId, dr.nome as doadorNome,
             e.titulo AS eventoTitulo
             FROM doacoes d
@@ -203,7 +203,7 @@ class DoacaoRepository {
                 const sql = `SELECT d.id, d.data, d.tipo, d.obs, d.doador,
                 d.idoso, NULL as idoso_id, d.evento_id AS eventoId,
                 dd.id as dinheiroId, dd.valor,
-                dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd,
+                dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd, dp.unidade_medida AS unidade_medida,
                 dr.id as doadorId, dr.nome as doadorNome,
                 e.titulo AS eventoTitulo
                 FROM doacoes d
@@ -284,7 +284,7 @@ class DoacaoRepository {
                     const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, 'Outros', 'Unidade', 0, 0, NULL)`, [item]);
                     produtoId = prodResult.insertId;
                 }
-                await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, quantidade, observacao) VALUES (?, ?, ?, ?)`, [doacaoId, produtoId, qntd, null]);
+                await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, unidade_medida, quantidade, observacao) VALUES (?, ?, ?, ?, ?)`, [doacaoId, produtoId, doacaoData?.doacao?.unidade_medida ?? 'Unidade', qntd, null]);
                 await conn.commit();
                 conn.release();
                 return await this.findById(doacaoId);
@@ -347,7 +347,7 @@ class DoacaoRepository {
                         const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, 'Outros', 'Unidade', 0, 0, NULL)`, [item]);
                         produtoId = prodResult.insertId;
                     }
-                    await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, quantidade, observacao) VALUES (?, ?, ?, ?)`, [doacaoId, produtoId, qntd, null]);
+                    await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, unidade_medida, quantidade, observacao) VALUES (?, ?, ?, ?, ?)`, [doacaoId, produtoId, doacaoData?.doacao?.unidade_medida ?? 'Unidade', qntd, null]);
                     await conn.commit();
                     conn.release();
                     return await this.findById(doacaoId);
@@ -419,7 +419,7 @@ class DoacaoRepository {
                     const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, 'Outros', 'Unidade', 0, 0, NULL)`, [item]);
                     produtoId = prodResult.insertId;
                 }
-                await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, qntd, id]);
+                await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, doacaoData?.doacao?.unidade_medida ?? 'Unidade', qntd, id]);
                 await conn.commit();
                 conn.release();
             }
@@ -477,7 +477,7 @@ class DoacaoRepository {
                         const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, 'Outros', 'Unidade', 0, 0, NULL)`, [item]);
                         produtoId = prodResult.insertId;
                     }
-                    await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, qntd, id]);
+                    await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, doacaoData?.doacao?.unidade_medida ?? 'Unidade', qntd, id]);
                     await conn.commit();
                     conn.release();
                 }

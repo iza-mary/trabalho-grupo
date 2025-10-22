@@ -11,9 +11,32 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
   // Compatibilidade com props antigas da página Doacoes.jsx
   const items = Array.isArray(doacoes) ? doacoes : (Array.isArray(doacoesApp) ? doacoesApp : []);
   const [showDelete, setShowDelete] = useState(Boolean(externalShowDelete));
+  const [doacaoParaExcluir, setDoacaoParaExcluir] = useState(null);
   const internalLoaderRef = useRef(null);
   const loaderRef = externalLoaderRef ?? internalLoaderRef;
   const doDelete = onDelete || handleDelete;
+
+  const abrirModalExclusao = (d) => {
+    setDoacaoParaExcluir(d);
+    setShowDelete(true);
+    externalSetShowDelete?.(true);
+  };
+
+  const fecharModalExclusao = () => {
+    setShowDelete(false);
+    externalSetShowDelete?.(false);
+    setDoacaoParaExcluir(null);
+  };
+
+  const confirmarExclusao = async () => {
+    if (!isAdmin) return;
+    if (!doacaoParaExcluir) return;
+    try {
+      await doDelete?.(doacaoParaExcluir);
+    } finally {
+      fecharModalExclusao();
+    }
+  };
 
   return (
     <Card>
@@ -47,7 +70,9 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
                     <td>{
                       String(d?.tipo || '').toUpperCase() === 'D'
                         ? (d?.doacao?.valor ?? d?.valor ?? '-')
-                        : (d?.doacao?.qntd ?? d?.quantidade ?? '-')
+                        : ((d?.doacao?.qntd ?? d?.quantidade) != null
+                            ? `${d?.doacao?.qntd ?? d?.quantidade} ${d?.doacao?.unidade_medida ?? d?.unidade_medida ?? ''}`
+                            : '-')
                     }</td>
                     <td>{d?.idoso ?? '-'}</td>
                     <td>{d?.doador?.nome ?? d?.doador_nome ?? '-'}</td>
@@ -69,7 +94,7 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
                           className={`action-btns ${!isAdmin ? 'disabled-action' : ''}`}
                           title={!isAdmin ? 'Apenas Administradores podem excluir' : 'Excluir'}
                           size='sm'
-                          onClick={!isAdmin ? undefined : () => { setShowDelete(true); doDelete?.(d); }}
+                          onClick={!isAdmin ? undefined : () => abrirModalExclusao(d)}
                           variant='outline-danger'
                           disabled={!isAdmin}
                         >
@@ -85,25 +110,18 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
           {/* Sentinel de carregamento contínuo */}
           <div ref={loaderRef} style={{ height: '1px' }} aria-hidden="true"></div>
 
-          <Modal show={showDelete} onHide={() => {
-            setShowDelete(false);
-            externalSetShowDelete?.(false);
-          }}>
+          <Modal show={showDelete} onHide={fecharModalExclusao}>
             <Modal.Header closeButton>
               <Modal.Title>Confirmar Exclusão</Modal.Title>
             </Modal.Header>
-            <Modal.Body>Tem certeza que deseja excluir esta doação?</Modal.Body>
+            <Modal.Body>
+              Tem certeza que deseja excluir esta doação?
+            </Modal.Body>
             <Modal.Footer>
-              <Button variant='secondary' onClick={() => {
-                setShowDelete(false);
-                externalSetShowDelete?.(false);
-              }}>Cancelar</Button>
+              <Button variant='secondary' onClick={fecharModalExclusao}>Cancelar</Button>
               <Button
                 variant='danger'
-                onClick={!isAdmin ? undefined : () => {
-                  setShowDelete(false);
-                  externalSetShowDelete?.(false);
-                }}
+                onClick={!isAdmin ? undefined : confirmarExclusao}
                 disabled={!isAdmin}
                 title={!isAdmin ? 'Apenas Administradores podem confirmar exclusão' : 'Excluir'}
                 className={!isAdmin ? 'disabled-action' : ''}

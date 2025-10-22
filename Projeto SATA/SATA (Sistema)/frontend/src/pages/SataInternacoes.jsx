@@ -452,11 +452,13 @@ const SataInternacoes = () => {
                             <Button 
                               variant="outline-warning" 
                               size="sm"
-                              onClick={() => {
+                              disabled={!isAdmin}
+                              className={!isAdmin ? 'disabled-action' : ''}
+                              onClick={!isAdmin ? undefined : () => {
                                 setInternacaoSelecionada(internacao);
                                 setMostrarModalBaixa(true);
                               }}
-                              title="Dar baixa"
+                              title={!isAdmin ? 'Apenas Administradores podem dar baixa' : 'Dar baixa'}
                             >
                               <BoxArrowRight className="me-2" />
                               Baixa
@@ -621,8 +623,10 @@ const SataInternacoes = () => {
               </Button>
               <Button 
                 variant="warning" 
-                onClick={handleDarBaixa}
-                disabled={salvando}
+                onClick={isAdmin ? handleDarBaixa : undefined}
+                disabled={!isAdmin || salvando}
+                className={!isAdmin ? 'disabled-action' : ''}
+                title={!isAdmin ? 'Apenas Administradores podem confirmar baixa' : 'Confirmar Baixa'}
               >
                 {salvando ? (
                   <>

@@ -156,20 +156,37 @@ class QuartoController {
     async delete(req, res) {
         try {
             const { id } = req.params;
-            const deletado = await QuartoRepository.delete(id);
-            
-            if (!deletado) {
-                return res.status(404).json({
+
+            // Validação: bloquear se houver internações ativas no quarto
+            const [ocupadasRows] = await db.execute(
+                'SELECT COUNT(*) AS ocupadas FROM internacoes WHERE quarto_id = ? AND status = "ativa"',
+                [id]
+            );
+            const ocupadas = ocupadasRows[0]?.ocupadas || 0;
+            if (ocupadas > 0) {
+                return res.status(409).json({
                     success: false,
-                    message: 'Quarto não encontrado'
+                    message: 'Não é possível excluir quarto com pacientes internados'
                 });
             }
-            
-            res.json({
+
+            // Prosseguir com a exclusão
+            await QuartoRepository.delete(id);
+
+            return res.json({
                 success: true,
                 message: 'Quarto excluído com sucesso'
             });
         } catch (error) {
+            // Tratar violação de integridade referencial, se houver
+            const msg = (error?.message || '').toLowerCase();
+            const isFkError = msg.includes('foreign key') || msg.includes('referenc') || msg.includes('constraint');
+            if (isFkError) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'Não é possível excluir quarto devido a dados relacionados'
+                });
+            }
             res.status(500).json({
                 success: false,
                 message: 'Erro ao excluir quarto',

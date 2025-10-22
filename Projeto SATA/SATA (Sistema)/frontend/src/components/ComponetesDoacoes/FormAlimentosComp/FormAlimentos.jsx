@@ -22,7 +22,8 @@ function FormAlimentos({ onSave }) {
     obs: "",
     doacao: {
       item: "",
-      qntd: 0
+      qntd: 0,
+      unidade_medida: "Unidade"
     }
   });
 
@@ -90,6 +91,11 @@ function FormAlimentos({ onSave }) {
         }
       }
     }
+  }
+
+  const handleChangeUnidade = (e) => {
+    const value = e.target.value;
+    setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
   }
 
   const handleChangeDescricao = (e) => {
@@ -211,6 +217,17 @@ function FormAlimentos({ onSave }) {
                 <Form.Control.Feedback type="invalid">
                   {errors.quantidade}
                 </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Unidade de medida</Form.Label>
+                <Form.Select value={doaAlimentos.doacao.unidade_medida} onChange={handleChangeUnidade}>
+                  <option value="Unidade">Unidade</option>
+                  <option value="Kg">Kg</option>
+                  <option value="L">L</option>
+                  <option value="Pacote">Pacote</option>
+                  <option value="Caixa">Caixa</option>
+                  <option value="Outro">Outro</option>
+                </Form.Select>
               </Form.Group>
               <Form.Group className="mb-3">
                 <SelectDoador setDoador={setSelectedDoador} setErrors={setErrors} errors={errors} setValidated={setValidated} />
