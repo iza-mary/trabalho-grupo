@@ -281,10 +281,17 @@ class DoacaoRepository {
                 if (Array.isArray(prodRows) && prodRows.length > 0) {
                     produtoId = prodRows[0].id;
                 } else {
-                    const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, 'Outros', 'Unidade', 0, 0, NULL)`, [item]);
+                    const categoriaIns = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                    const unidadeIns = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                    const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, ?, ?, 0, 0, NULL)`, [item, categoriaIns, unidadeIns]);
                     produtoId = prodResult.insertId;
                 }
-                await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, unidade_medida, quantidade, observacao) VALUES (?, ?, ?, ?, ?)`, [doacaoId, produtoId, doacaoData?.doacao?.unidade_medida ?? 'Unidade', qntd, null]);
+                const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, unidade_medida, quantidade, observacao) VALUES (?, ?, ?, ?, ?)`, [doacaoId, produtoId, unidade, qntd, null]);
+                // Harmonizar categoria/unidade e somar quantidade ao estoque do produto
+                const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+-                await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = quantidade + ? WHERE id = ?`, [categoria, unidade, qntd, produtoId]);
++                await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = quantidade + ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] +', ?, ' | Doação #', ?, ' | Unidade: ', ?) WHERE id = ?`, [categoria, unidade, qntd, qntd, doacaoId, unidade, produtoId]);
                 await conn.commit();
                 conn.release();
                 return await this.findById(doacaoId);
@@ -344,10 +351,16 @@ class DoacaoRepository {
                     if (Array.isArray(prodRows) && prodRows.length > 0) {
                         produtoId = prodRows[0].id;
                     } else {
-                        const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, 'Outros', 'Unidade', 0, 0, NULL)`, [item]);
+                        const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                        const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                        const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, ?, ?, 0, 0, NULL)`, [item, categoria, unidade]);
                         produtoId = prodResult.insertId;
                     }
-                    await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, unidade_medida, quantidade, observacao) VALUES (?, ?, ?, ?, ?)`, [doacaoId, produtoId, doacaoData?.doacao?.unidade_medida ?? 'Unidade', qntd, null]);
+                    // Harmonizar categoria/unidade e somar quantidade ao estoque do produto
+                    const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                    const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                    await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = quantidade + ? WHERE id = ?`, [categoria, unidade, qntd, produtoId]);
+                    await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, unidade_medida, quantidade, observacao) VALUES (?, ?, ?, ?, ?)`, [doacaoId, produtoId, unidade, qntd, null]);
                     await conn.commit();
                     conn.release();
                     return await this.findById(doacaoId);
@@ -410,16 +423,36 @@ class DoacaoRepository {
             } else {
                 await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, idoso_id = ?, evento_id = ? WHERE id = ?`,
                     [data, tipo, obs, doadorId, idosoNome, idosoId, eventoId ?? null, id]);
+                // Obter registro anterior para reconciliar estoque
+                const [prevDoaRows] = await conn.execute(`SELECT produto_id, quantidade FROM doacaoproduto WHERE doacao_id = ? LIMIT 1`, [id]);
+                const prevProdId = Array.isArray(prevDoaRows) && prevDoaRows.length ? prevDoaRows[0].produto_id : null;
+                const prevQty = Array.isArray(prevDoaRows) && prevDoaRows.length ? Number(prevDoaRows[0].quantidade) : 0;
+
                 // mapear item -> produto_id e atualizar quantidade
                 let produtoId = null;
                 const [prodRows] = await conn.execute(`SELECT id FROM produtos WHERE nome = ? LIMIT 1`, [item]);
                 if (Array.isArray(prodRows) && prodRows.length > 0) {
                     produtoId = prodRows[0].id;
                 } else {
-                    const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, 'Outros', 'Unidade', 0, 0, NULL)`, [item]);
+                    const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                    const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                    const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, ?, ?, 0, 0, NULL)`, [item, categoria, unidade]);
                     produtoId = prodResult.insertId;
                 }
-                await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, doacaoData?.doacao?.unidade_medida ?? 'Unidade', qntd, id]);
+                const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, unidade, qntd, id]);
+
+                // reconciliar estoque conforme possível mudança de item/quantidade
+                if (prevProdId && prevProdId === produtoId) {
+                    const delta = Number(qntd) - prevQty;
+                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] ', ?, ?, ' | Doação #', ?, ' (ajuste) | Unidade: ', ?) WHERE id = ?`, [delta, categoria, unidade, (delta >= 0 ? '+' : '-'), Math.abs(delta), id, unidade, produtoId]);
+                } else {
+                    if (prevProdId) {
+                        await conn.execute(`UPDATE produtos SET quantidade = quantidade - ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] -', ?, ' | Doação #', ?, ' (revisão)') WHERE id = ?`, [prevQty, prevQty, id, prevProdId]);
+                    }
+                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] +', ?, ' | Doação #', ?, ' | Unidade: ', ?) WHERE id = ?`, [qntd, categoria, unidade, qntd, id, unidade, produtoId]);
+                }
                 await conn.commit();
                 conn.release();
             }
@@ -468,16 +501,35 @@ class DoacaoRepository {
                 } else {
                     await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento_id = ? WHERE id = ?`,
                         [data, tipo, obs, doadorId, idosoNome, eventoId ?? null, id]);
+                    // Obter registro anterior para reconciliar estoque
+                    const [prevDoaRows] = await conn.execute(`SELECT produto_id, quantidade FROM doacaoproduto WHERE doacao_id = ? LIMIT 1`, [id]);
+                    const prevProdId = Array.isArray(prevDoaRows) && prevDoaRows.length ? prevDoaRows[0].produto_id : null;
+                    const prevQty = Array.isArray(prevDoaRows) && prevDoaRows.length ? Number(prevDoaRows[0].quantidade) : 0;
                     // mapear item -> produto_id e atualizar quantidade
                     let produtoId = null;
                     const [prodRows] = await conn.execute(`SELECT id FROM produtos WHERE nome = ? LIMIT 1`, [item]);
                     if (Array.isArray(prodRows) && prodRows.length > 0) {
                         produtoId = prodRows[0].id;
                     } else {
-                        const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, 'Outros', 'Unidade', 0, 0, NULL)`, [item]);
+                        const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                        const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                        const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, ?, ?, 0, 0, NULL)`, [item, categoria, unidade]);
                         produtoId = prodResult.insertId;
                     }
-                    await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, doacaoData?.doacao?.unidade_medida ?? 'Unidade', qntd, id]);
+                    const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                    const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                    await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, unidade, qntd, id]);
+
+                    // reconciliar estoque conforme possível mudança de item/quantidade
+                    if (prevProdId && prevProdId === produtoId) {
+                        const delta = Number(qntd) - prevQty;
+                        await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] ', ?, ?, ' | Doação #', ?, ' (ajuste) | Unidade: ', ?) WHERE id = ?`, [delta, categoria, unidade, (delta >= 0 ? '+' : '-'), Math.abs(delta), id, unidade, produtoId]);
+                    } else {
+                        if (prevProdId) {
+                            await conn.execute(`UPDATE produtos SET quantidade = quantidade - ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] -', ?, ' | Doação #', ?, ' (revisão)') WHERE id = ?`, [prevQty, prevQty, id, prevProdId]);
+                        }
+                        await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] +', ?, ' | Doação #', ?, ' | Unidade: ', ?) WHERE id = ?`, [qntd, categoria, unidade, qntd, id, unidade, produtoId]);
+                    }
                     await conn.commit();
                     conn.release();
                 }
