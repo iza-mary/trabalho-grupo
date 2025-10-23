@@ -1,2 +1,0 @@
-{"timestamp":"2025-10-22T15:24:59.609Z","action":"delete","entity":"idoso","entityId":3,"actor":{"id":1,"username":"admin","role":"Admin"},"details":{"internacoesRemovidas":1}}
-{"timestamp":"2025-10-22T15:35:05.460Z","action":"delete","entity":"idoso","entityId":2,"actor":{"id":1,"username":"admin","role":"Admin"},"details":{"internacoesRemovidas":2}}

@@ -61,7 +61,7 @@ CREATE TABLE `eventos` (
   KEY `idx_titulo` (`titulo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 5. Produtos (CRIAR das doações)
+-- 5. Produtos
 CREATE TABLE `produtos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nome` varchar(255) NOT NULL,

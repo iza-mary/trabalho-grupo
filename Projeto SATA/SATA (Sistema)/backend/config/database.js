@@ -2,7 +2,6 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const SQL_SCHEMA_FILE = 'd:\\coisas da facudade\\Progrmação Fullstack I\\trabalho-grupo-1\\Projeto SATA\\Tabelas.sql';
 const DB_NAME = process.env.DB_NAME || 'sistema_idosos';
 
 const pool = mysql.createPool({
