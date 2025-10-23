@@ -3,6 +3,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const DB_NAME = process.env.DB_NAME || 'sistema_idosos';
+const SQL_SCHEMA_FILE = path.resolve(__dirname, 'Tabelas.sql');
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -39,6 +40,7 @@ async function ensureSchema() {
     return status;
   }
   const blocks = parseCreateTables(sqlText);
+  status.tablesDefined = blocks.map(b => b.name);
   const conn = await pool.getConnection();
   const createdThisRun = [];
   try {
@@ -93,6 +95,11 @@ async function testConnection() {
     }
     if (schemaStatus.errors.length) {
       console.error('Erros:', schemaStatus.errors.map(e => `${e.table || 'arquivo'}: ${e.error}`).join(' | '));
+    }
+    // Mensagem detalhada solicitada
+    const ts = new Date().toISOString();
+    if (schemaStatus.success && schemaStatus.errors.length === 0) {
+      console.log(`[${ts}] VERIFICAÇÃO DE BANCO DE DADOS: Todas as ${schemaStatus.tablesDefined.length} tabelas no banco ${DB_NAME} estão presentes e configuradas corretamente. Tabelas verificadas: [${schemaStatus.tablesDefined.join(', ')}]`);
     }
     return schemaStatus;
   } catch (error) {

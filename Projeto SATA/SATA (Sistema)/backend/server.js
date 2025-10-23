@@ -12,6 +12,7 @@ const financeiroRouters = require('./routers/financeiroRouters');
 const produtoRouters = require('./routers/produtoRouters');
 const notificacaoRouters = require('./routers/notificacaoRouters');
 const authRouters = require('./routers/authRouters');
+const db = require('./config/database');
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -49,4 +50,5 @@ app.get('/', (req, res) => {
 // Bind explícito em 0.0.0.0 para evitar problemas de acesso em ambientes de preview
 app.listen(port, '0.0.0.0', () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
+    db.testConnection().catch(err => console.error('Falha na verificação do banco:', err.message));
 });

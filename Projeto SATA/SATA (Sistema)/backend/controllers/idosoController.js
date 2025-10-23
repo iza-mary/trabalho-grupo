@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const db = require('../config/database.js');
 const Idoso = require('../models/idoso');
 const IdosoRepository = require('../repository/idosoRepository.js');
 
