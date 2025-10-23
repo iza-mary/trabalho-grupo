@@ -61,7 +61,7 @@ CREATE TABLE `eventos` (
   KEY `idx_titulo` (`titulo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 5. Produtos (CRIADA ANTES das doações)
+-- 5. Produtos (CRIAR das doações)
 CREATE TABLE `produtos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nome` varchar(255) NOT NULL,
@@ -80,23 +80,23 @@ CREATE TABLE `produtos` (
   PRIMARY KEY (`id`),
   KEY `idx_produtos_nome` (`nome`),
   KEY `idx_produtos_categoria` (`categoria`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 6. Financeiro (CRIADA ANTES das doações em dinheiro)
 CREATE TABLE `financeiro` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `descricao` VARCHAR(255) NOT NULL,
-  `valor` DECIMAL(10,2) NOT NULL,
-  `tipo` ENUM('Entrada','Saída') NOT NULL,
-  `categoria` ENUM('Doações','Patrocínios','Salários','Fornecedores','Manutenção','Outros') NOT NULL,
-  `forma_pagamento` ENUM('Dinheiro','PIX','Transferência Bancária','Cartão de Débito','Cartão de Crédito','Cheque') NOT NULL,
-  `recorrente` TINYINT(1) NOT NULL DEFAULT 0,
-  `frequencia_recorrencia` ENUM('Diária','Semanal','Mensal','Bimestral','Trimestral','Semestral','Anual') DEFAULT NULL,
-  `ocorrencias_recorrencia` INT DEFAULT NULL,
-  `data` DATE NOT NULL,
-  `observacao` TEXT NULL,
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `descricao` varchar(255) NOT NULL,
+  `valor` decimal(10,2) NOT NULL,
+  `tipo` enum('Entrada','Saída') NOT NULL,
+  `categoria` enum('Doações','Patrocínios','Salários','Fornecedores','Manutenção','Outros') NOT NULL,
+  `forma_pagamento` enum('Dinheiro','PIX','Transferência Bancária','Cartão de Débito','Cartão de Crédito','Cheque') NOT NULL,
+  `recorrente` tinyint(1) NOT NULL DEFAULT 0,
+  `frequencia_recorrencia` enum('Diária','Semanal','Mensal','Bimestral','Trimestral','Semestral','Anual') DEFAULT NULL,
+  `ocorrencias_recorrencia` int(11) DEFAULT NULL,
+  `data` date NOT NULL,
+  `observacao` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_financeiro_data` (`data`),
   KEY `idx_financeiro_tipo` (`tipo`)
@@ -149,7 +149,7 @@ CREATE TABLE `internacoes` (
   CONSTRAINT `fk_quarto` FOREIGN KEY (`quarto_id`) REFERENCES `quartos` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 9. Doacoes (TABELA PRINCIPAL)
+-- 9. Doacoes
 CREATE TABLE `doacoes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `data` datetime NOT NULL,
@@ -168,8 +168,8 @@ CREATE TABLE `doacoes` (
   KEY `idx_doacoes_idoso_id` (`idoso_id`),
   KEY `idx_doacoes_evento_id` (`evento_id`),
   CONSTRAINT `fk_doacoes_doador` FOREIGN KEY (`doador`) REFERENCES `doadores` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `fk_doacoes_idoso` FOREIGN KEY (`idoso_id`) REFERENCES `idosos` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `fk_doacoes_evento` FOREIGN KEY (`evento_id`) REFERENCES `eventos` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `fk_doacoes_evento` FOREIGN KEY (`evento_id`) REFERENCES `eventos` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_doacoes_idoso` FOREIGN KEY (`idoso_id`) REFERENCES `idosos` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 10. DoacaoDinheiro (COMUNICAÇÃO COM FINANCEIRO)
@@ -187,7 +187,7 @@ CREATE TABLE `doacaodinheiro` (
   CONSTRAINT `fk_doacaodinheiro_financeiro` FOREIGN KEY (`financeiro_id`) REFERENCES `financeiro` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 11. DoacaoProduto (COMUNICAÇÃO COM PRODUTOS)
+-- 11. DoacaoProduto
 CREATE TABLE `doacaoproduto` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `doacao_id` int(11) NOT NULL,
@@ -202,7 +202,7 @@ CREATE TABLE `doacaoproduto` (
   KEY `idx_doacaoproduto_produto_id` (`produto_id`),
   CONSTRAINT `fk_doacaoproduto_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_doacaoproduto_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 12. Usuários
 CREATE TABLE `users` (
