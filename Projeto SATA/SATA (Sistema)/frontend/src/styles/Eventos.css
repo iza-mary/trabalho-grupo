@@ -1,0 +1,195 @@
+/* Página de Eventos — alinhada ao tema global */
+.eventos-page {
+  padding: var(--gap-2);
+  width: 100%;
+  min-height: calc(100vh - var(--navbar-height)); /* ocupa todo o espaço de page-content */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+.eventos-page h4 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.calendar-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--gap-3);
+  width: 100%;
+  min-height: 70vh; /* área útil suficiente ao calendário */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Garante dimensões mínimas do calendário dentro do wrapper */
+.calendar-wrapper .fc,
+.calendar-wrapper .fc-view-harness,
+.calendar-wrapper .fc-scrollgrid {
+  min-height: 60vh;
+}
+
+/* Ajustes do FullCalendar para melhor leitura */
+.fc .fc-toolbar-title {
+  font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+}
+
+.fc .fc-button {
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.fc .fc-button:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+  border-color: var(--border);
+}
+
+.fc-daygrid-event {
+  border-radius: 8px;
+  padding: 0 4px;
+}
+
+/* Ajustes de modal dentro da página de eventos */
+.eventos-page .modal-content {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.eventos-page .modal-header {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid var(--border);
+}
+.eventos-page .modal-footer {
+  background: #fff;
+  border-top: 1px solid var(--border);
+}
+
+/* Badge do tipo de evento conforme tema */
+.eventos-page .badge {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Botões de ação nas tabelas — padronização com outras páginas */
+.botoes-acao .btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+}
+
+.botoes-acao .btn svg {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.botoes-acao .btn-outline-primary { border-color: #0d6efd; color: #0d6efd; }
+.botoes-acao .btn-outline-info { border-color: #0dcaf0; color: #0dcaf0; }
+.botoes-acao .btn-outline-warning { border-color: #ffc107; color: #ffc107; }
+.botoes-acao .btn-outline-danger { border-color: #dc3545; color: #dc3545; }
+.botoes-acao .btn-outline-secondary { border-color: #6c757d; color: #6c757d; }
+
+.botoes-acao .btn:hover { color: #fff; }
+.botoes-acao .btn-outline-primary:hover { background-color: #0d6efd; }
+.botoes-acao .btn-outline-info:hover { background-color: #0dcaf0; }
+.botoes-acao .btn-outline-warning:hover { background-color: #ffc107; }
+.botoes-acao .btn-outline-danger:hover { background-color: #dc3545; }
+.botoes-acao .btn-outline-secondary:hover { background-color: #6c757d; }
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .eventos-page {
+    padding: var(--gap-2);
+    max-width: 100%; /* usa toda a largura em telas pequenas */
+    gap: var(--gap-2);
+  }
+  .calendar-wrapper {
+    padding: var(--gap-2);
+    min-height: 60vh; /* reduz levemente a altura mínima no mobile */
+  }
+  .botoes-acao .btn {
+    margin-bottom: 5px;
+    margin-right: 3px;
+    width: 32px;
+    height: 32px;
+  }
+  .fc .fc-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .fc .fc-toolbar-chunk {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+/* O espaçamento lateral e superior agora é controlado por .page-content do Navbar */
+
+@media (min-width: 992px) {
+  .calendar-wrapper {
+    padding: 1rem 1.25rem; /* respira melhor em telas médias/grandes */
+  }
+}
+/* Tabela de Próximos Eventos — interações acessíveis */
+.eventos-page .table tbody tr[role="button"] { cursor: pointer; }
+.eventos-page .table tbody tr:hover { background-color: #f8fafc; }
+.eventos-page .table tbody tr:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  background-color: #eef6ff;
+}
+
+/* Próximos Eventos — cards com borda lateral colorida */
+.proximos-eventos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.proximo-evento-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+  box-shadow: var(--shadow-soft, 0 1px 2px rgba(16, 24, 40, 0.04));
+}
+.proximo-evento-card:hover { background: #f8fafc; }
+.proximo-evento-card:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.evento-infos .evento-titulo {
+  font-size: 1rem;
+  line-height: 1.25rem;
+}
+.evento-meta {
+  display: flex;
+  align-items: center;
+  color: var(--muted, #495057);
+  margin-bottom: 0.25rem;
+}
+.evento-meta svg { color: var(--muted, #495057); }
+
+@media (max-width: 576px) {
+  .proximo-evento-card { padding: 0.6rem 0.75rem; }
+  .evento-infos .evento-titulo { font-size: 0.95rem; }
+}

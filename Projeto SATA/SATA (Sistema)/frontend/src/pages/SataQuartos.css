@@ -1,0 +1,44 @@
+/* ===============================================
+   Estilos de Quartos — Padronização de Botões de Ação
+   Alinha com a página de Lista/Cadastro de Idosos
+   =============================================== */
+
+/* Botões de ação (ícones) */
+.botoes-acao .btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+}
+
+.botoes-acao .btn svg {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Variantes em outline com cores coerentes e hover preenchido */
+.botoes-acao .btn-outline-primary { border-color: #0d6efd; color: #0d6efd; }
+.botoes-acao .btn-outline-info { border-color: #0dcaf0; color: #0dcaf0; }
+.botoes-acao .btn-outline-warning { border-color: #ffc107; color: #ffc107; }
+.botoes-acao .btn-outline-danger { border-color: #dc3545; color: #dc3545; }
+.botoes-acao .btn-outline-secondary { border-color: #6c757d; color: #6c757d; }
+
+.botoes-acao .btn:hover { color: #fff; }
+.botoes-acao .btn-outline-primary:hover { background-color: #0d6efd; }
+.botoes-acao .btn-outline-info:hover { background-color: #0dcaf0; }
+.botoes-acao .btn-outline-warning:hover { background-color: #ffc107; }
+.botoes-acao .btn-outline-danger:hover { background-color: #dc3545; }
+.botoes-acao .btn-outline-secondary:hover { background-color: #6c757d; }
+
+@media (max-width: 768px) {
+  .botoes-acao .btn {
+    margin-bottom: 5px;
+    margin-right: 3px;
+    width: 32px;
+    height: 32px;
+  }
+}

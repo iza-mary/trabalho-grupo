@@ -1,0 +1,17 @@
+form .form-control,
+form .form-select {
+  border-radius: 0.5rem;
+}
+
+form textarea.form-control {
+  resize: none;
+}
+
+form .btn {
+  min-width: 120px;
+  border-radius: 0.5rem;
+}
+
+form .btn + .btn {
+  margin-left: 0.5rem;
+}

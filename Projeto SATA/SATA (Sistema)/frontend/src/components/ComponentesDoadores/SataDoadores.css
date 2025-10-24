@@ -1,0 +1,148 @@
+/* SataDoadores.css */
+.content-area {
+  margin-left: 0; /* Removido deslocamento lateral específico desta página */
+  padding: 20px;
+  width: 100%; /* Ocupa toda a largura disponível dentro de main */
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.linha-cabecalho {
+  padding: var(--gap-3) 0 0;
+  margin: 0;
+  border-bottom: 1px solid transparent;
+}
+
+.card { border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); width: 100%; }
+.card-header { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-bottom: 1px solid var(--border); padding: var(--gap-3) var(--gap-4); font-weight: 600; font-size: 1.05rem; }
+.card-body { padding: var(--gap-4); }
+
+/* Formulário - ocupa todo o espaço */
+.form-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.form-row {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -15px;
+}
+
+.form-col {
+  padding: 0 15px;
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Tabela - ocupa todo o espaço */
+.table-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.table-responsive {
+  flex: 1;
+  overflow-x: auto;
+}
+
+/* Elementos de formulário */
+.form-control, .form-select {
+  border-radius: 4px;
+  font-size: 0.95rem;
+  width: 100%; /* Ocupa toda a largura do container */
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Tabela */
+.table { width: 100%; margin-bottom: 0; }
+.table th { background-color: #f8f9fa; font-weight: 600; vertical-align: middle; }
+.table td { vertical-align: middle; }
+
+/* Botões */
+.botoes-acao {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.botoes-acao .btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.botoes-acao .btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn { padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 0.95rem; }
+.btn svg { width: 16px; height: 16px; }
+.btn-outline-primary:hover { background-color: #0d6efd; color: #fff; }
+.btn-outline-info:hover { background-color: #0dcaf0; color: #fff; }
+.btn-outline-warning:hover { background-color: #ffc107; color: #fff; }
+.btn-outline-danger:hover { background-color: #dc3545; color: #fff; }
+.btn-outline-secondary:hover { background-color: #6c757d; color: #fff; }
+
+/* Badges */
+.badge {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.badge.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+/* Modal */
+.modal-content {
+  border-radius: 8px;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .content-area {
+    margin-left: 0;
+    width: 100%;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .botoes-acao .btn {
+    margin-bottom: 5px;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .form-col {
+    min-width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .table th, .table td {
+    white-space: normal;
+  }
+}

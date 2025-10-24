@@ -1,0 +1,182 @@
+/* Notificações - Estilos */
+
+.notificacoes-lista {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.notificacao-card {
+  transition: all 0.2s ease-in-out;
+  border-left: 4px solid transparent;
+}
+
+.notificacao-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.notificacao-card.nao-lida {
+  border-left-color: #0d6efd;
+  background-color: #f8f9ff;
+}
+
+.notificacao-icone {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.notificacao-card.nao-lida .notificacao-icone {
+  background-color: #e7f1ff;
+}
+
+/* Badges personalizados */
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.badge.bg-info {
+  background-color: #0dcaf0 !important;
+  color: #000 !important;
+}
+
+.badge.bg-primary {
+  background-color: #0d6efd !important;
+}
+
+.badge.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .notificacoes-lista {
+    max-height: 60vh;
+  }
+  
+  .notificacao-card .row {
+    align-items: flex-start;
+  }
+  
+  .notificacao-icone {
+    font-size: 1.2rem;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .badge {
+    font-size: 0.7rem;
+  }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notificacao-card {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Estados de loading */
+.spinner-border {
+  color: #0d6efd;
+}
+
+/* Filtros */
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Paginação */
+.btn-outline-primary {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.btn-outline-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Checkbox customizado */
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-input:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Melhorias visuais */
+.page-header .badge {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+/* Estados vazios */
+.text-center.py-5 {
+  color: #6c757d;
+}
+
+.text-center.py-5 svg {
+  opacity: 0.5;
+}
+
+/* Scrollbar personalizada */
+.notificacoes-lista::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notificacoes-lista::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.notificacoes-lista::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.notificacoes-lista::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

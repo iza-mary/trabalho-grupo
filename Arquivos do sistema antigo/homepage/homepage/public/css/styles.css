@@ -1,0 +1,224 @@
+:root {
+  --primary-color: #2c6e9b;
+  --secondary-color: #d63384;
+  --accent-color: #20c997;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Navbar branca minimalista com borda azul */
+.navbar {
+  background-color: #ffffff;
+  border-bottom: 3px solid #005580;
+  position: fixed;
+  display: flex;
+  z-index: 1;
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: #005580;
+  font-weight: 500;
+}
+
+.navbar .nav-link:hover {
+  color: #ff6600;
+  /* destaque no hover */
+}
+
+.logo {
+  position: absolute;
+  top: 0px;
+  /* metade sobre a navbar e metade sobre a imagem */
+  width: 120px;
+  /* ajuste o tamanho da logo */
+  z-index: 2;
+  /* acima da navbar e da imagem */
+}
+
+section {
+  scroll-margin-top: 55px;
+  /* altura da sua navbar */
+}
+
+.hero-section {
+  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+    url('https://nurapresidence.org.br/wp-content/uploads/2024/03/cuidador-de-idosos-estrategias.jpg');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  padding: 100px 0;
+  text-align: center;
+}
+
+.section-title {
+  position: relative;
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.section-title:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background-color: var(--accent-color);
+}
+
+.card2 {
+  border-width: 2px;
+}
+
+.card {
+  border-width: 2px;
+  border-radius: 25px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.event-card {
+  background-color: var(--light-color);
+  border-left: 4px solid var(--secondary-color);
+}
+
+.donation-section {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #235a83;
+  border-color: #235a83;
+}
+
+.btn-donation {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: white;
+}
+
+.btn-login {
+  background-color: #2c6e9b;
+}
+
+.btn-login:hover {
+  background-color: #ff6600;
+}
+
+.btn-donation:hover {
+  background-color: #b02a6e;
+  border-color: #b02a6e;
+  color: white;
+}
+
+footer {
+  background-color: var(--dark-color);
+  color: white;
+}
+
+.social-icon {
+  color: white;
+  font-size: 1.5rem;
+  margin-right: 15px;
+  transition: color 0.3s;
+}
+
+.social-icon:hover {
+  color: var(--accent-color);
+}
+
+.logo-sobreposta {
+  width: 120px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+
+.doacao {
+  background: linear-gradient(135deg, #f2f6f9, #e6f0f8);
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.titulo-doacao {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.subtexto {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 40px;
+}
+
+.cards-doacao {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.card-doacao {
+  background: #fff;
+  border-radius: 15px;
+  padding: 25px 20px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  width: 280px;
+  transition: transform 0.3s ease;
+}
+
+.card-doacao:hover {
+  transform: translateY(-5px);
+}
+
+.card-doacao i {
+  font-size: 2rem;
+  color: #0077b6;
+  margin-bottom: 15px;
+}
+
+.card-doacao h3 {
+  color: #0077b6;
+  margin-bottom: 10px;
+}
+
+.card-doacao p {
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.botao-doacao button {
+  background: #0077b6;
+  color: #fff;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.botao-doacao button:hover {
+  background: #cc3c6e;
+}

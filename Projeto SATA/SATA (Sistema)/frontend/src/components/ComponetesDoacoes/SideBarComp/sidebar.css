@@ -1,0 +1,21 @@
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: var(--sidebar-bg);
+  color: #fff;
+  padding: 1rem 0;
+  z-index: 1100;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.25);
+}
+.sidebar h4 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.sidebar .nav-link, .sidebar .nav-link:visited {
+  display: flex; align-items: center; padding: 10px 1rem; font-size: 1.05rem;
+  color: var(--sidebar-link) !important; text-decoration: none; transition: background 0.3s, color 0.3s;
+  background-color: transparent !important; border-radius: 8px;
+}
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+  background-color: rgba(53, 141, 212, 0.18); border-radius: 8px; color: var(--sidebar-link) !important;
+}

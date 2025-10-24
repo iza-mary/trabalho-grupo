@@ -1,0 +1,140 @@
+/*
+  Sistema de Estilos — Tema Global Unificado
+  Define tokens, resets e utilitários para padronização visual.
+*/
+
+:root {
+  /* Paleta */
+  --page-bg: #f6f8fb;
+  --surface: #ffffff;
+  --text: #1b2430;
+  --muted: #6b7785;
+  --primary: #358DD4;
+  --success: #2ecc71;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --border: #e6e9ef;
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --sidebar-bg: linear-gradient(180deg, #213449 0%, #17212C 100%);
+  --sidebar-link: #358DD4;
+
+  /* Forma e sombra */
+  --radius: 12px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+
+  /* Espaços */
+  --gap-1: 8px;
+  --gap-2: 12px;
+  --gap-3: 16px;
+  --gap-4: 24px;
+  --gap-5: 32px;
+}
+
+/* Resets essenciais */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+}
+
+/* Padroniza a fonte de todos os cabeçalhos (headings) */
+h1, h2, h3, h4, h5, h6 {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+}
+
+/* Escala tipográfica para headings: tamanhos e pesos padronizados */
+h1 { font-size: 2rem; font-weight: 700; line-height: 1.2; }
+h2 { font-size: 1.5rem; font-weight: 600; line-height: 1.25; }
+h3 { font-size: 1.25rem; font-weight: 600; line-height: 1.3; }
+h4 { font-size: 1.125rem; font-weight: 600; line-height: 1.35; }
+h5 { font-size: 1rem; font-weight: 600; line-height: 1.4; }
+h6 { font-size: 0.875rem; font-weight: 600; line-height: 1.4; }
+a { text-decoration: none; color: inherit; }
+img, svg { vertical-align: middle; }
+
+/* Utilitários de página */
+.content-area {
+  /* Reduz o padding geral e mantém organização visual */
+  padding: var(--gap-2);
+  min-height: 100vh;
+  background: var(--page-bg);
+  color: var(--text);
+  position: relative;
+  z-index: 0;
+}
+.content-area > * { position: relative; z-index: 1; }
+
+/* Removido override global de .container-fluid para escopo apenas em Produtos */
+
+/* Utilitário: ocupar toda a área disponível do main */
+.full-main {
+  width: 100%;
+  min-height: inherit;
+}
+/* Padrão de tabelas */
+.table { width: 100%; margin-bottom: 0; }
+.table th { background-color: #f8f9fa; font-weight: 600; vertical-align: middle; }
+.table td { vertical-align: middle; }
+
+/* Padrão de botões */
+.btn { padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 0.95rem; }
+.btn svg { width: 16px; height: 16px; }
+.btn-outline-primary:hover { background-color: #0d6efd; color: #fff; }
+.btn-outline-info:hover { background-color: #0dcaf0; color: #fff; }
+.btn-outline-warning:hover { background-color: #ffc107; color: #fff; }
+.btn-outline-danger:hover { background-color: #dc3545; color: #fff; }
+.btn-outline-secondary:hover { background-color: #6c757d; color: #fff; }
+
+.page-header {
+  padding: var(--gap-3) 0;
+  border-bottom: 1px solid transparent;
+}
+.page-title { font-size: clamp(1.25rem, 2.2vw, 1.75rem); font-weight: 700; margin: 0; }
+.page-subtitle { color: var(--muted); margin: 4px 0 0; }
+
+/* Cartões */
+.card { border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+.card-header { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-bottom: 1px solid var(--border); padding: var(--gap-3) var(--gap-4); font-weight: 600; }
+.card-body { padding: var(--gap-4); }
+
+/* Botões e formulários */
+.btn { padding: 8px 16px; border-radius: 10px; font-weight: 600; }
+.form-control, .form-select { border-radius: 8px; }
+.form-control:focus, .form-select:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+
+/* Tabelas */
+.table-responsive { overflow-x: auto; }
+th[role="button"] { cursor: pointer; }
+
+/* Botões de ação (ícones) — padrão compartilhado */
+.botoes-acao .btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+}
+.botoes-acao .btn svg {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+@media (max-width: 768px) {
+  .botoes-acao .btn {
+    width: 32px;
+    height: 32px;
+    margin-right: 3px;
+    margin-bottom: 5px;
+  }
+}
+
+/* Layout com sidebar genérica */
+.with-sidebar { padding-left: calc(var(--sidebar-width)); box-sizing: border-box; width: 100%; }
+@media (max-width: 768px) { .with-sidebar { padding-left: 0; width: 100%; } }

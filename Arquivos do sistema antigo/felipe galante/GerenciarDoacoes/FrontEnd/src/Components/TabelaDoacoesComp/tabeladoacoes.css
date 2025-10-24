@@ -1,0 +1,53 @@
+.action-btns {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Padrão de botões de ação inspirado na SataListaIdosos */
+.botoes-acao .btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+}
+
+.botoes-acao .btn svg {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.botoes-acao .btn-outline-warning {
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+.botoes-acao .btn-outline-danger {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.botoes-acao .btn:hover {
+  color: #fff;
+}
+
+.botoes-acao .btn-outline-warning:hover {
+  background-color: #ffc107;
+}
+
+.botoes-acao .btn-outline-danger:hover {
+  background-color: #dc3545;
+}
+
+/* Cabeçalhos clicáveis para ordenação */
+th[role="button"] {
+  cursor: pointer;
+}
+
+/* Responsividade da tabela */
+.table-responsive {
+  overflow-x: auto;
+}

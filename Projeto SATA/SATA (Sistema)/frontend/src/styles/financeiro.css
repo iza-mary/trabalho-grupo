@@ -1,0 +1,116 @@
+/* Estilos dedicados para a página FinanceiroLocal */
+
+.summary-card {
+  border-radius: 10px;
+  padding: 16px;
+  color: #fff;
+  height: 100%;
+}
+
+/* Garantir mesma altura/largura visual entre os cards do resumo */
+.financeiro-page .row.mb-4 {
+  align-items: stretch;
+}
+.financeiro-page .row.mb-4 > [class*="col-"] {
+  display: flex;
+}
+.financeiro-page .row.mb-4 .summary-card {
+  width: 100%;
+}
+
+.income-card {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.expense-card {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.financeiro-page .summary-title {
+  font-weight: 600;
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+}
+
+.financeiro-page .summary-sub {
+  opacity: 0.9;
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+}
+
+.financeiro-page .summary-value {
+  font-weight: 600;
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+}
+
+/* Linhas da tabela destacando tipo */
+.transaction-income {
+  background-color: rgba(46, 204, 113, 0.06);
+}
+
+.transaction-expense {
+  background-color: rgba(231, 76, 60, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .summary-card {
+    color: #fff;
+  }
+  .transaction-income {
+    background-color: rgba(46, 204, 113, 0.12);
+  }
+  .transaction-expense {
+    background-color: rgba(231, 76, 60, 0.12);
+  }
+}
+
+/* Coluna de botões de ação (Ações) */
+.botoes-acao {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+.botoes-acao .btn,
+.botoes-acao button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Padronização dos botões de ação (igual ao padrão das outras páginas) */
+.botoes-acao .btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+}
+
+.botoes-acao .btn svg {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.botoes-acao .btn-outline-primary { border-color: #0d6efd; color: #0d6efd; }
+.botoes-acao .btn-outline-danger { border-color: #dc3545; color: #dc3545; }
+.botoes-acao .btn-outline-secondary { border-color: #6c757d; color: #6c757d; }
+
+.botoes-acao .btn:hover { color: #fff; }
+.botoes-acao .btn-outline-primary:hover { background-color: #0d6efd; }
+.botoes-acao .btn-outline-danger:hover { background-color: #dc3545; }
+.botoes-acao .btn-outline-secondary:hover { background-color: #6c757d; }
+
+@media (max-width: 768px) {
+  .botoes-acao .btn {
+    margin-bottom: 5px;
+    margin-right: 3px;
+    width: 32px;
+    height: 32px;
+  }
+}
