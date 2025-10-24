@@ -1,5 +1,0 @@
-.donation-type { cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
-.donation-type:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-.donation-type.active { border-color: var(--primary); outline: 3px solid rgba(53,141,212,0.18); }
-.donation-type svg { font-size: 2rem; color: var(--primary); }
-.donation-type h5 { margin: 8px 0 0; font-weight: 600; }
