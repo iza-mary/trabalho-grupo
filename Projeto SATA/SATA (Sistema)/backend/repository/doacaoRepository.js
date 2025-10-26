@@ -291,7 +291,7 @@ class DoacaoRepository {
                 // Harmonizar categoria/unidade e somar quantidade ao estoque do produto
                 const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
 -                await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = quantidade + ? WHERE id = ?`, [categoria, unidade, qntd, produtoId]);
-+                await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = quantidade + ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] +', ?, ' | Doação #', ?, ' | Unidade: ', ?) WHERE id = ?`, [categoria, unidade, qntd, qntd, doacaoId, unidade, produtoId]);
++                await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = quantidade + ? WHERE id = ?`, [categoria, unidade, qntd, produtoId]);
                 await conn.commit();
                 conn.release();
                 return await this.findById(doacaoId);
@@ -446,12 +446,12 @@ class DoacaoRepository {
                 // reconciliar estoque conforme possível mudança de item/quantidade
                 if (prevProdId && prevProdId === produtoId) {
                     const delta = Number(qntd) - prevQty;
-                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] ', ?, ?, ' | Doação #', ?, ' (ajuste) | Unidade: ', ?) WHERE id = ?`, [delta, categoria, unidade, (delta >= 0 ? '+' : '-'), Math.abs(delta), id, unidade, produtoId]);
+                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ? WHERE id = ?`, [delta, categoria, unidade, produtoId]);
                 } else {
                     if (prevProdId) {
-                        await conn.execute(`UPDATE produtos SET quantidade = quantidade - ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] -', ?, ' | Doação #', ?, ' (revisão)') WHERE id = ?`, [prevQty, prevQty, id, prevProdId]);
+                        await conn.execute(`UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`, [prevQty, prevProdId]);
                     }
-                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] +', ?, ' | Doação #', ?, ' | Unidade: ', ?) WHERE id = ?`, [qntd, categoria, unidade, qntd, id, unidade, produtoId]);
+                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ? WHERE id = ?`, [qntd, categoria, unidade, produtoId]);
                 }
                 await conn.commit();
                 conn.release();
@@ -521,15 +521,15 @@ class DoacaoRepository {
                     await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, unidade, qntd, id]);
 
                     // reconciliar estoque conforme possível mudança de item/quantidade
-                    if (prevProdId && prevProdId === produtoId) {
-                        const delta = Number(qntd) - prevQty;
-                        await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] ', ?, ?, ' | Doação #', ?, ' (ajuste) | Unidade: ', ?) WHERE id = ?`, [delta, categoria, unidade, (delta >= 0 ? '+' : '-'), Math.abs(delta), id, unidade, produtoId]);
-                    } else {
-                        if (prevProdId) {
-                            await conn.execute(`UPDATE produtos SET quantidade = quantidade - ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] -', ?, ' | Doação #', ?, ' (revisão)') WHERE id = ?`, [prevQty, prevQty, id, prevProdId]);
-                        }
-                        await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ?, observacao = CONCAT(COALESCE(observacao,''), '\n[', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'), '] +', ?, ' | Doação #', ?, ' | Unidade: ', ?) WHERE id = ?`, [qntd, categoria, unidade, qntd, id, unidade, produtoId]);
+                if (prevProdId && prevProdId === produtoId) {
+                    const delta = Number(qntd) - prevQty;
+                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ? WHERE id = ?`, [delta, categoria, unidade, produtoId]);
+                } else {
+                    if (prevProdId) {
+                        await conn.execute(`UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`, [prevQty, prevProdId]);
                     }
+                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ?, categoria = ?, unidade_medida = ? WHERE id = ?`, [qntd, categoria, unidade, produtoId]);
+                }
                     await conn.commit();
                     conn.release();
                 }

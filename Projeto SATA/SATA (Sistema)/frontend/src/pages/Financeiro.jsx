@@ -222,7 +222,7 @@ const Financeiro = () => {
   }, [despesas, filter]);
 
   return (
-    <Navbar>
+    <Navbar disableSidebar={showModal}>
       <div className="container-fluid py-3 financeiro-page">
         <PageHeader
           title="Financeiro"

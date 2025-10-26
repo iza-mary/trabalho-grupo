@@ -131,7 +131,7 @@ export default function Produtos() {
   }, [search, categoria, minPreco, maxPreco, sort, order]);
 
   return (
-    <Navbar>
+    <Navbar disableSidebar={showMovModal}>
       <div className="container-fluid" style={{ padding: 'var(--gap-2)' }}>
         <PageHeader
           title="Estoque"

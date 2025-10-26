@@ -90,12 +90,8 @@ class ProdutoController {
         novo = atual - qty;
       }
 
-      // Apêndice de log na observacao para registro
-      const ts = new Date().toISOString();
-      const logLine = `[${ts}] ${tipo === 'entrada' ? '+' : '-'}${qty}${observacao ? ` | ${observacao}` : ''}`;
-      const observacaoNova = [found.observacao || '', logLine].filter(Boolean).join('\n');
-
-      const produtoAtualizado = new Produto({ ...found, quantidade: novo, observacao: observacaoNova });
+      // Não armazenar registros de movimentação no campo "observacao"
+      const produtoAtualizado = new Produto({ ...found, quantidade: novo });
       const ok = await ProdutoRepository.update(id, produtoAtualizado);
       if (!ok) return res.status(500).json({ success: false, error: 'Falha ao registrar movimentação' });
       const updated = await ProdutoRepository.findById(id);

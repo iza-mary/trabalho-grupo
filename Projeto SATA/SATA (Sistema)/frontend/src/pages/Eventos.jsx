@@ -418,7 +418,7 @@ export default function Eventos() {
 
 
   return (
-    <Navbar>
+    <Navbar disableSidebar={showModal}>
     <Container fluid className="eventos-page">
       <PageHeader
         title="Eventos"
@@ -934,9 +934,7 @@ export default function Eventos() {
                   Salvar
                 </Button>
                 <Button variant="outline-secondary" onClick={() => setShowModal(false)}>Fechar</Button>
-                <Button variant="danger" disabled={!isAdmin} className={!isAdmin ? 'disabled-action' : ''} onClick={!isAdmin ? undefined : () => abrirConfirmarExclusao(eventoSelecionado)} title={!isAdmin ? 'Apenas Administradores podem excluir' : 'Excluir'}>
-                  <Trash className="me-2" /> Excluir
-                </Button>
+                {/* Removido: botão Excluir do modo editar para atender requisito */}
               </div>
             </div>
           )}
