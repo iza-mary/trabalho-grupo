@@ -45,22 +45,29 @@
   z-index: 1990 !important;
 }
 .modal-internacao {
-  /* Confinar o modal à área de conteúdo, sem cobrir a sidebar */
-  position: fixed;
-  left: var(--sidebar-width) !important;
-  width: calc(100% - var(--sidebar-width)) !important;
+  /* Fullscreen overlay for modal */
+  position: fixed !important;
   top: 0 !important;
-  bottom: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
   height: 100vh !important;
   display: flex;
   align-items: center;
   justify-content: center; /* centraliza horizontal e verticalmente */
   z-index: 2000 !important;
+  overflow: auto; /* permitir rolagem quando necessário */
 }
 
 /* Remover margens padrão do Bootstrap para centralização exata */
 .modal-internacao .modal-dialog {
-  margin: 0 !important;
+  /* Centralizar horizontalmente o contêiner do modal */
+  margin: 0 auto !important;
+}
+
+/* Garantir que o conteúdo do modal fique centralizado horizontalmente */
+.modal-internacao .modal-content.modal-internacao-conteudo {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .modal-internacao-backdrop {
@@ -76,28 +83,16 @@
   .modal-internacao,
   .modal-internacao-backdrop {
     left: 0 !important;
-    width: 100% !important;
-  }
-  /* Considerar altura da mobile header (56px) ao centralizar dentro de .page-content */
-  .modal-internacao {
-    top: 56px !important;
-    height: calc(100vh - 56px) !important;
+    width: 100vw !important;
+    height: 100vh !important;
   }
 }
 
 /* Ajuste para menu colapsado: usar largura reduzida da sidebar */
-.sidebar.collapsed ~ .page-content .modal-internacao {
-  left: var(--sidebar-collapsed) !important;
-  width: calc(100% - var(--sidebar-collapsed)) !important;
-}
+/* Sidebar state no longer affects modal overlay — fullscreen */
+/* .sidebar.collapsed ~ .page-content .modal-internacao { }
+   .sidebar.disabled ~ .page-content .modal-internacao { } */
 /* Removido ajuste específico para menu colapsado — backdrop sempre fullscreen */
 
 /* Quando a sidebar estiver desativada, centralizar o modal dentro da área principal */
-.sidebar.disabled ~ .page-content .modal-internacao {
-  left: 0 !important;
-  width: 100% !important;
-}
-.sidebar.disabled ~ .page-content .modal-internacao-backdrop {
-  left: 0 !important;
-  width: 100% !important;
-}
+/* Backdrop remains fullscreen; rules above already ensure full coverage */
