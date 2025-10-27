@@ -4,17 +4,27 @@ import { BsList, BsChevronLeft, BsChevronRight, BsDoorClosedFill, BsPeopleFill, 
 import { Building, HeartFill, GiftFill, CashStack, BoxSeam, BellFill } from 'react-bootstrap-icons';
 import { useAuth } from '../hooks/useAuth';
 import './Navbar.css';
+import { Modal, Button } from 'react-bootstrap';
 
 const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const closeOnNavigate = () => setOpen(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     if (disableSidebar) return;
-    await logout();
-    navigate('/login');
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      setShowLogoutConfirm(false);
+      navigate('/login');
+    }
   };
 
   // Se a sidebar estiver desativada, garantir que não fique aberta
@@ -196,6 +206,20 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
       <main className="page-content">
         {children}
       </main>
+
+      {/* Confirmação de logout */}
+      <Modal show={showLogoutConfirm} onHide={() => setShowLogoutConfirm(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar saída</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Deseja sair do perfil e encerrar a sessão?</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowLogoutConfirm(false)}>Cancelar</Button>
+          <Button variant="danger" onClick={confirmLogout}>Sair</Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
