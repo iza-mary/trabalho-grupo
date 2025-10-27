@@ -1,13 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { Button, Card, Form, Row, Col, Alert } from 'react-bootstrap';
+import { formatarRG, normalizarRG, validarRG, formatarCNPJ, validarCNPJ, normalizarCNPJ, normalizarCPF, validarCPF, formatarCPF } from '../../pages/validacoes';
 import { PlusCircle } from 'react-bootstrap-icons';
 import './SataDoadores.css';
 
 function FormDoador({ onSubmit, doadores }) {
   const [validated, setValidated] = useState(false);
   const [doador, setDoador] = useState({
+    tipo: 'PF',
     nome: "",
     cpf: "",
+    cnpj: "",
+    dataNascimento: "",
+    representante: "",
     telefone: "",
     rg: "",
     email: "",
@@ -22,8 +27,12 @@ function FormDoador({ onSubmit, doadores }) {
 
   const limpaForm = () => {
     setDoador({
+      tipo: 'PF',
       nome: "",
       cpf: "",
+      cnpj: "",
+      dataNascimento: "",
+      representante: "",
       telefone: "",
       rg: "",
       email: "",
@@ -49,15 +58,22 @@ function FormDoador({ onSubmit, doadores }) {
     }
   };
 
+  const handleChangeTipo = (e) => {
+    const tipo = e.target.value;
+    setDoador(prev => ({ ...prev, tipo }));
+    // Limpa documentos do outro tipo para evitar validação/duplicidade indevida
+    if (tipo === 'PF') {
+      setDoador(prev => ({ ...prev, cnpj: "", representante: "" }));
+    } else {
+      setDoador(prev => ({ ...prev, cpf: "", dataNascimento: "" }));
+    }
+  };
+
   const handleChangeCpf = (e) => {
-    let value = e.target.value;
-    value = value.replace(/\D/g, "");
-    if (value.length > 3) value = value.replace(/^(\d{3})(\d)/, "$1.$2");
-    if (value.length > 6) value = value.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3");
-    if (value.length > 9) value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+    let value = formatarCPF(e.target.value);
     setDoador(prev => ({ ...prev, cpf: value }));
-    
-    if (value && value.length === 14) {
+    const raw = normalizarCPF(value);
+    if (raw && validarCPF(value)) {
       setErrors(prev => ({ ...prev, cpf: null }));
     } else if (!value) {
       setErrors(prev => ({ ...prev, cpf: "CPF é obrigatório" }));
@@ -76,6 +92,59 @@ function FormDoador({ onSubmit, doadores }) {
         setValidated(false);
       }
     }, 3000);
+  };
+
+  const handleChangeCnpj = (e) => {
+    const masked = formatarCNPJ(e.target.value);
+    const raw = normalizarCNPJ(masked);
+    setDoador(prev => ({ ...prev, cnpj: masked }));
+    if (!masked) {
+      setErrors(prev => ({ ...prev, cnpj: "CNPJ é obrigatório" }));
+      setValidated(false);
+    } else if (!validarCNPJ(raw)) {
+      setErrors(prev => ({ ...prev, cnpj: "CNPJ inválido" }));
+      setValidated(false);
+    } else {
+      setErrors(prev => ({ ...prev, cnpj: null }));
+    }
+
+    clearTimeout(timeOutId.current);
+    timeOutId.current = setTimeout(() => {
+      const cnpjExistente = doadores.find(d => d.cnpj === masked);
+      if (cnpjExistente) {
+        setErrors(prev => ({ ...prev, cnpj: "Este CNPJ já existe" }));
+        setValidated(false);
+      }
+    }, 3000);
+  };
+
+  const handleChangeDataNascimento = (e) => {
+    const value = e.target.value;
+    setDoador(prev => ({ ...prev, dataNascimento: value }));
+    if (!value) {
+      setErrors(prev => ({ ...prev, dataNascimento: "Data de nascimento é obrigatória" }));
+      setValidated(false);
+    } else {
+      const dt = new Date(value);
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      if (isNaN(dt.getTime()) || dt > hoje) {
+        setErrors(prev => ({ ...prev, dataNascimento: "Data de nascimento inválida" }));
+        setValidated(false);
+      } else {
+        setErrors(prev => ({ ...prev, dataNascimento: null }));
+      }
+    }
+  };
+
+  const handleChangeRepresentante = (e) => {
+    const value = e.target.value;
+    setDoador(prev => ({ ...prev, representante: value }));
+    if (!value || !value.trim()) {
+      setErrors(prev => ({ ...prev, representante: "Representante legal é obrigatório" }));
+      setValidated(false);
+    } else {
+      setErrors(prev => ({ ...prev, representante: null }));
+    }
   };
 
   const handleChangeTelefone = (e) => {
@@ -104,10 +173,11 @@ function FormDoador({ onSubmit, doadores }) {
   };
 
   const handleChangeRg = (e) => {
-    const value = e.target.value;
-    setDoador(prev => ({ ...prev, rg: value }));
-    if (value && value.length !== 12) {
-      setErrors(prev => ({ ...prev, rg: "RG inválido" }));
+    const masked = formatarRG(e.target.value);
+    const raw = normalizarRG(masked);
+    setDoador(prev => ({ ...prev, rg: masked }));
+    if (raw && !validarRG(raw)) {
+      setErrors(prev => ({ ...prev, rg: 'RG inválido' }));
       setValidated(false);
     } else {
       setErrors(prev => ({ ...prev, rg: null }));
@@ -193,12 +263,30 @@ function FormDoador({ onSubmit, doadores }) {
       setValidated(false);
     }
 
-    if (!doador.cpf) {
-      newErrors.cpf = "CPF é obrigatório";
-      setValidated(false);
-    } else if (doador.cpf.length !== 14) {
-      newErrors.cpf = "CPF inválido";
-      setValidated(false);
+    if (doador.tipo === 'PF') {
+      if (!doador.cpf) {
+        newErrors.cpf = "CPF é obrigatório";
+        setValidated(false);
+      } else if (!validarCPF(doador.cpf)) {
+        newErrors.cpf = "CPF inválido";
+        setValidated(false);
+      }
+      if (!doador.dataNascimento) {
+        newErrors.dataNascimento = "Data de nascimento é obrigatória";
+        setValidated(false);
+      }
+    } else {
+      if (!doador.cnpj) {
+        newErrors.cnpj = "CNPJ é obrigatório";
+        setValidated(false);
+      } else if (!validarCNPJ(doador.cnpj)) {
+        newErrors.cnpj = "CNPJ inválido";
+        setValidated(false);
+      }
+      if (!doador.representante || !doador.representante.trim()) {
+        newErrors.representante = "Representante legal é obrigatório";
+        setValidated(false);
+      }
     }
 
     if (!doador.telefone) {
@@ -209,9 +297,12 @@ function FormDoador({ onSubmit, doadores }) {
       setValidated(false);
     }
 
-    if (doador.rg && doador.rg.length !== 12) {
-      newErrors.rg = "RG inválido";
-      setValidated(false);
+    if (doador.rg) {
+      const rawRG = normalizarRG(doador.rg);
+      if (!validarRG(rawRG)) {
+        newErrors.rg = "RG inválido";
+        setValidated(false);
+      }
     }
 
     if (doador.email) {
@@ -237,16 +328,32 @@ function FormDoador({ onSubmit, doadores }) {
       setValidated(false);
     }
 
-    const cpfExistente = doadores.find(doadr => doadr.cpf === doador.cpf);
-    if (cpfExistente) {
-      newErrors.cpf = "Este CPF já existe";
-      setValidated(false);
+    if (doador.tipo === 'PF') {
+      const cpfExistente = doadores.find(d => d.cpf === doador.cpf);
+      if (cpfExistente) {
+        newErrors.cpf = "Este CPF já existe";
+        setValidated(false);
+      }
+    } else {
+      const cnpjExistente = doadores.find(d => d.cnpj === doador.cnpj);
+      if (cnpjExistente) {
+        newErrors.cnpj = "Este CNPJ já existe";
+        setValidated(false);
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
     } else {
-      onSubmit(doador);
+      const payload = {
+        ...doador,
+        nome: doador.nome?.trim(),
+        cpf: doador.tipo === 'PF' ? normalizarCPF(doador.cpf) : null,
+        cnpj: doador.tipo === 'PJ' ? normalizarCNPJ(doador.cnpj) : null,
+        rg: normalizarRG(doador.rg)
+      };
+      // Campos extras (dataNascimento/representante) não são persistidos no schema atual
+      onSubmit(payload);
       setValidated(true);
     }
   }
@@ -261,33 +368,80 @@ function FormDoador({ onSubmit, doadores }) {
           <Form noValidate validated={validated} onSubmit={handleSubmit}>
             <Row>
               <Col md={6}>
-                <h5 className="mb-3">Dados Pessoais</h5>
+                <h5 className="mb-3">Dados do Doador</h5>
+                <Form.Group className="mb-3" controlId="tipo">
+                  <Form.Label>Tipo de Doador</Form.Label>
+                  <Form.Select value={doador.tipo} onChange={handleChangeTipo}>
+                    <option value="PF">Pessoa Física</option>
+                    <option value="PJ">Pessoa Jurídica</option>
+                  </Form.Select>
+                </Form.Group>
                 <Form.Group className="mb-3" controlId="nome">
-                  <Form.Label>Nome Completo</Form.Label>
+                  <Form.Label>{doador.tipo === 'PF' ? 'Nome Completo' : 'Razão Social'}</Form.Label>
                   <Form.Control
                     isInvalid={!!errors.nome}
                     required
                     value={doador.nome}
                     onChange={handleChangeNome}
-                    placeholder="Nome Sobrenome"
+                    placeholder={doador.tipo === 'PF' ? 'Nome Sobrenome' : 'Empresa Ltda'}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.nome}
                   </Form.Control.Feedback>
                 </Form.Group>
-
-                <Form.Group className="mb-3" controlId="cpf">
-                  <Form.Label>CPF</Form.Label>
-                  <Form.Control 
-                    maxLength={14} 
-                    onChange={handleChangeCpf} 
-                    value={doador.cpf} 
-                    isInvalid={!!errors.cpf} 
-                    type="text" 
-                    placeholder="123.456.789-01" 
-                  />
-                  <Form.Control.Feedback type="invalid">{errors.cpf}</Form.Control.Feedback>
-                </Form.Group>
+                {doador.tipo === 'PF' ? (
+                  <>
+                    <Form.Group className="mb-3" controlId="cpf">
+                      <Form.Label>CPF</Form.Label>
+                      <Form.Control 
+                        maxLength={14} 
+                        onChange={handleChangeCpf} 
+                        value={doador.cpf} 
+                        isInvalid={!!errors.cpf} 
+                        type="text" 
+                        placeholder="123.456.789-01" 
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.cpf}</Form.Control.Feedback>
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="dataNascimento">
+                      <Form.Label>Data de Nascimento</Form.Label>
+                      <Form.Control 
+                        type="date"
+                        value={doador.dataNascimento}
+                        onChange={handleChangeDataNascimento}
+                        isInvalid={!!errors.dataNascimento}
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.dataNascimento}</Form.Control.Feedback>
+                    </Form.Group>
+                  </>
+                ) : (
+                  <>
+                    <Form.Group className="mb-3" controlId="cnpj">
+                      <Form.Label>CNPJ</Form.Label>
+                      <Form.Control 
+                        maxLength={18} 
+                        onChange={handleChangeCnpj} 
+                        value={doador.cnpj} 
+                        isInvalid={!!errors.cnpj} 
+                        type="text" 
+                        placeholder="12.345.678/0001-90" 
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.cnpj}</Form.Control.Feedback>
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="representante">
+                      <Form.Label>Representante Legal</Form.Label>
+                      <Form.Control 
+                        value={doador.representante}
+                        onChange={handleChangeRepresentante}
+                        isInvalid={!!errors.representante}
+                        required
+                        placeholder="Nome do representante"
+                      />
+                      <Form.Control.Feedback type="invalid">{errors.representante}</Form.Control.Feedback>
+                    </Form.Group>
+                  </>
+                )}
 
                 <Form.Group className="mb-3" controlId="telefone">
                   <Form.Label>Telefone</Form.Label>
@@ -308,7 +462,7 @@ function FormDoador({ onSubmit, doadores }) {
                     onChange={handleChangeRg} 
                     isInvalid={!!errors.rg} 
                     value={doador.rg} 
-                    maxLength={12} 
+                    maxLength={14} 
                     type="text" 
                     placeholder="12.345.678-9" 
                   />

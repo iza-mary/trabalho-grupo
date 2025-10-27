@@ -1,6 +1,7 @@
 const db = require('../config/database.js');
 const Idoso = require('../models/idoso');
 const IdosoRepository = require('../repository/idosoRepository.js');
+const normalizeRG = (v) => String(v || '').replace(/\D/g, '');
 
 class IdosoController {
     // Obtém todos os idosos
@@ -42,6 +43,7 @@ class IdosoController {
             // Prepara os dados do idoso
             const idosoData = {
                 ...req.body,
+                rg: normalizeRG(req.body?.rg),
                 estadoId: estado[0].id
             };
             
@@ -136,6 +138,7 @@ class IdosoController {
             // Prepara os dados para atualização
             const idosoData = {
                 ...req.body,
+                rg: normalizeRG(req.body?.rg),
                 estadoId: estado[0].id,
                 id: req.params.id
             };

@@ -23,7 +23,8 @@ CREATE TABLE `quartos` (
 CREATE TABLE `doadores` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nome` varchar(255) NOT NULL,
-  `cpf` varchar(14) NOT NULL,
+  `cpf` varchar(14) DEFAULT NULL,
+  `cnpj` varchar(18) DEFAULT NULL,
   `telefone` varchar(20) NOT NULL,
   `rg` varchar(20) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
@@ -36,8 +37,9 @@ CREATE TABLE `doadores` (
   `data_atualizacao` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `cpf` (`cpf`),
+  UNIQUE KEY `cnpj` (`cnpj`),
   KEY `idx_nome` (`nome`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
 
 -- 4. Eventos
 CREATE TABLE `eventos` (

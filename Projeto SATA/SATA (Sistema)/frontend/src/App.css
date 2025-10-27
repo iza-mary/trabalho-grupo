@@ -9,3 +9,45 @@
   .main-content { padding-left: 0; width: 100%; }
 }
 
+/* Modal de confirmação fixo no topo, responsivo e com transição */
+.modal-top.modal-dialog {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) !important; /* impede o bootstrap de zerar o transform */
+  transition: none !important; /* evita animação padrão que mexe no transform */
+  margin: 0;
+  width: calc(100% - 24px);
+  max-width: 720px;
+}
+
+@keyframes modal-slide-down {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Aparência consistente com a tabela de idosos */
+.modal-top .modal-content {
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+}
+.modal-top .modal-header { border-bottom: 1px solid rgba(0,0,0,0.075); }
+.modal-top .modal-footer { border-top: 1px solid rgba(0,0,0,0.075); }
+
+@media (min-width: 768px) {
+  .modal-top.modal-dialog { width: auto; max-width: 640px; }
+}
+@media (min-width: 992px) {
+  .modal-top.modal-dialog { max-width: 720px; }
+}
+
+/* Largura padrão compartilhada com modais amplos (90% da viewport, até 960px) */
+.modal-90w {
+  max-width: 960px !important;
+  width: 90% !important;
+  margin: 0 auto !important;
+}
+@media (max-width: 768px) {
+  .modal-90w { max-width: 100% !important; width: calc(100% - 20px) !important; }
+}
+

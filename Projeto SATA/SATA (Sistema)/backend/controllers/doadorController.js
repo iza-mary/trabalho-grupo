@@ -1,5 +1,11 @@
 const Doador = require("../models/doador");
 const DoadorRepository = require("../repository/doadoRepository");
+const normalizeRG = (v) => String(v || '').replace(/\D/g, '');
+const normalizeDocOrNull = (v) => {
+    if (v === null || v === undefined) return null;
+    const digits = String(v).replace(/\D/g, '');
+    return digits.length ? digits : null;
+};
 
 class DoadorController {
     async getAll(req, res) {
@@ -37,7 +43,13 @@ class DoadorController {
 
     async create(req, res) {
         try {
-            const doador = new Doador(req.body);
+            const body = { 
+                ...req.body, 
+                rg: normalizeRG(req.body?.rg),
+                cpf: normalizeDocOrNull(req.body?.cpf),
+                cnpj: normalizeDocOrNull(req.body?.cnpj)
+            };
+            const doador = new Doador(body);
             const errors = doador.validate();
             if (errors.length > 0) {
                 return res.status(400).json({
@@ -92,12 +104,18 @@ class DoadorController {
                     message: "Doador não encontrado"
                 })
             }
-            const doador = new Doador({ ...req.body, id })
+            const body = { 
+                ...req.body, 
+                rg: normalizeRG(req.body?.rg),
+                cpf: normalizeDocOrNull(req.body?.cpf),
+                cnpj: normalizeDocOrNull(req.body?.cnpj)
+            };
+            const doador = new Doador({ ...body, id })
             const errors = doador.validate();
             if (errors.length > 0) {
                 return res.status(400).json({
                     success: false,
-                    message: "Dados inválido",
+                    message: "Dados inválidos",
                     errors
                 })
             }

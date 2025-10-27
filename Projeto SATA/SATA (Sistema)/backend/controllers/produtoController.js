@@ -1,5 +1,6 @@
 const Produto = require('../models/produto');
 const ProdutoRepository = require('../repository/produtoRepository');
+const MovimentoEstoqueRepository = require('../repository/movimentoEstoqueRepository');
 
 class ProdutoController {
   async getAll(req, res) {
@@ -98,8 +99,49 @@ class ProdutoController {
 
       const abaixoMinimo = Number(updated.quantidade || 0) < Number(updated.estoque_minimo || 0);
       res.json({ success: true, data: updated, abaixoMinimo });
+
+      // Registrar movimento de estoque
+      try {
+        await MovimentoEstoqueRepository.create({
+          produto_id: id,
+          tipo,
+          quantidade: qty,
+          saldo_anterior: atual,
+          saldo_posterior: novo,
+          responsavel_id: req.user?.id ?? null,
+          responsavel_nome: req.user?.username ?? null,
+          motivo: null,
+          observacao: observacao || null,
+        });
+      } catch (logErr) {
+        // Evitar quebrar o fluxo principal por falhas de log
+        console.error('Falha ao registrar movimento de estoque:', logErr.message);
+      }
     } catch (err) {
       res.status(500).json({ success: false, error: 'Erro ao movimentar estoque', detail: err.message });
+    }
+  }
+
+  async historico(req, res) {
+    try {
+      const id = Number(req.params.id);
+      const found = await ProdutoRepository.findById(id);
+      if (!found) return res.status(404).json({ success: false, error: 'Produto não encontrado' });
+
+      const { startDate, endDate, search, sort, order, page, pageSize } = req.query;
+      const result = await MovimentoEstoqueRepository.searchPaginated({
+        produtoId: id,
+        startDate,
+        endDate,
+        search,
+        sort,
+        order,
+        page,
+        pageSize,
+      });
+      res.json({ success: true, ...result });
+    } catch (err) {
+      res.status(500).json({ success: false, error: 'Erro ao obter histórico de estoque', detail: err.message });
     }
   }
 }

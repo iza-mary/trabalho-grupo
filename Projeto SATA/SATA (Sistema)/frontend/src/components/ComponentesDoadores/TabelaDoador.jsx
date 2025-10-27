@@ -75,11 +75,11 @@ function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handl
         </Card.Body>
       </Card>
 
-      <Modal show={deletar} onHide={() => setDeletar(false)} centered>
+      <Modal show={deletar} onHide={() => setDeletar(false)} dialogClassName="modal-top" aria-labelledby="modal-excluir-doador-title" aria-describedby="modal-excluir-doador-desc">
         <Modal.Header closeButton>
-          <Modal.Title>Confirmar Exclusão</Modal.Title>
+          <Modal.Title id="modal-excluir-doador-title">Confirmar Exclusão</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body id="modal-excluir-doador-desc">
           Tem certeza que deseja excluir este doador? Esta ação não pode ser desfeita.
         </Modal.Body>
         <Modal.Footer>

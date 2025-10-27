@@ -27,8 +27,7 @@ function Doacoes() {
     tipo: 'todos',
     data: 'todos',
     destinatario: 'todos',
-    busca: '',
-    eventoId: null
+    busca: ''
   });
   const [doacoes, setDoacoes] = useState([]);
 
@@ -66,9 +65,7 @@ function Doacoes() {
         busca: filtros.busca
       };
       try {
-        const dados = filtros.eventoId
-          ? await doacoesService.getByEvento(filtros.eventoId, filtrosBackend)
-          : await doacoesService.getByFiltred(filtrosBackend);
+        const dados = await doacoesService.getByFiltred(filtrosBackend);
         if (Array.isArray(dados)) {
           setDoacoes(dados);
         }
@@ -254,10 +251,7 @@ function Doacoes() {
     setFiltros((prev) => ({ ...prev, busca: busca?.toLowerCase() ?? prev.busca }));
   };
 
-  const handleFiltrarEvento = (eventoId) => {
-    const idNum = Number(eventoId);
-    setFiltros((prev) => ({ ...prev, eventoId: Number.isFinite(idNum) && idNum > 0 ? idNum : null }));
-  };
+  // Removido filtro por evento: interface passa a filtrar apenas por tipo, período, destinatário e busca
 
   return (
     <Navbar>
@@ -281,7 +275,6 @@ function Doacoes() {
               onPeriodo={handleFiltrarPeriodo}
               onDestinatario={handleFiltrarDestin}
               onBusca={handleFiltrarBusca}
-              onEvento={handleFiltrarEvento}
             />
             <TabelaDoacoes
               onDelete={handleDeleteDoacao}

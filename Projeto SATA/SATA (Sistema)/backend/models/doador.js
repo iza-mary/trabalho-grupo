@@ -6,6 +6,7 @@ class Doador {
             this.doadorId = null;
             this.nome = "";
             this.cpf = "";
+            this.cnpj = "";
             this.telefone = "";
             this.rg = "";
             this.email = "";
@@ -26,6 +27,7 @@ class Doador {
             this.doadorId = idNum;
             this.nome = "";
             this.cpf = "";
+            this.cnpj = "";
             this.telefone = "";
             this.rg = "";
             this.email = "";
@@ -44,6 +46,7 @@ class Doador {
         this.doadorId = data.doadorId || data.id || null;
         this.nome = data.nome;
         this.cpf = data.cpf;
+        this.cnpj = data.cnpj || null;
         this.telefone = data.telefone;
         this.rg = data.rg || "";
         this.email = data.email || "";
@@ -62,8 +65,11 @@ class Doador {
         if (!this.nome || !this.nome.trim().length === 0) {
             errors.push("Nome é obrigatório");
         }
-        if (!this.cpf || this.cpf.trim().length === 0) {
-            errors.push("CPF é obrigatório!")
+        // Exigir pelo menos um documento: CPF (PF) ou CNPJ (PJ)
+        const hasCPF = !!(this.cpf && String(this.cpf).trim().length > 0);
+        const hasCNPJ = !!(this.cnpj && String(this.cnpj).trim().length > 0);
+        if (!hasCPF && !hasCNPJ) {
+            errors.push("CPF ou CNPJ é obrigatório!");
         }
         if (!this.telefone || this.telefone.trim().length === 0) {
             errors.push("Telefone é obrigatório!");
@@ -78,6 +84,7 @@ class Doador {
             doadorId: this.doadorId || this.id,
             nome: this.nome,
             cpf: this.cpf,
+            cnpj: this.cnpj,
             telefone: this.telefone,
             rg: this.rg,
             email: this.email,

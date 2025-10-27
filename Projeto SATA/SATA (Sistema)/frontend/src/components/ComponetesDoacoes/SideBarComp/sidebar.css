@@ -9,6 +9,9 @@
   padding: 1rem 0;
   z-index: 1100;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.25);
+  overflow-y: auto; /* barra aparece somente quando necessário */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 .sidebar h4 { font-size: 1.25rem; font-weight: 700; margin: 0; }
 .sidebar .nav-link, .sidebar .nav-link:visited {
@@ -19,3 +22,14 @@
 .sidebar .nav-link:hover, .sidebar .nav-link.active {
   background-color: rgba(53, 141, 212, 0.18); border-radius: 8px; color: var(--sidebar-link) !important;
 }
+
+/* Estilos da barra de rolagem, consistentes e isolados à sidebar */
+.sidebar::-webkit-scrollbar { width: 10px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(53, 141, 212, 0.45);
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+}
+.sidebar:hover::-webkit-scrollbar-thumb { background: rgba(53, 141, 212, 0.65); }
+.sidebar { scrollbar-width: thin; scrollbar-color: rgba(53, 141, 212, 0.65) transparent; }

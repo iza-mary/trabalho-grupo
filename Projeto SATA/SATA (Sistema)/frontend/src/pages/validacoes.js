@@ -46,6 +46,90 @@ export const formatarCEP = (cep) => {
     .replace(/(-\d{3})\d+?$/, '$1');
 };
 
+// --- RG ---
+export const normalizarRG = (rg) => String(rg || '').replace(/\D/g, '');
+
+// Formatação progressiva padrão: 2.3.3 com hífen no último dígito quando houver
+export const formatarRG = (valor) => {
+  const digitos = normalizarRG(valor);
+  let v = digitos;
+  v = v.replace(/(\d{2})(\d)/, '$1.$2');
+  v = v.replace(/(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+  v = v.replace(/(\d{2})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+  return v;
+};
+
+// Validação: somente dígitos, tamanho por estado (quando disponível)
+// Padrões comuns: DF=7, SP=9, RS=10; demais aceitam 7–10 dígitos
+const rgTamanhoPorEstado = {
+  'Distrito Federal': 7,
+  'São Paulo': 9,
+  'Rio Grande do Sul': 10,
+};
+
+export const validarRG = (rg, estado) => {
+  const digitos = normalizarRG(rg);
+  if (!digitos) return false;
+  if (!/^\d+$/.test(digitos)) return false;
+
+  // Determina tamanho esperado
+  const esperado = estado ? rgTamanhoPorEstado[estado] : undefined;
+  if (esperado) {
+    if (digitos.length !== esperado) return false;
+  } else {
+    if (digitos.length < 7 || digitos.length > 10) return false;
+  }
+
+  // evita sequências com todos dígitos iguais
+  const repeticoesMin = Math.max(7, Math.min(digitos.length, 10));
+  const regexTodosIguais = new RegExp(`^(\\d)\\1{${repeticoesMin - 1},}$`);
+  if (regexTodosIguais.test(digitos)) return false;
+
+  return true;
+};
+
+// --- CPF/CNPJ helpers ---
+export const normalizarCPF = (cpf) => String(cpf || '').replace(/\D/g, '');
+
+export const formatarCNPJ = (cnpj) => {
+  return String(cnpj || '')
+    .replace(/\D/g, '')
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/(\d{2})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3/$4')
+    .replace(/(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
+export const normalizarCNPJ = (cnpj) => String(cnpj || '').replace(/\D/g, '');
+
+export const validarCNPJ = (cnpj) => {
+  cnpj = normalizarCNPJ(cnpj);
+  if (!cnpj || cnpj.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cnpj)) return false;
+  let tamanho = cnpj.length - 2;
+  let numeros = cnpj.substring(0, tamanho);
+  let digitos = cnpj.substring(tamanho);
+  let soma = 0;
+  let pos = tamanho - 7;
+  for (let i = tamanho; i >= 1; i--) {
+    soma += parseInt(numeros.charAt(tamanho - i), 10) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+  if (resultado !== parseInt(digitos.charAt(0), 10)) return false;
+  tamanho += 1;
+  numeros = cnpj.substring(0, tamanho);
+  soma = 0;
+  pos = tamanho - 7;
+  for (let i = tamanho; i >= 1; i--) {
+    soma += parseInt(numeros.charAt(tamanho - i), 10) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+  return resultado === parseInt(digitos.charAt(1), 10);
+};
+
 export const estadosBrasileiros = [
   'Acre', 'Alagoas', 'Amapá', 'Amazonas', 'Bahia', 'Ceará',
   'Distrito Federal', 'Espírito Santo', 'Goiás', 'Maranhão',
@@ -81,8 +165,8 @@ export const validarFormulario = (formData) => {
   
   if (!formData.rg || !formData.rg.trim || !formData.rg.trim()) {
     erros.rg = 'RG é obrigatório';
-  } else if (formData.rg.trim().length < 7) {
-    erros.rg = 'RG deve ter pelo menos 7 dígitos';
+  } else if (!validarRG(formData.rg, formData.estado)) {
+    erros.rg = 'RG inválido';
   }
   
   if (!formData.cpf || !formData.cpf.trim || !formData.cpf.trim()) {

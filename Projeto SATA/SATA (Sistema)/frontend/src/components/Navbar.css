@@ -146,6 +146,9 @@
   flex-direction: column;
   padding: 20px;
   z-index: 1100;
+  overflow-y: auto; /* barra aparece somente quando necessário */
+  scroll-behavior: smooth; /* rolagem suave para âncoras/teclado */
+  -webkit-overflow-scrolling: touch; /* suaviza no iOS */
 }
 
 .sidebar-header { display: flex; align-items: center; justify-content: space-between; }
@@ -248,3 +251,19 @@
 .sidebar-section .user-summary .text-muted { color: #0d6efd !important; }
 .sidebar-bottom { margin-top: auto; padding-left: 6px; }
 .sidebar-bottom .sidebar-section-inner { margin-right: 8px; }
+
+/* Estilo consistente da barra de rolagem apenas dentro da sidebar */
+.sidebar::-webkit-scrollbar { width: 10px; }
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(124,58,237,0.45), rgba(34,211,238,0.45));
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+}
+.sidebar:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(124,58,237,0.65), rgba(34,211,238,0.65));
+}
+/* Firefox */
+.sidebar { scrollbar-width: thin; scrollbar-color: rgba(124,58,237,0.65) transparent; }

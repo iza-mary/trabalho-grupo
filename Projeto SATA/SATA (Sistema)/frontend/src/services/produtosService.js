@@ -30,3 +30,8 @@ export async function movimentarProduto(id, payload) {
   const { data } = await api.post(`/produtos/${id}/movimentar`, payload);
   return data;
 }
+
+export async function listarMovimentos(id, params = {}) {
+  const { data } = await api.get(`/produtos/${id}/historico`, { params });
+  return data;
+}

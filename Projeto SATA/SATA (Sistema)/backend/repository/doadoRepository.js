@@ -23,9 +23,9 @@ class DoadorRepository {
 
     async create(doadorData) {
         try {
-            const { nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento } = doadorData;
-            const [result] = await db.execute('INSERT INTO doadores (nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento]
+            const { nome, cpf, cnpj, telefone, rg, email, cidade, rua, numero, cep, complemento } = doadorData;
+            const [result] = await db.execute('INSERT INTO doadores (nome, cpf, cnpj, telefone, rg, email, cidade, rua, numero, cep, complemento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [nome, cpf, cnpj, telefone, rg, email, cidade, rua, numero, cep, complemento]
             )
             return await this.findById(result.insertId)
         } catch (error) {
@@ -35,8 +35,8 @@ class DoadorRepository {
 
     async update(id, doadorData) {
         try {
-            const { nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento } = doadorData;
-            const [result] = await db.execute("UPDATE doadores SET nome = ?, cpf = ?, telefone = ?, rg = ?, email = ?, cidade = ?, rua = ?, numero = ?, cep = ?, complemento = ? WHERE id = ?", [nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento, id])
+            const { nome, cpf, cnpj, telefone, rg, email, cidade, rua, numero, cep, complemento } = doadorData;
+            const [result] = await db.execute("UPDATE doadores SET nome = ?, cpf = ?, cnpj = ?, telefone = ?, rg = ?, email = ?, cidade = ?, rua = ?, numero = ?, cep = ?, complemento = ? WHERE id = ?", [nome, cpf, cnpj, telefone, rg, email, cidade, rua, numero, cep, complemento, id])
             return await this.findById(id);
         } catch (error) {
             throw new Error("Erro ao atualizar doador: " + error.message);
@@ -54,7 +54,7 @@ class DoadorRepository {
 
     async getByBusca(filtros) {
         try {
-            const colunas = ["nome", "cpf", "telefone", "rg", "email", "cidade", "rua", "numero", "cep", "complemento"];
+            const colunas = ["nome", "cpf", "cnpj", "telefone", "rg", "email", "cidade", "rua", "numero", "cep", "complemento"];
             const whereConditions = [];
             const whereValues = [];
             const relevanceParts = [];

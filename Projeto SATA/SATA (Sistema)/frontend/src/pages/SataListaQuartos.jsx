@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, InputGroup, Alert, Modal, Spinner } from 'react-bootstrap';
-import { PlusCircle, Funnel, Search, Pencil, Trash, HouseDoor } from 'react-bootstrap-icons';
+import { PlusCircle, Funnel, Search, Pencil, Trash, DoorClosed } from 'react-bootstrap-icons';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
 import StandardTable from '../components/ui/StandardTable';
@@ -149,7 +149,7 @@ const abrirDetalhes = (quarto) => {
         <Container fluid>
           <PageHeader
             title="Lista de Quartos"
-            icon={<HouseDoor />}
+            icon={<DoorClosed />}
             actions={
               <Button
                 variant="primary"

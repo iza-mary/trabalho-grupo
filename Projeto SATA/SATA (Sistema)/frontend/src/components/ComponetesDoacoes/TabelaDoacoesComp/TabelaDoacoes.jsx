@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
-import { BiPencil, BiTrash } from 'react-icons/bi';
+import { Pencil, Trash } from 'react-bootstrap-icons';
+import ActionIconButton from '../../ui/ActionIconButton';
 import StandardTable from '../../ui/StandardTable';
 import { useAuth } from '../../../hooks/useAuth';
 import { formatDate } from '../../../utils/dateUtils';
@@ -79,27 +80,29 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
                     <td>{d?.evento ?? d?.evento_titulo ?? '-'}</td>
                     <td>{d?.obs ?? '-'}</td>
                     <td>
-                      <div className='botoes-acao d-flex'>
-                        <Button
-                          className={`action-btns me-1 ${!isAdmin ? 'disabled-action' : ''}`}
+                      <div className='botoes-acao'>
+                        <ActionIconButton
+                          className={!isAdmin ? 'disabled-action' : undefined}
                           title={!isAdmin ? 'Apenas Administradores podem editar' : 'Editar'}
                           size='sm'
                           onClick={!isAdmin ? undefined : () => { onEdit?.(d); editando?.(false); }}
                           variant='outline-primary'
                           disabled={!isAdmin}
+                          ariaLabel={!isAdmin ? 'Apenas Administradores podem editar' : 'Editar doação'}
                         >
-                          <BiPencil />
-                        </Button>
-                        <Button
-                          className={`action-btns ${!isAdmin ? 'disabled-action' : ''}`}
+                          <Pencil />
+                        </ActionIconButton>
+                        <ActionIconButton
+                          className={!isAdmin ? 'disabled-action' : undefined}
                           title={!isAdmin ? 'Apenas Administradores podem excluir' : 'Excluir'}
                           size='sm'
                           onClick={!isAdmin ? undefined : () => abrirModalExclusao(d)}
                           variant='outline-danger'
                           disabled={!isAdmin}
+                          ariaLabel={!isAdmin ? 'Apenas Administradores podem excluir' : 'Excluir doação'}
                         >
-                          <BiTrash />
-                        </Button>
+                          <Trash />
+                        </ActionIconButton>
                       </div>
                     </td>
                   </tr>

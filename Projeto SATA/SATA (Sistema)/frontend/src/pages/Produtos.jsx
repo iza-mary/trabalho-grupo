@@ -3,9 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
 import ActionIconButton from '../components/ui/ActionIconButton';
-import { BoxSeam, PlusCircle, Funnel, Pencil, Trash, ArrowLeftRight } from 'react-bootstrap-icons';
-import { listarProdutos, deletarProduto, movimentarProduto } from '../services/produtosService';
-import { Modal, Button } from 'react-bootstrap';
+import { BoxSeam, PlusCircle, Funnel, Pencil, Trash, ArrowLeftRight, ClockHistory, ArrowUpCircleFill, ArrowDownCircleFill } from 'react-bootstrap-icons';
+import { listarProdutos, deletarProduto, movimentarProduto, listarMovimentos } from '../services/produtosService';
+import { Modal, Button, Spinner } from 'react-bootstrap';
 import { categoriasProdutos } from './validacoesProdutos';
 import { useAuth } from '../hooks/useAuth';
 
@@ -35,6 +35,27 @@ export default function Produtos() {
   const [movError, setMovError] = useState('');
   const [movSubmitting, setMovSubmitting] = useState(false);
 
+  // Estado de exclusão (modal customizado)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteItem, setDeleteItem] = useState(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  // Estado do histórico de estoque
+  const [showHistModal, setShowHistModal] = useState(false);
+  const [histProduto, setHistProduto] = useState(null);
+  const [histItems, setHistItems] = useState([]);
+  const [histPage, setHistPage] = useState(1);
+  const [histPageSize, setHistPageSize] = useState(10);
+  const [histTotal, setHistTotal] = useState(0);
+  const [histSort] = useState('data_hora');
+  const [histOrder, setHistOrder] = useState('DESC');
+  const [histStartDate, setHistStartDate] = useState('');
+  const [histEndDate, setHistEndDate] = useState('');
+  const [histSearch, setHistSearch] = useState('');
+  const [histLoading, setHistLoading] = useState(false);
+  const [histError, setHistError] = useState('');
+
   function abrirMovimentacao(item) {
     setMovItem(item || null);
     setMovProdutoId(item?.id ? String(item.id) : '');
@@ -51,6 +72,107 @@ export default function Produtos() {
     setMovProdutoId('');
     setMovError('');
     setMovSubmitting(false);
+  }
+
+  function abrirConfirmarExclusao(item) {
+    if (!isAdmin) return;
+    setDeleteItem(item || null);
+    setDeleteError('');
+    setShowDeleteModal(true);
+  }
+
+  function fecharDeleteModal() {
+    setShowDeleteModal(false);
+    setDeleteItem(null);
+    setDeleteError('');
+    setDeleteSubmitting(false);
+  }
+
+  async function confirmarExclusaoProduto() {
+    if (!isAdmin || !deleteItem) return;
+    try {
+      setDeleteSubmitting(true);
+      setDeleteError('');
+      const res = await deletarProduto(deleteItem.id);
+      if (res?.success) {
+        setSuccess('Produto excluído com sucesso');
+        fecharDeleteModal();
+        await load();
+      } else {
+        setDeleteError(res?.error || 'Falha ao excluir produto');
+      }
+    } catch (err) {
+      setDeleteError(err?.message || 'Erro ao excluir produto');
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  }
+
+  async function abrirHistorico(item) {
+    setHistProduto(item || null);
+    setShowHistModal(true);
+    setHistPage(1);
+    await carregarHistorico(item?.id);
+  }
+
+  function fecharHistorico() {
+    setShowHistModal(false);
+    setHistProduto(null);
+    setHistItems([]);
+    setHistError('');
+  }
+
+  async function carregarHistorico(produtoId) {
+    if (!produtoId) return;
+    setHistLoading(true);
+    setHistError('');
+    try {
+      const res = await listarMovimentos(produtoId, {
+        page: histPage,
+        pageSize: histPageSize,
+        sort: histSort,
+        order: histOrder,
+        startDate: histStartDate || undefined,
+        endDate: histEndDate || undefined,
+        search: histSearch || undefined,
+      });
+      if (res?.success) {
+        setHistItems(Array.isArray(res.data) ? res.data : []);
+        setHistTotal(Number(res.total || 0));
+      } else {
+        setHistError(res?.error || 'Falha ao carregar histórico');
+      }
+    } catch {
+      setHistError('Erro ao carregar histórico');
+    } finally {
+      setHistLoading(false);
+    }
+  }
+
+  function exportarCSV() {
+    const headers = ['Data/Hora','Operação','Quantidade','Saldo Anterior','Saldo Posterior','Responsável','Observações'];
+    const rows = histItems.map(m => [
+      new Date(m.data_hora).toLocaleString(),
+      m.tipo,
+      m.quantidade,
+      m.saldo_anterior,
+      m.saldo_posterior,
+      m.responsavel_nome || '',
+      m.observacao || '',
+    ]);
+    const csv = [headers.join(';'), ...rows.map(r => r.map(v => String(v).replace(/;/g, ',')).join(';'))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `historico_estoque_${histProduto?.nome || 'produto'}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportarPDF() {
+    // Exportação simples via impressão do conteúdo da tabela (usuário pode salvar em PDF)
+    window.print();
   }
 
   async function confirmarMovimentacao() {
@@ -305,25 +427,19 @@ export default function Produtos() {
                           </ActionIconButton
                           >
                           <ActionIconButton
+                            variant="outline-secondary"
+                            title="Histórico"
+                            ariaLabel="Histórico de movimentações"
+                            onClick={() => abrirHistorico(p)}
+                          >
+                            <ClockHistory />
+                          </ActionIconButton>
+                          <ActionIconButton
                             variant="outline-danger"
                             title="Excluir"
                             disabled={!isAdmin}
                             className={!isAdmin ? 'disabled-action' : ''}
-                            onClick={!isAdmin ? undefined : async () => {
-                              if (!window.confirm('Confirma excluir este produto?')) return;
-                              try {
-                                setError('');
-                                const res = await deletarProduto(p.id);
-                                if (res?.success) {
-                                  setSuccess('Produto excluído com sucesso');
-                                  load();
-                                } else {
-                                  setError(res?.error || 'Falha ao excluir produto');
-                                }
-                              } catch {
-                                setError('Erro ao excluir produto');
-                              }
-                            }}
+                            onClick={!isAdmin ? undefined : () => abrirConfirmarExclusao(p)}
                           >
                             <Trash />
                           </ActionIconButton>
@@ -406,6 +522,135 @@ export default function Produtos() {
           <Button variant="primary" onClick={confirmarMovimentacao} disabled={movSubmitting}>
             {movSubmitting ? 'Salvando...' : 'Confirmar'}
           </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de Exclusão de Produto (padronizado) */}
+      <Modal show={showDeleteModal} onHide={fecharDeleteModal} dialogClassName="modal-top" aria-labelledby="excluir-title" aria-describedby="excluir-desc">
+        <Modal.Header closeButton>
+          <Modal.Title id="excluir-title">Confirmar Exclusão</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p id="excluir-desc">Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
+          {deleteItem && (
+            <p className="fw-bold">{deleteItem.nome}</p>
+          )}
+          {deleteError && (
+            <div role="alert" className="alert alert-danger mt-2">{deleteError}</div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={fecharDeleteModal} disabled={deleteSubmitting} autoFocus>
+            Cancelar
+          </Button>
+          <Button
+            variant="danger"
+            onClick={confirmarExclusaoProduto}
+            disabled={deleteSubmitting}
+            className={deleteSubmitting ? 'disabled-action' : undefined}
+          >
+            {deleteSubmitting ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                <span className="ms-2">Excluindo...</span>
+              </>
+            ) : 'Excluir'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      {/* Modal de Histórico de Estoque */}
+      <Modal show={showHistModal} onHide={fecharHistorico} size="xl" aria-labelledby="historico-title" centered>
+        <Modal.Header closeButton>
+          <Modal.Title id="historico-title">Histórico de Estoque - {histProduto?.nome || 'Selecionado'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {histError && <div role="alert" className="alert alert-danger">{histError}</div>}
+          <div className="row g-3 mb-3">
+            <div className="col-md-3">
+              <label className="form-label" htmlFor="histStart">Início</label>
+              <input id="histStart" type="datetime-local" className="form-control" value={histStartDate}
+                     onChange={e => setHistStartDate(e.target.value)} />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label" htmlFor="histEnd">Fim</label>
+              <input id="histEnd" type="datetime-local" className="form-control" value={histEndDate}
+                     onChange={e => setHistEndDate(e.target.value)} />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label" htmlFor="histOrder">Ordenação</label>
+              <select id="histOrder" className="form-select" value={histOrder} onChange={e => setHistOrder(e.target.value)}>
+                <option value="DESC">Mais recente</option>
+                <option value="ASC">Mais antigo</option>
+              </select>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label" htmlFor="histSearch">Buscar</label>
+              <input id="histSearch" className="form-control" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Observações ou responsável" />
+            </div>
+          </div>
+          <div className="d-flex gap-2 mb-3">
+            <Button variant="primary" onClick={() => carregarHistorico(histProduto?.id)} disabled={histLoading}>
+              {histLoading ? 'Carregando...' : 'Aplicar Filtros'}
+            </Button>
+            <Button variant="outline-secondary" onClick={() => { setHistStartDate(''); setHistEndDate(''); setHistSearch(''); setHistOrder('DESC'); setHistPage(1); carregarHistorico(histProduto?.id); }}>Limpar</Button>
+            <Button variant="outline-success" onClick={exportarCSV} title="Exportar CSV">Exportar CSV</Button>
+            <Button variant="outline-dark" onClick={exportarPDF} title="Exportar PDF">Exportar PDF</Button>
+          </div>
+
+          <div className="table-responsive">
+            <table className="table table-striped table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Operação</th>
+                  <th className="text-end">Quantidade</th>
+                  <th className="text-end">Saldo Anterior</th>
+                  <th className="text-end">Saldo Posterior</th>
+                  <th>Responsável</th>
+                  <th>Observações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {histItems.map(m => (
+                  <tr key={m.id}>
+                    <td>{new Date(m.data_hora).toLocaleString()}</td>
+                    <td>
+                      {m.tipo === 'entrada' && <ArrowUpCircleFill className="text-success me-1" />}
+                      {m.tipo === 'saida' && <ArrowDownCircleFill className="text-danger me-1" />}
+                      {m.tipo}
+                    </td>
+                    <td className="text-end">{m.quantidade}</td>
+                    <td className="text-end">{m.saldo_anterior}</td>
+                    <td className="text-end">{m.saldo_posterior}</td>
+                    <td>{m.responsavel_nome || ''}</td>
+                    <td>{m.observacao || ''}</td>
+                  </tr>
+                ))}
+                {histItems.length === 0 && !histLoading && (
+                  <tr><td colSpan={7} className="text-center text-muted">Nenhuma movimentação encontrada.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Paginação */}
+          <div className="d-flex justify-content-between align-items-center mt-2">
+            <div className="text-muted">Total: {histTotal} registros</div>
+            <div className="d-flex gap-2 align-items-center">
+              <label className="form-label mb-0">Página</label>
+              <Button variant="outline-secondary" disabled={histPage <= 1} onClick={() => { setHistPage(p => Math.max(p-1,1)); carregarHistorico(histProduto?.id); }}>Anterior</Button>
+              <span>{histPage}</span>
+              <Button variant="outline-secondary" disabled={(histPage * histPageSize) >= histTotal} onClick={() => { setHistPage(p => p + 1); carregarHistorico(histProduto?.id); }}>Próximo</Button>
+              <select className="form-select form-select-sm ms-2" value={histPageSize} onChange={e => { setHistPageSize(Number(e.target.value)); setHistPage(1); carregarHistorico(histProduto?.id); }}>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={fecharHistorico}>Fechar</Button>
         </Modal.Footer>
       </Modal>
     </Navbar>

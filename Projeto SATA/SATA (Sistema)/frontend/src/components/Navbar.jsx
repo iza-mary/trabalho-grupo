@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BsList, BsChevronLeft, BsChevronRight, BsHouseDoorFill, BsPeopleFill, BsCalendarEventFill, BsPersonFill, BsBoxArrowRight, BsKeyFill } from 'react-icons/bs';
+import { BsList, BsChevronLeft, BsChevronRight, BsDoorClosedFill, BsPeopleFill, BsCalendarEventFill, BsPersonFill, BsBoxArrowRight, BsKeyFill } from 'react-icons/bs';
 import { Building, HeartFill, GiftFill, CashStack, BoxSeam, BellFill } from 'react-bootstrap-icons';
 import { useAuth } from '../hooks/useAuth';
 import './Navbar.css';
@@ -55,7 +55,7 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
         <ul className="nav-vertical">
           <li>
             <Link to="/quartos" className="nav-item" onClick={closeOnNavigate} aria-disabled={disableSidebar ? 'true' : 'false'} tabIndex={disableSidebar ? -1 : 0}>
-              <BsHouseDoorFill className="me-2" size={18} /> <span className="label">Quartos</span>
+              <BsDoorClosedFill className="me-2" size={18} /> <span className="label">Quartos</span>
             </Link>
           </li>
           <li>

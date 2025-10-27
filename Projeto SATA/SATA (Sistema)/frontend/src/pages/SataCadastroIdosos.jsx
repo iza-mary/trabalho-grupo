@@ -24,7 +24,9 @@ import {
   validarFormularioInternacao,
   formatarTelefone,
   formatarCPF,
-  formatarCEP
+  formatarCEP,
+  formatarRG,
+  normalizarRG
 } from './validacoes';
 import idosoService from '../services/idosoService';
 import internacaoService from '../services/internacaoService';
@@ -133,6 +135,8 @@ const SataCadastroIdosos = () => {
       valorFormatado = formatarTelefone(value);
     } else if (name === 'cep') {
       valorFormatado = formatarCEP(value);
+    } else if (name === 'rg') {
+      valorFormatado = formatarRG(value, formData.estado);
     }
     
     setFormData({
@@ -181,10 +185,10 @@ const SataCadastroIdosos = () => {
     setSalvando(true);
     try {
       if (estaEditando) {
-        await idosoService.update(id, formData);
+        await idosoService.update(id, { ...formData, rg: normalizarRG(formData.rg) });
         alert('Cadastro atualizado com sucesso!');
       } else {
-        await idosoService.add(formData);
+        await idosoService.add({ ...formData, rg: normalizarRG(formData.rg) });
         alert('Cadastro criado com sucesso!');
       }
       navigate('/');
@@ -334,6 +338,8 @@ const SataCadastroIdosos = () => {
                           name="rg"
                           value={formData.rg}
                           onChange={handleChange}
+                          maxLength="14"
+                          placeholder="12.345.678-9"
                           isInvalid={!!erros.rg}
                           required
                         />

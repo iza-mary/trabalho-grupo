@@ -3,9 +3,8 @@ import { BsFunnel } from "react-icons/bs";
 import { BiSearch } from "react-icons/bi";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import './filtrobusca.css';
-import SelectEvento from "../Shared/SelectEvento";
 
-function FiltroBusca({ onTipo, onPeriodo, onDestinatario, onBusca, onEvento }) {
+function FiltroBusca({ onTipo, onPeriodo, onDestinatario, onBusca }) {
 
     return (
             <Card className="mb-4">
@@ -45,14 +44,9 @@ function FiltroBusca({ onTipo, onPeriodo, onDestinatario, onBusca, onEvento }) {
                             </Form.Select>
                         </Col>
                         <Col md={3} className="mb-3">
-                            <SelectEvento
-                                setEventoId={(id) => onEvento?.(id)}
-                            />
-                        </Col>
-                        <Col md={3} className="mb-3">
                             <Form.Label>Buscar</Form.Label>
                             <InputGroup>
-                                <Form.Control type="text" placeholder="Doador, item ou evento..." onChange={(e) => { onBusca(e.target.value); }} />
+                                <Form.Control type="text" placeholder="Doador ou item..." onChange={(e) => { onBusca(e.target.value); }} />
                             </InputGroup>
                         </Col>
                     </Row>
