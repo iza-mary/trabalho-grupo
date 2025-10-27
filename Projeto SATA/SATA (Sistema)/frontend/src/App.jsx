@@ -14,6 +14,7 @@ import ProdutoNovo from "./pages/ProdutoNovo";
 import ProdutoEditar from "./pages/ProdutoEditar";
 import Notificacoes from "./pages/Notificacoes";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -25,6 +26,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/perfil" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Perfil /></ProtectedRoute>} />

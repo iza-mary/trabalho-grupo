@@ -13,6 +13,8 @@ export default function PasswordField({
   ariaRequired = false,
   disabled = false,
   groupClassName = 'mb-3',
+  isInvalid = false,
+  feedback = '',
 }) {
   const [show, setShow] = useState(false);
   const inputType = show ? 'text' : 'password';
@@ -33,6 +35,7 @@ export default function PasswordField({
           required={required}
           aria-required={ariaRequired}
           disabled={disabled}
+          isInvalid={isInvalid}
         />
         <Button
           variant="outline-secondary"
@@ -45,6 +48,9 @@ export default function PasswordField({
           {show ? <EyeSlash aria-hidden="true" /> : <Eye aria-hidden="true" />}
         </Button>
       </InputGroup>
+      {isInvalid && (
+        <Form.Control.Feedback type="invalid">{feedback}</Form.Control.Feedback>
+      )}
     </Form.Group>
   );
 }

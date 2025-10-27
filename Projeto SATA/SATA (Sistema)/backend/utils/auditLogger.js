@@ -3,6 +3,7 @@ const path = require('path');
 
 const LOG_DIR = path.join(__dirname, '..', 'logs');
 const LOG_FILE = path.join(LOG_DIR, 'deletions.log');
+const SEC_FILE = path.join(LOG_DIR, 'security.log');
 
 function ensureLogDir() {
   try {
@@ -25,4 +26,18 @@ function logDeletion(entry) {
   }
 }
 
-module.exports = { logDeletion };
+function logSecurityEvent(entry) {
+  try {
+    ensureLogDir();
+    const payload = {
+      timestamp: new Date().toISOString(),
+      action: 'security',
+      ...entry,
+    };
+    fs.appendFileSync(SEC_FILE, JSON.stringify(payload) + '\n', { encoding: 'utf8' });
+  } catch (err) {
+    console.warn('Falha ao registrar evento de segurança:', err?.message || err);
+  }
+}
+
+module.exports = { logDeletion, logSecurityEvent };

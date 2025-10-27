@@ -16,9 +16,9 @@ const authService = {
     return data; // { success: true }
   },
 
-  async forgotPassword(username) {
-    const { data } = await api.post('/auth/forgot-password', { username });
-    return data; // { success: true }
+  async forgotPassword(email) {
+    const { data } = await api.post('/auth/forgot-password', { email });
+    return data; // { success: true, token? }
   },
 
   async resetPassword(token, new_password) {
@@ -29,6 +29,11 @@ const authService = {
   async changePassword(current_password, new_password) {
     const { data } = await api.post('/auth/change-password', { current_password, new_password });
     return data; // { success: true }
+  },
+
+  async register({ username, email, password, role }) {
+    const { data } = await api.post('/auth/register', { username, email, password, role });
+    return data; // { success, data }
   },
 };
 

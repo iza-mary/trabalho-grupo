@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Container, Row, Col, Form, Button, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export default function ForgotPassword() {
   const { forgotPassword } = useAuth();
-  const [username, setUsername] = useState('');
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
 
@@ -12,17 +14,22 @@ export default function ForgotPassword() {
     e.preventDefault();
     setStatus({ type: '', message: '' });
 
-    if (!username.trim()) {
-      setStatus({ type: 'danger', message: 'Informe seu nome de usuário.' });
+    if (!email.trim()) {
+      setStatus({ type: 'danger', message: 'Informe seu email cadastrado.' });
       return;
     }
 
     setSubmitting(true);
-    const res = await forgotPassword(username.trim());
+    const res = await forgotPassword(email.trim());
     setSubmitting(false);
 
     if (res.ok) {
-      setStatus({ type: 'success', message: 'Se houver um usuário correspondente, enviaremos instruções de redefinição (em ambiente de desenvolvimento, contate o administrador).' });
+      // Se estivermos em desenvolvimento sem SMTP, podemos receber um token e redirecionar
+      if (res.token) {
+        navigate(`/reset-password?token=${encodeURIComponent(res.token)}`);
+        return;
+      }
+      setStatus({ type: 'success', message: 'Se houver um usuário correspondente, enviaremos instruções de redefinição.' });
     } else {
       setStatus({ type: 'danger', message: res.error || 'Não foi possível iniciar a recuperação.' });
     }
@@ -39,14 +46,14 @@ export default function ForgotPassword() {
             </Alert>
           )}
           <Form onSubmit={handleSubmit} noValidate>
-            <Form.Group className="mb-3" controlId="username">
-              <Form.Label>Nome do Usuário</Form.Label>
+            <Form.Group className="mb-3" controlId="email">
+              <Form.Label>Email cadastrado</Form.Label>
               <Form.Control
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Digite seu usuário"
-                autoComplete="username"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seuemail@exemplo.com"
+                autoComplete="email"
                 required
                 aria-required="true"
               />

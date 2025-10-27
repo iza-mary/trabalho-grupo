@@ -1,28 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import PasswordField from '../components/ui/PasswordField';
 
 export default function ResetPassword() {
   const { resetPassword } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
 
+  const isAcceptablePassword = (pw) => {
+    if (!pw || pw.length < 8) return false;
+    const lower = pw.toLowerCase();
+    const common = ['12345678','123456789','password','qwerty','abc123','111111','123123','senha','admin'];
+    if (common.includes(lower)) return false;
+    if (/^(.)\1{7,}$/.test(pw)) return false; // caracteres repetidos
+    if (lower.includes('abcdefghijklmnopqrstuvwxyz') || lower.includes('12345678')) return false; // sequências muito simples
+    return true;
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const t = params.get('token');
+    if (t) setToken(t);
+  }, [location.search]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({ type: '', message: '' });
 
-    if (!token.trim()) {
-      setStatus({ type: 'danger', message: 'Informe o token de redefinição.' });
+    if (!token) {
+      setStatus({ type: 'danger', message: 'Link inválido ou expirado. Acesse o link enviado por email.' });
       return;
     }
-    if (!newPassword || newPassword.length < 6) {
-      setStatus({ type: 'danger', message: 'A nova senha deve ter pelo menos 6 caracteres.' });
+    if (!newPassword || !isAcceptablePassword(newPassword)) {
+      setStatus({
+        type: 'danger',
+        message: 'Senha fraca: mínimo 8 caracteres e evite senhas comuns (ex.: 12345678, password).',
+      });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -53,17 +73,6 @@ export default function ResetPassword() {
             </Alert>
           )}
           <Form onSubmit={handleSubmit} noValidate>
-            <Form.Group className="mb-3" controlId="token">
-              <Form.Label>Token de redefinição</Form.Label>
-              <Form.Control
-                type="text"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder="Cole aqui o token recebido"
-                required
-                aria-required="true"
-              />
-            </Form.Group>
 
             {/* Nova senha com toggle */}
             <PasswordField

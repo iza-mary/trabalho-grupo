@@ -45,10 +45,10 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const forgotPassword = async (username) => {
+  const forgotPassword = async (email) => {
     try {
-      const res = await authService.forgotPassword(username);
-      if (res?.success) return { ok: true };
+      const res = await authService.forgotPassword(email);
+      if (res?.success) return { ok: true, token: res?.token };
       return { ok: false, error: res?.error || 'Falha ao iniciar recuperação' };
     } catch (e) {
       return { ok: false, error: e?.response?.data?.error || e.message || 'Erro ao iniciar recuperação' };
@@ -75,6 +75,16 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const register = async ({ username, email, password, role }) => {
+    try {
+      const res = await authService.register({ username, email, password, role });
+      if (res?.success) return { ok: true, data: res.data };
+      return { ok: false, error: res?.error || 'Falha ao cadastrar' };
+    } catch (e) {
+      return { ok: false, error: e?.response?.data?.error || e.message || 'Erro ao cadastrar' };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -83,6 +93,7 @@ export function AuthProvider({ children }) {
     forgotPassword,
     resetPassword,
     changePassword,
+    register,
     isAdmin: user?.role === 'Admin',
   };
 

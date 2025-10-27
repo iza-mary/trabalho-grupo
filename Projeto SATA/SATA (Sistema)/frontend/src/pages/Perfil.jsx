@@ -12,6 +12,16 @@ export default function Perfil() {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
 
+  const isAcceptablePassword = (pw) => {
+    if (!pw || pw.length < 8) return false;
+    const lower = pw.toLowerCase();
+    const common = ['12345678','123456789','password','qwerty','abc123','111111','123123','senha','admin'];
+    if (common.includes(lower)) return false;
+    if (/^(.)\1{7,}$/.test(pw)) return false; // repetição simples
+    if (lower.includes('abcdefghijklmnopqrstuvwxyz') || lower.includes('12345678')) return false; // sequências triviais
+    return true;
+  };
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setStatus({ type: '', message: '' });
@@ -20,8 +30,11 @@ export default function Perfil() {
       setStatus({ type: 'danger', message: 'Preencha a senha atual e a nova.' });
       return;
     }
-    if (newPassword.length < 6) {
-      setStatus({ type: 'danger', message: 'A nova senha deve ter pelo menos 6 caracteres.' });
+    if (!isAcceptablePassword(newPassword)) {
+      setStatus({
+        type: 'danger',
+        message: 'Senha fraca: mínimo 8 caracteres e evite senhas comuns (ex.: 12345678, password).',
+      });
       return;
     }
     if (newPassword !== confirmPassword) {

@@ -80,7 +80,7 @@ export default function Login() {
                 {submitting ? 'Entrando...' : 'Entrar'}
               </Button>
               <div className="text-center">
-                <Link to="/forgot-password">Esqueci minha senha</Link>
+                <Link to="/forgot-password">Esqueci minha senha</Link> · <Link to="/register">Criar conta</Link>
               </div>
             </div>
           </Form>

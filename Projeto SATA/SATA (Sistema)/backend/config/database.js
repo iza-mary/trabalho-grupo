@@ -96,7 +96,7 @@ async function testConnection() {
     if (schemaStatus.errors.length) {
       console.error('Erros:', schemaStatus.errors.map(e => `${e.table || 'arquivo'}: ${e.error}`).join(' | '));
     }
-    // Mensagem detalhada solicitada
+    
     const ts = new Date().toISOString();
     if (schemaStatus.success && schemaStatus.errors.length === 0) {
       console.log(`[${ts}] VERIFICAÇÃO DE BANCO DE DADOS: Todas as ${schemaStatus.tablesDefined.length} tabelas no banco ${DB_NAME} estão presentes e configuradas corretamente. Tabelas verificadas: [${schemaStatus.tablesDefined.join(', ')}]`);
