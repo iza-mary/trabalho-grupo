@@ -6,7 +6,7 @@ import { CashStack, Funnel, PlusCircle } from 'react-bootstrap-icons';
 import { Button, Col, Form, Row, Spinner, Alert, Card, Badge, Modal } from 'react-bootstrap';
 import '../styles/financeiro.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import { useDialog } from '../context/DialogContext';
+import { useDialog } from '../context/useDialog';
 
 const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v || 0));
 const formatDate = (d) => {

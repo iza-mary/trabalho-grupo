@@ -8,7 +8,7 @@ import { listarProdutos, deletarProduto, movimentarProduto, listarMovimentos } f
 import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
 import { categoriasProdutos } from './validacoesProdutos';
 import { useAuth } from '../hooks/useAuth';
-import { useDialog } from '../context/DialogContext';
+import { useDialog } from '../context/useDialog';
 
 export default function Produtos() {
   const [items, setItems] = useState([]);

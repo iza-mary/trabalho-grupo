@@ -1,7 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { DialogContext } from './dialogContextBase';
 import { Modal, Button, Form } from 'react-bootstrap';
-
-const DialogContext = createContext(null);
 
 export function DialogProvider({ children }) {
   const [queue, setQueue] = useState([]);
@@ -112,8 +111,4 @@ export function DialogProvider({ children }) {
   );
 }
 
-export const useDialog = () => {
-  const ctx = useContext(DialogContext);
-  if (!ctx) throw new Error('useDialog must be used within DialogProvider');
-  return ctx;
-};
+// Observação: o hook useDialog foi movido para ./useDialog.js

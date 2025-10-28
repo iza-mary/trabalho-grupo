@@ -9,7 +9,7 @@ import TabelaDoadores from '../components/ComponentesDoadores/TabelaDoador';
 import FormDoador from '../components/ComponentesDoadores/FormDoador';
 import FormEditDoador from '../components/ComponentesDoadores/FormEditDoador';
 import api from '../services/api';
-import { useDialog } from '../context/DialogContext';
+import { useDialog } from '../context/useDialog';
 
 function SataDoadores() {
   const [carregando, setCarregando] = useState(true);
