@@ -704,10 +704,10 @@ const Financeiro = () => {
         {/* Modal para criar/editar despesa */}
         <Modal show={showModal} onHide={handleCloseModal} centered>
           <Modal.Header closeButton>
-            <Modal.Title>{editId ? 'Editar Despesa' : 'Nova Despesa'}</Modal.Title>
+            <Modal.Title>{editId ? 'Editar Transação' : 'Nova Transação'}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form onSubmit={handleSubmit} aria-label={editId ? 'Formulário de edição de despesa' : 'Formulário de criação de despesa'}>
+            <Form onSubmit={handleSubmit} aria-label={editId ? 'Formulário de edição de transação' : 'Formulário de criação de transação'}>
               <Row className="g-3">
                 <Col md={4}>
                   <Form.Group controlId="tipo">
@@ -774,7 +774,7 @@ const Financeiro = () => {
                   <Form.Check
                     type="switch"
                     id="recorrente"
-                    label="Cobrança recorrente"
+                    label="Transação Recorrente"
                     checked={!!form.recorrente}
                     onChange={(e) => setForm({
                       ...form,

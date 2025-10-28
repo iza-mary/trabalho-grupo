@@ -368,7 +368,13 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
       </Row>
       <div className="d-flex justify-content-end gap-2">
         <Button variant="secondary" type="button" onClick={() => {setShowModal(false), show(true)}}>Cancelar</Button>
-        <Button variant="warning" style={{color: "white"}} type="submit">Atualizar Doação</Button>
+        <Button
+          variant="primary"
+          type="submit"
+          style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}
+        >
+          Atualizar Doação
+        </Button>
       </div>
     </Form>
             </Modal.Body>

@@ -365,7 +365,13 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                     </Row>
                     <div className="d-flex justify-content-end gap-2">
                         <Button variant="secondary" onClick={() => { setShowModal(false), show(true) }} type="button">Cancelar</Button>
-                        <Button variant="warning" type="submit" style={{ color: "white" }}>Atualizar Doação</Button>
+            <Button
+              variant="primary"
+              type="submit"
+              style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}
+            >
+              Atualizar Doação
+            </Button>
                     </div>
                 </Form>
             </Modal.Body>
