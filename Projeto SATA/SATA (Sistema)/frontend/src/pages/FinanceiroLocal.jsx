@@ -6,6 +6,7 @@ import { CashStack, Funnel, PlusCircle } from 'react-bootstrap-icons';
 import { Button, Col, Form, Row, Spinner, Alert, Card, Badge, Modal } from 'react-bootstrap';
 import '../styles/financeiro.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { useDialog } from '../context/DialogContext';
 
 const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v || 0));
 const formatDate = (d) => {
@@ -22,6 +23,7 @@ const formatDate = (d) => {
 const STORAGE_KEY = 'financeiro_local_transacoes';
 
 const FinanceiroLocal = () => {
+  const { confirm } = useDialog();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -137,8 +139,8 @@ const FinanceiroLocal = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
-    const ok = window.confirm('Tem certeza que deseja excluir esta transação?');
+  const handleDelete = async (id) => {
+    const ok = await confirm('Tem certeza que deseja excluir esta transação?');
     if (!ok) return;
     setTransactions((prev) => prev.filter((t) => t.id !== id));
     setSuccessMsg('Transação removida com sucesso');

@@ -16,17 +16,19 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
             qntd: ""
         },
         destinatario: "",
-        doador: "",
+        doador: { doadorId: 0, nome: "" },
         telefone: "",
         evento: "",
         eventoId: null,
         obs: ""
     })
 
-    const [validated, setValidated] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [showAlert, setShowAlert] = useState(false);
-    const [showModal, setShowModal] = useState(true);
+  const [validated, setValidated] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showAlert, setShowAlert] = useState(false);
+  const [showModal, setShowModal] = useState(true);
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade");
+  const [unidadeOutro, setUnidadeOutro] = useState("");
 
     useEffect(() => {
         if (!doacaoEdit) return;
@@ -39,7 +41,7 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                 qntd: doacaoEdit.doacao?.qntd ?? ""
             },
             destinatario: doacaoEdit.idoso || "",
-            doador: doacaoEdit.doador?.nome || "",
+            doador: { doadorId: doacaoEdit.doador?.doadorId ?? doacaoEdit.doador?.id ?? 0, nome: doacaoEdit.doador?.nome ?? "" },
             telefone: doacaoEdit.telefone || "",
             evento: doacaoEdit.evento || "",
             eventoId: doacaoEdit.eventoId ?? null,
@@ -102,22 +104,48 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
     const handleChangeDescricao = (e) => {
         const value = e.target.value;
         setDoaOutros(prev => ({ ...prev, obs: value }))
-        if (value && isNaN(value)) {
+        if (value === "") {
             setErrors((prev) => ({ ...prev, obs: null }));
+        } else if (!isNaN(value)) {
+            setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
+            setValidated(false);
         } else {
-            if (value === "") {
-                setErrors((prev) => ({ ...prev, obs: "A descrição deve ser preenchida" }));
-                setValidated(false);
-            } else if (!isNaN(value)) {
-                setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
-                setValidated(false);
-            }
+            setErrors((prev) => ({ ...prev, obs: null }));
         }
     }
 
-    const handleChangeDoador = (e) => {
-        const value = e.target.value.replace(/[0-9]/g, '');
-        setDoaOutros(prev => ({ ...prev, doador: value }))
+    // Removido: doador é selecionado via SelectDoador com id e nome
+
+    // Sincroniza seleção de unidade quando dados da doação mudarem
+    useEffect(() => {
+        setUnidadeSelecionada(doaOutros?.doacao?.unidade_medida ?? 'Unidade');
+    }, [doaOutros?.doacao?.unidade_medida]);
+
+    const handleChangeUnidade = (e) => {
+        const value = e.target.value;
+        setUnidadeSelecionada(value);
+        if (value === 'Outro') {
+            setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: '' } }));
+        } else {
+            setUnidadeOutro('');
+            setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
+            setErrors(prev => ({ ...prev, unidade_medida: null }));
+        }
+    }
+
+    const handleChangeUnidadeOutro = (e) => {
+        const value = e.target.value;
+        setUnidadeOutro(value);
+        setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
+        if (!value || String(value).trim() === '') {
+            setErrors(prev => ({ ...prev, unidade_medida: 'Informe a unidade' }));
+            setValidated(false);
+        } else if (!isNaN(value)) {
+            setErrors(prev => ({ ...prev, unidade_medida: 'A unidade (Outro) deve ser texto válido' }));
+            setValidated(false);
+        } else {
+            setErrors(prev => ({ ...prev, unidade_medida: null }));
+        }
     }
 
     const handleChangeTelefone = (e) => {
@@ -184,6 +212,12 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
             newErrors.quantidade = "Quantidade inválida";
             setValidated(false);
         }
+        // Doador obrigatório: exigir um doador selecionado com id válido
+        const did = Number(doaOutros?.doador?.doadorId);
+        if (!did || did <= 0) {
+            newErrors.doador = "Doador é obrigatório";
+            setValidated(false);
+        }
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -220,7 +254,7 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                                 <Card.Body>
                                     <Card.Title className="mb-4"><h5>Informações da Doação</h5></Card.Title>
                                     <Form.Group className="mb-3" >
-                                        <Form.Label>Data da Doação</Form.Label>
+                                        <Form.Label>Data da Doação (Obrigatório)</Form.Label>
                                         <Form.Control type="date" name="data" onChange={handleChangleData} autoComplete="off"
                                             value={doaOutros.data || ""}
                                             isInvalid={!!errors.data}
@@ -230,7 +264,7 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Item Doado</Form.Label>
+                                        <Form.Label>Item Doado (Obrigatório)</Form.Label>
                                         <Form.Control name="item" onChange={handleChangeItem} autoComplete="off"
                                             value={doaOutros.doacao.item || ""}
                                             isInvalid={!!errors.item}
@@ -240,7 +274,7 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Quantidade</Form.Label>
+                                        <Form.Label>Quantidade (Obrigatório)</Form.Label>
                                         <Form.Control name="quantidade" onChange={handleChangeQuantidade} autoComplete="off"
                                             value={doaOutros.doacao.qntd || ""}
                                             isInvalid={!!errors.quantidade}
@@ -250,11 +284,28 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Observações/Descrição</Form.Label>
+                                        <Form.Label>Unidade de medida (Obrigatório)</Form.Label>
+                                        <Form.Select name="unidade_medida" value={unidadeSelecionada} onChange={handleChangeUnidade} required isInvalid={!!errors.unidade_medida}>
+                                            <option value="Unidade">Unidade</option>
+                                            <option value="Kg">Kg</option>
+                                            <option value="L">L</option>
+                                            <option value="Pacote">Pacote</option>
+                                            <option value="Caixa">Caixa</option>
+                                            <option value="Outro">Outro</option>
+                                        </Form.Select>
+                                        {unidadeSelecionada === 'Outro' && (
+                                            <Form.Control className="mt-2" placeholder="Especifique a unidade" value={unidadeOutro} onChange={handleChangeUnidadeOutro} isInvalid={!!errors.unidade_medida} required />
+                                        )}
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.unidade_medida}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Observações/Descrição (Opcional)</Form.Label>
                                         <Form.Control name="descricao" onChange={handleChangeDescricao} autoComplete="off"
                                             value={doaOutros.obs || ""}
                                             isInvalid={!!errors.obs}
-                                            as="textarea" rows={3} required />
+                                            as="textarea" rows={3} />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.obs}
                                         </Form.Control.Feedback>
@@ -277,11 +328,13 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                                 <Card.Body>
                                     <Card.Title className="mb-4"><h5>Informações Adicionais (Opcional)</h5></Card.Title>
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Destinatário</Form.Label>
-                                        <Form.Control autoComplete="off"
-                                            onChange={handleChangeDoador}
-                                            value={doaOutros.doador || ""}
-                                            name="doador" type="text" />
+                                        <SelectDoador
+                                          setDoador={setDoaOutros}
+                                          setErrors={setErrors}
+                                          setValidated={setValidated}
+                                          errors={errors}
+                                          selectedDoadorEdit={doaOutros.doador}
+                                        />
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Telefone para Contato (Opcional)</Form.Label>

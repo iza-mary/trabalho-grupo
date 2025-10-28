@@ -5,9 +5,10 @@ import PageHeader from '../components/ui/PageHeader';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import { BoxSeam, PlusCircle, Funnel, Pencil, Trash, ArrowLeftRight, ClockHistory, ArrowUpCircleFill, ArrowDownCircleFill } from 'react-bootstrap-icons';
 import { listarProdutos, deletarProduto, movimentarProduto, listarMovimentos } from '../services/produtosService';
-import { Modal, Button, Spinner } from 'react-bootstrap';
+import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
 import { categoriasProdutos } from './validacoesProdutos';
 import { useAuth } from '../hooks/useAuth';
+import { useDialog } from '../context/DialogContext';
 
 export default function Produtos() {
   const [items, setItems] = useState([]);
@@ -24,6 +25,7 @@ export default function Produtos() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const dialog = useDialog();
 
   // Estado da movimentação de estoque
   const [showMovModal, setShowMovModal] = useState(false);
@@ -102,7 +104,32 @@ export default function Produtos() {
         setDeleteError(res?.error || 'Falha ao excluir produto');
       }
     } catch (err) {
-      setDeleteError(err?.message || 'Erro ao excluir produto');
+      const status = err?.response?.status;
+      const detail = String(err?.response?.data?.detail || err?.response?.data?.error || err?.message || '');
+      const isRelacionamento = status === 409 || /foreign key constraint fails|ER_ROW_IS_REFERENCED/i.test(detail);
+      if (isRelacionamento) {
+        // Fecha o modal de confirmação e mostra alerta padronizado
+        fecharDeleteModal();
+        dialog.alert(
+          (
+            <div>
+              <Alert variant="danger" className="mb-3">
+                <strong>Operação não permitida.</strong><br />
+                Este item de estoque não pode ser excluído pois está vinculado a uma doação registrada no sistema.
+              </Alert>
+              <p className="mb-3">
+                Para remover este item, primeiro exclua as doações que o utilizam ou entre em contato com o administrador do sistema.
+              </p>
+              <div className="d-flex justify-content-between align-items-center">
+                <span className="text-muted">Produto: {deleteItem?.nome}</span>
+              </div>
+            </div>
+          ),
+          { title: 'Exclusão não permitida', okLabel: 'Entendi' }
+        );
+      } else {
+        setDeleteError(err?.message || 'Erro ao excluir produto');
+      }
     } finally {
       setDeleteSubmitting(false);
     }

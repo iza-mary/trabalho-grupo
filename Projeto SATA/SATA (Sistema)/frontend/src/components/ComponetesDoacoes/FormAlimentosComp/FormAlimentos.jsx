@@ -34,6 +34,8 @@ function FormAlimentos({ onSave }) {
     doadorId: 0,
     nome: ""
   });
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade");
+  const [unidadeOutro, setUnidadeOutro] = useState("");
 
   useEffect(() => {
     setDoaAlimentos(prev => ({
@@ -95,7 +97,29 @@ function FormAlimentos({ onSave }) {
 
   const handleChangeUnidade = (e) => {
     const value = e.target.value;
+    setUnidadeSelecionada(value);
+    if (value === 'Outro') {
+      setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: '' } }));
+    } else {
+      setUnidadeOutro('');
+      setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
+      setErrors(prev => ({ ...prev, unidade_medida: null }));
+    }
+  }
+
+  const handleChangeUnidadeOutro = (e) => {
+    const value = e.target.value;
+    setUnidadeOutro(value);
     setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
+    if (!value || String(value).trim() === '') {
+      setErrors(prev => ({ ...prev, unidade_medida: 'Informe a unidade' }));
+      setValidated(false);
+    } else if (!isNaN(value)) {
+      setErrors(prev => ({ ...prev, unidade_medida: 'A unidade (Outro) deve ser texto válido' }));
+      setValidated(false);
+    } else {
+      setErrors(prev => ({ ...prev, unidade_medida: null }));
+    }
   }
 
   const handleChangeDescricao = (e) => {
@@ -219,8 +243,8 @@ function FormAlimentos({ onSave }) {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Unidade de medida</Form.Label>
-                <Form.Select value={doaAlimentos.doacao.unidade_medida} onChange={handleChangeUnidade}>
+                <Form.Label>Unidade de medida (Obrigatório)</Form.Label>
+                <Form.Select value={unidadeSelecionada} onChange={handleChangeUnidade} required isInvalid={!!errors.unidade_medida}>
                   <option value="Unidade">Unidade</option>
                   <option value="Kg">Kg</option>
                   <option value="L">L</option>
@@ -228,6 +252,12 @@ function FormAlimentos({ onSave }) {
                   <option value="Caixa">Caixa</option>
                   <option value="Outro">Outro</option>
                 </Form.Select>
+                {unidadeSelecionada === 'Outro' && (
+                  <Form.Control className="mt-2" placeholder="Especifique a unidade" value={unidadeOutro} onChange={handleChangeUnidadeOutro} isInvalid={!!errors.unidade_medida} required />
+                )}
+                <Form.Control.Feedback type="invalid">
+                  {errors.unidade_medida}
+                </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
                 <SelectDoador setDoador={setSelectedDoador} setErrors={setErrors} errors={errors} setValidated={setValidated} />

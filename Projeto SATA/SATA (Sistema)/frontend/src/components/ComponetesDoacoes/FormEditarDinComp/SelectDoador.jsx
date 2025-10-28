@@ -40,7 +40,10 @@ function SelectDoador({ setDoador, setErrors, setValidated, errors, selectedDoad
     }
 
     useEffect(() => {
-        document.getElementsByName("doador")[0].value = selectedDoadorEdit.nome;
+        const input = document.getElementsByName("doador")[0];
+        if (input) {
+            input.value = selectedDoadorEdit?.nome || "";
+        }
     }, [selectedDoadorEdit])
 
 
@@ -59,7 +62,7 @@ function SelectDoador({ setDoador, setErrors, setValidated, errors, selectedDoad
 
     return (
         <Form.Group>
-            <Form.Label>Doador</Form.Label>
+            <Form.Label>Doador (Obrigatório)</Form.Label>
             <Form.Control isInvalid={!!errors.doador} onChange={(e) => { handleChangeBusca(e) }} name="doador" placeholder="Pesquise um Doador" autoComplete="off" />
             <div id="doadorSelect" className="dropdown-menu position-absolute w-100 mt-1" style={{maxHeight : '200px', overflowY:'auto', zIndex: 1000}}>
                 {listadoadores.map((doador) => (

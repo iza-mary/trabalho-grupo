@@ -29,9 +29,11 @@ function FormOutros({ onSave }) {
   const [errors, setErrors] = useState({});
   const [showAlert, setShowAlert] = useState(false);
   const [selectedDoador, setSelectedDoador] = useState({
-      doadorId: 0,
-      nome: ""
-    });
+    doadorId: 0,
+    nome: ""
+  });
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade");
+  const [unidadeOutro, setUnidadeOutro] = useState("");
   
     useEffect(() => {
       setDoaOutros(prev => ({
@@ -179,6 +181,32 @@ function FormOutros({ onSave }) {
     }
   }
 
+  const handleChangeUnidade = (e) => {
+    const value = e.target.value;
+    setUnidadeSelecionada(value);
+    if (value === 'Outro') {
+      setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: '' } }));
+    } else {
+      setUnidadeOutro('');
+      setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
+      setErrors(prev => ({ ...prev, unidade_medida: null }));
+    }
+  }
+
+  const handleChangeUnidadeOutro = (e) => {
+    const value = e.target.value;
+    setUnidadeOutro(value);
+    setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
+    if (!value || String(value).trim() === '') {
+      setErrors(prev => ({ ...prev, unidade_medida: 'Informe a unidade' }));
+      setValidated(false);
+    } else if (!isNaN(value)) {
+      setErrors(prev => ({ ...prev, unidade_medida: 'A unidade (Outro) deve ser texto válido' }));
+      setValidated(false);
+    } else {
+      setErrors(prev => ({ ...prev, unidade_medida: null }));
+    }
+  }
   return (
     // Formulário comum
     <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -216,6 +244,23 @@ function FormOutros({ onSave }) {
                   type="number" required />
                 <Form.Control.Feedback type="invalid">
                   {errors.quantidade}
+                </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Unidade de medida (Obrigatório)</Form.Label>
+                <Form.Select value={unidadeSelecionada} onChange={handleChangeUnidade} required isInvalid={!!errors.unidade_medida}>
+                  <option value="Unidade">Unidade</option>
+                  <option value="Kg">Kg</option>
+                  <option value="L">L</option>
+                  <option value="Pacote">Pacote</option>
+                  <option value="Caixa">Caixa</option>
+                  <option value="Outro">Outro</option>
+                </Form.Select>
+                {unidadeSelecionada === 'Outro' && (
+                  <Form.Control className="mt-2" placeholder="Especifique a unidade" value={unidadeOutro} onChange={handleChangeUnidadeOutro} isInvalid={!!errors.unidade_medida} required />
+                )}
+                <Form.Control.Feedback type="invalid">
+                  {errors.unidade_medida}
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">

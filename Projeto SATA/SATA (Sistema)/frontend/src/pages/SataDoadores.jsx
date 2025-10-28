@@ -9,6 +9,7 @@ import TabelaDoadores from '../components/ComponentesDoadores/TabelaDoador';
 import FormDoador from '../components/ComponentesDoadores/FormDoador';
 import FormEditDoador from '../components/ComponentesDoadores/FormEditDoador';
 import api from '../services/api';
+import { useDialog } from '../context/DialogContext';
 
 function SataDoadores() {
   const [carregando, setCarregando] = useState(true);
@@ -20,6 +21,7 @@ function SataDoadores() {
   const [mostrarModalEdicao, setMostrarModalEdicao] = useState(false);
   const [doadorEditar, setDoadorEditar] = useState(null);
   const [doadorParaDeletar, setDoadorParaDeletar] = useState(null);
+  const dialog = useDialog();
 
 
   const carregarDoadores = async () => {
@@ -82,7 +84,30 @@ function SataDoadores() {
       alert('Doador excluído com sucesso!');
     } catch (e) {
       console.error(e);
-      alert(e.message || 'Falha ao excluir doador');
+      const total = e?.response?.data?.totalDoacoes;
+      const msg = e?.response?.data?.message || e.message || 'Falha ao excluir doador';
+      if (typeof total === 'number' && total > 0) {
+        // Mensagem clara, amigável, profissional e visualmente destacada
+        dialog.alert(
+          (
+            <div>
+              <Alert variant="danger" className="mb-3">
+                <strong>Operação não permitida.</strong><br />
+                Este doador não pode ser excluído pois possui {total} doação(ões) registrada(s) no sistema.
+              </Alert>
+              <p className="mb-3">
+                Para remover este cadastro, primeiro é necessário excluir todas as doações associadas ou entrar em contato com o administrador do sistema.
+              </p>
+              <div className="d-flex justify-content-between align-items-center">
+                <span className="text-muted">Doador: {doadorParaDeletar?.nome}</span>
+              </div>
+            </div>
+          ),
+          { title: 'Exclusão não permitida', okLabel: 'Entendi' }
+        );
+      } else {
+        alert(msg);
+      }
     }
   };
 
@@ -105,10 +130,10 @@ function SataDoadores() {
 
     if (tipo) {
       lista = lista.filter(d => {
-        const t = (d.tipo ?? d.tipoDoador ?? d.tipo_doador ?? '').toString().toLowerCase();
-        if (!t) return false;
-        if (tipo === 'pf') return t.includes('física') || t.includes('pf') || t.includes('fisica');
-        if (tipo === 'pj') return t.includes('jurídica') || t.includes('pj') || t.includes('juridica');
+        const hasCPF = !!(d.cpf && String(d.cpf).trim().length > 0);
+        const hasCNPJ = !!(d.cnpj && String(d.cnpj).trim().length > 0);
+        if (tipo === 'pf') return hasCPF && !hasCNPJ;
+        if (tipo === 'pj') return hasCNPJ && !hasCPF;
         return true;
       });
     }

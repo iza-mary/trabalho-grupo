@@ -4,6 +4,7 @@ import { Pencil, Trash } from "react-bootstrap-icons";
 import StandardTable from "../ui/StandardTable";
 import { formatDate } from "../../utils/dateUtils";
 import { useAuth } from '../../hooks/useAuth';
+import { formatarCPF, formatarCNPJ, validarCPF, validarCNPJ } from '../../pages/validacoes';
 
 function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handleDeletar }) {
   const [deletar, setDeletar] = useState(false);
@@ -23,7 +24,7 @@ function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handl
                 <thead>
                   <tr>
                     <th>Nome</th>
-                    <th>CPF</th>
+                    <th>CPF/CNPJ</th>
                     <th>Telefone</th>
                     <th>Cadastro</th>
                     <th>Ações</th>
@@ -33,7 +34,7 @@ function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handl
                   {doadores.map((doador) => (
                     <tr key={doador.id}>
                       <td>{doador.nome}</td>
-                      <td>{doador.cpf || "-"}</td>
+                      <td>{renderDocumento(doador)}</td>
                       <td>{doador.telefone || "-"}</td>
                       <td>{formatDate(doador.dataCadastro ?? doador.data_cadastro)}</td>
                       <td>
@@ -105,3 +106,20 @@ function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handl
 }
 
 export default TabelaDoadores;
+
+function renderDocumento(doador) {
+  const tipoStr = (doador.tipo ?? doador.tipoDoador ?? doador.tipo_doador ?? '').toString().toLowerCase();
+  const isPJByTipo = tipoStr.includes('jurídica') || tipoStr.includes('pj') || tipoStr.includes('juridica');
+  const hasCNPJ = Boolean(doador.cnpj);
+  const isPJ = isPJByTipo || hasCNPJ;
+
+  if (isPJ) {
+    const cnpj = String(doador.cnpj || '').trim();
+    if (!cnpj) return '-';
+    return validarCNPJ(cnpj) ? formatarCNPJ(cnpj) : (<span className="text-danger">CNPJ inválido</span>);
+  }
+
+  const cpf = String(doador.cpf || '').trim();
+  if (!cpf) return '-';
+  return validarCPF(cpf) ? formatarCPF(cpf) : (<span className="text-danger">CPF inválido</span>);
+}

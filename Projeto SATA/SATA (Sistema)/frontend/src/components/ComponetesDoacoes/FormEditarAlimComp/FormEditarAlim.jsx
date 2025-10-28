@@ -18,7 +18,7 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
           unidade_medida: "Unidade"
         },
         destinatario: "",
-        doador: "",
+        doador: { doadorId: 0, nome: "" },
         telefone: "",
         evento: "",
         eventoId: null,
@@ -29,6 +29,8 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
   const [errors, setErrors] = useState({});
   const [showAlert, setShowAlert] = useState(false);
   const [showModal, setShowModal] = useState(true);
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade");
+  const [unidadeOutro, setUnidadeOutro] = useState("");
 
     useEffect(() => {
         if (!doacaoEdit) return;
@@ -42,7 +44,7 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
               unidade_medida: doacaoEdit.doacao?.unidade_medida ?? "Unidade"
             },
             destinatario: doacaoEdit.idoso || "",
-            doador: doacaoEdit.doador?.nome || "",
+            doador: { doadorId: doacaoEdit.doador?.doadorId ?? doacaoEdit.doador?.id ?? 0, nome: doacaoEdit.doador?.nome ?? "" },
             telefone: doacaoEdit.telefone || "",
             evento: doacaoEdit.evento || "",
             eventoId: doacaoEdit.eventoId ?? null,
@@ -108,29 +110,49 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
 
   const handleChangeUnidade = (e) => {
     const value = e.target.value;
-    setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }))
+    setUnidadeSelecionada(value);
+    if (value === 'Outro') {
+      setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: '' } }));
+    } else {
+      setUnidadeOutro('');
+      setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
+      setErrors(prev => ({ ...prev, unidade_medida: null }));
+    }
   }
+
+  const handleChangeUnidadeOutro = (e) => {
+    const value = e.target.value;
+    setUnidadeOutro(value);
+    setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, unidade_medida: value } }));
+    if (!value || String(value).trim() === '') {
+      setErrors(prev => ({ ...prev, unidade_medida: 'Informe a unidade' }));
+      setValidated(false);
+    } else if (!isNaN(value)) {
+      setErrors(prev => ({ ...prev, unidade_medida: 'A unidade (Outro) deve ser texto válido' }));
+      setValidated(false);
+    } else {
+      setErrors(prev => ({ ...prev, unidade_medida: null }));
+    }
+  }
+
+  useEffect(() => {
+    setUnidadeSelecionada(doaAlimentos?.doacao?.unidade_medida ?? 'Unidade');
+  }, [doaAlimentos?.doacao?.unidade_medida]);
 
   const handleChangeDescricao = (e) => {
     const value = e.target.value;
     setDoaAlimentos(prev => ({ ...prev, obs: value }))
-    if (value && isNaN(value)) {
+    if (value === "") {
       setErrors((prev) => ({ ...prev, obs: null }));
+    } else if (!isNaN(value)) {
+      setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
+      setValidated(false);
     } else {
-      if (value === "") {
-        setErrors((prev) => ({ ...prev, obs: "A descrição deve ser preenchida" }));
-        setValidated(false);
-      } else if (!isNaN(value)) {
-        setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
-        setValidated(false);
-      }
+      setErrors((prev) => ({ ...prev, obs: null }));
     }
   }
 
-  const handleChangeDoador = (e) => {
-    const value = e.target.value.replace(/[0-9]/g, '');
-    setDoaAlimentos(prev => ({ ...prev, doador: value }))
-  }
+  // Removido: doador é selecionado via componente SelectDoador com id e nome
 
   const handleChangeTelefone = (e) => {
     const value = e.target.value;
@@ -196,11 +218,10 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
       newErrors.quantidade = "Quantidade inválida";
       setValidated(false);
     }
-    if (!doaAlimentos.obs) {
-      newErrors.obs = "A descrição deve ser preenchida";
-      setValidated(false);
-    } else if (!isNaN(doaAlimentos.obs)) {
-      newErrors.obs = "A descrição deve ser um texto válido";
+    // Doador obrigatório: exigir um doador selecionado com id válido
+    const did = Number(doaAlimentos?.doador?.doadorId);
+    if (!did || did <= 0) {
+      newErrors.doador = "Doador é obrigatório";
       setValidated(false);
     }
     if (Object.keys(newErrors).length > 0) {
@@ -236,7 +257,7 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
             <Card.Body>
               <Card.Title className="mb-4"><h5>Informações da Doação</h5></Card.Title>
               <Form.Group className="mb-3" >
-                <Form.Label>Data da Doação</Form.Label>
+                <Form.Label>Data da Doação (Obrigatório)</Form.Label>
                 <Form.Control type="date" name="data" onChange={handleChangleData} autoComplete="off"
                   value={doaAlimentos.data || ""}
                   isInvalid={!!errors.data}
@@ -246,7 +267,7 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Item Doado</Form.Label>
+                <Form.Label>Item Doado (Obrigatório)</Form.Label>
                 <Form.Control name="item" onChange={handleChangeItem} autoComplete="off"
                   value={doaAlimentos.doacao.item || ""}
                   isInvalid={!!errors.item}
@@ -256,7 +277,7 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Quantidade</Form.Label>
+                <Form.Label>Quantidade (Obrigatório)</Form.Label>
                 <Form.Control name="quantidade" onChange={handleChangeQuantidade} autoComplete="off"
                   value={doaAlimentos.doacao.qntd || ""}
                   isInvalid={!!errors.quantidade}
@@ -266,8 +287,8 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Unidade da Quantidade</Form.Label>
-                <Form.Select name="unidade_medida" value={doaAlimentos.doacao.unidade_medida} onChange={handleChangeUnidade}>
+                <Form.Label>Unidade de medida (Obrigatório)</Form.Label>
+                <Form.Select name="unidade_medida" value={unidadeSelecionada} onChange={handleChangeUnidade} required isInvalid={!!errors.unidade_medida}>
                   <option value="Unidade">Unidade</option>
                   <option value="Kg">Kg</option>
                   <option value="L">L</option>
@@ -275,9 +296,15 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
                   <option value="Caixa">Caixa</option>
                   <option value="Outro">Outro</option>
                 </Form.Select>
+                {unidadeSelecionada === 'Outro' && (
+                  <Form.Control className="mt-2" placeholder="Especifique a unidade" value={unidadeOutro} onChange={handleChangeUnidadeOutro} isInvalid={!!errors.unidade_medida} required />
+                )}
+                <Form.Control.Feedback type="invalid">
+                  {errors.unidade_medida}
+                </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Observações/Descrição</Form.Label>
+                <Form.Label>Observações/Descrição (Opcional)</Form.Label>
                 <Form.Control autoComplete="off"
                   onChange={handleChangeDescricao}
                   value={doaAlimentos.obs || ""}
@@ -305,10 +332,12 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
             <Card.Body>
               <Card.Title className="mb-4"><h5>Informações do Doador</h5></Card.Title>
               <Form.Group className="mb-3">
-                <Form.Label>Nome do Doador (Opcional)</Form.Label>
-                <Form.Control name="doador" type="text" autoComplete="off"
-                  onChange={handleChangeDoador}
-                  value={doaAlimentos.doador || ""}
+                <SelectDoador
+                  setDoador={setDoaAlimentos}
+                  setErrors={setErrors}
+                  setValidated={setValidated}
+                  errors={errors}
+                  selectedDoadorEdit={doaAlimentos.doador}
                 />
               </Form.Group>
               <Form.Group controlId="telefone" className="mb-3">

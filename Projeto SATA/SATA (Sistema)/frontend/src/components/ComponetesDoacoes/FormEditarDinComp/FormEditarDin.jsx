@@ -35,22 +35,22 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
 
     useEffect(() => {
         setDoaDinheiro({
-            id: parseInt(doacaoEdit.id),
-            data: doacaoEdit.data.substring(0,10),
-            tipo: doacaoEdit.tipo,
+            id: parseInt(doacaoEdit?.id),
+            data: (doacaoEdit?.data || "").substring(0,10),
+            tipo: doacaoEdit?.tipo,
             doador: {
-                doadorId: doacaoEdit.doador.doadorId || 0,
-                nome: doacaoEdit.doador.nome || ""
+                doadorId: doacaoEdit?.doador?.doadorId ?? doacaoEdit?.doador?.id ?? 0,
+                nome: doacaoEdit?.doador?.nome ?? ""
             },
-            idoso: doacaoEdit.idoso || "",
-            evento: doacaoEdit.evento || "",
-            eventoId: doacaoEdit.eventoId ?? null,
-            obs: doacaoEdit.obs || "",
-            doacao: doacaoEdit.tipo.toUpperCase() === "D" ? {
-                valor: parseFloat(doacaoEdit.doacao.valor) || 0,
+            idoso: doacaoEdit?.idoso || "",
+            evento: doacaoEdit?.evento || "",
+            eventoId: doacaoEdit?.eventoId ?? null,
+            obs: doacaoEdit?.obs || "",
+            doacao: (doacaoEdit?.tipo || "").toUpperCase() === "D" ? {
+                valor: parseFloat(doacaoEdit?.doacao?.valor) || 0,
             } : {
-                qntd: parseInt(doacaoEdit.doacao.qntd) || 0,
-                item: doacaoEdit.doacao.item || "-",
+                qntd: parseInt(doacaoEdit?.doacao?.qntd) || 0,
+                item: doacaoEdit?.doacao?.item || "-",
             }
         })
     }, [doacaoEdit]);
@@ -119,11 +119,17 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
             newErrors.data = "A data não pode ser maior do que hoje";
             setValidated(false);
         }
-        if (!doaDinheiro.doacao.valor) {
+        if (!doaDinheiro.doacao.valor && doaDinheiro.doacao.valor !== 0) {
             newErrors.valor = "O valor deve ser preenchido";
             setValidated(false);
         } else if (parseFloat(doaDinheiro.doacao.valor) < 0) {
             newErrors.valor = "Valor inválido";
+            setValidated(false);
+        }
+        // Doador obrigatório: exigir um doador selecionado com id válido
+        const did = Number(doaDinheiro?.doador?.doadorId);
+        if (!did || did <= 0) {
+            newErrors.doador = "Doador é obrigatório";
             setValidated(false);
         }
         if (doaDinheiro.obs !== "" && !isNaN(doaDinheiro.obs)) {
@@ -167,7 +173,7 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
                                 <Card.Body>
                                     <Card.Title className="mb-4"><h5>Informações da Doação</h5></Card.Title>
                                     <Form.Group className="mb-3" controlId="data">
-                                        <Form.Label>Data da Doação</Form.Label>
+                                        <Form.Label>Data da Doação (Obrigatório)</Form.Label>
                                         <Form.Control type="date" name="data" onChange={handleChangeData}
                                             required
                                             value={doaDinheiro.data || ""}
@@ -178,7 +184,7 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                     <Form.Group className="mb-3" controlId="valor">
-                                        <Form.Label>Valor da Doação</Form.Label>
+                                        <Form.Label>Valor da Doação (Obrigatório)</Form.Label>
                                         <Form.Control type="number" step={0.01} placeholder="R$ 0,00" name="valor" required
                                             onChange={handleChangeValor}
                                             value={doaDinheiro.doacao.valor || ""}
@@ -228,7 +234,7 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
                                         />
                                     </Form.Group>
                                     <Form.Group className="mb-3" controlId="observacoes">
-                                        <Form.Label>Observações</Form.Label>
+                                        <Form.Label>Observações (Opcional)</Form.Label>
                                         <Form.Control name="observacoes"
                                             onChange={handleChangeObservacoes}
                                             value={doaDinheiro.obs || ""}
