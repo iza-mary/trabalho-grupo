@@ -96,6 +96,38 @@ class InternacaoRepository {
         }
     }
 
+    // Finaliza todas as internações ativas de um idoso específico
+    async finalizarPorIdoso(idosoId, motivo_saida = 'Baixa realizada via cadastro de idosos') {
+        try {
+            // Busca todas as internações ativas do idoso
+            const [ativas] = await db.execute(
+                `SELECT id, quarto_id FROM internacoes WHERE idoso_id = ? AND status = 'ativa'`,
+                [idosoId]
+            );
+
+            let totalFinalizadas = 0;
+            for (const row of ativas) {
+                const ok = await this.finalizarInternacao(row.id, motivo_saida);
+                if (ok) totalFinalizadas += 1;
+            }
+
+            // Log estruturado de auditoria
+            const ts = new Date().toISOString();
+            console.log(JSON.stringify({
+                scope: 'internacoes',
+                operation: 'bulk_finalize_by_idoso',
+                timestamp: ts,
+                idoso_id: Number(idosoId),
+                totalAtivasAntes: Array.isArray(ativas) ? ativas.length : 0,
+                totalFinalizadas
+            }));
+
+            return { totalAtivas: Array.isArray(ativas) ? ativas.length : 0, totalFinalizadas };
+        } catch (error) {
+            throw new Error(`Erro ao finalizar internações do idoso: ${error.message}`);
+        }
+    }
+
     async findByUsuarioId(usuarioId) {
         try {
             const [rows] = await db.execute(`

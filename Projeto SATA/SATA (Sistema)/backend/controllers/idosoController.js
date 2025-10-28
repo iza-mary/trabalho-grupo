@@ -199,27 +199,53 @@ async updateStatus(req, res) {
             });
         }
         
-        // Atualizar apenas o status
+        // Atualizar status do idoso
         const [result] = await db.execute(
             'UPDATE idosos SET status = ?, data_atualizacao = NOW() WHERE id = ?',
             [status, id]
         );
-        
+
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Idoso não encontrado'
             });
         }
-        
+
+        // Se a ação foi baixa (nao_internado), finalizar internações ativas
+        let resumoBaixa = null;
+        if (status === 'nao_internado') {
+            try {
+                const InternacaoRepository = require('../repository/internacaoRepository');
+                resumoBaixa = await InternacaoRepository.finalizarPorIdoso(id, 'Baixa realizada via cadastro de idosos');
+            } catch (e) {
+                console.error('Falha ao finalizar internações ativas durante updateStatus:', e.message);
+            }
+        }
+
         // Buscar o idoso atualizado
         const [rows] = await db.execute('SELECT * FROM idosos WHERE id = ?', [id]);
         const idosoAtualizado = new Idoso(rows[0]);
-        
+
+        // Log estruturado para auditoria
+        try {
+            const ts = new Date().toISOString();
+            console.log(JSON.stringify({
+                scope: 'idosos',
+                operation: 'update_status',
+                timestamp: ts,
+                idoso_id: Number(id),
+                novo_status: status,
+                baixa_aplicada: status === 'nao_internado',
+                resumo_baixa: resumoBaixa
+            }));
+        } catch {}
+
         res.json({
             success: true,
             data: idosoAtualizado.toJSON(),
-            message: 'Status atualizado com sucesso'
+            message: 'Status atualizado com sucesso',
+            resumoBaixa
         });
     } catch (error) {
         console.error("Erro no updateStatus:", error);
