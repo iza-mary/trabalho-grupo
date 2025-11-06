@@ -43,6 +43,17 @@ const getById = async (id) => {
     }
 };
 
+const getFicha = async (id) => {
+    try {
+        const { data } = await api.get(`${resource}/${id}/ficha`);
+        if (!data?.success) throw new Error(data?.message || 'Erro de requisição');
+        return data.data;
+    } catch (error) {
+        console.error(`Erro ao buscar ficha completa do idoso ${id}:`, error);
+        throw error;
+    }
+};
+
 const add = async (idoso) => {
     try {
         const { data } = await api.post(resource, idoso);
@@ -96,6 +107,7 @@ const updateStatus = async (id, status) => {
 const idosoService = {
     getAll,
     getById,
+    getFicha,
     update,
     add,
     remove,

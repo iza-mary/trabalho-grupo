@@ -185,6 +185,108 @@ class IdosoController {
         }
     }
 
+    // Ficha completa do idoso (dados agregados para visualização/impressão)
+    async getFichaCompleta(req, res) {
+        try {
+            const { id } = req.params;
+
+            // Buscar idoso
+            const idoso = await IdosoRepository.findById(id);
+            if (!idoso) {
+                return res.status(404).json({ success: false, message: 'Idoso não encontrado' });
+            }
+
+            // Nome do estado
+            let estadoNome = null;
+            try {
+                const [estadoRows] = await db.execute('SELECT nome FROM estados WHERE id = ?', [idoso.estadoId]);
+                estadoNome = Array.isArray(estadoRows) && estadoRows[0] ? estadoRows[0].nome : null;
+            } catch {}
+
+            // Internações e acomodação
+            const InternacaoRepository = require('../repository/internacaoRepository');
+            let internacoes = [];
+            try {
+                internacoes = await InternacaoRepository.findByUsuarioId(id);
+            } catch (e) {
+                console.warn('Falha ao buscar internações do idoso na ficha completa:', e.message);
+                internacoes = [];
+            }
+
+            const historicoQuartos = (internacoes || []).map((i) => ({
+                quartoNumero: i.quarto_numero || i.quarto_id || null,
+                cama: i.cama || null,
+                dataEntrada: i.data_entrada || null,
+                dataSaida: i.data_saida || null,
+                status: i.status || null,
+            }));
+            const atual = (internacoes || []).find(i => String(i.status).toLowerCase() === 'ativa') || null;
+
+            // Utilitário para idade
+            const calcIdade = (dob) => {
+                if (!dob) return null;
+                const nascimento = new Date(dob);
+                const hoje = new Date();
+                let idade = hoje.getFullYear() - nascimento.getFullYear();
+                const m = hoje.getMonth() - nascimento.getMonth();
+                if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--;
+                return idade;
+            };
+
+            const ficha = {
+                dadosPessoais: {
+                    nome: idoso.nome,
+                    dataNascimento: idoso.dataNascimento,
+                    idade: calcIdade(idoso.dataNascimento),
+                    contatos: {
+                        telefone: idoso.telefone || null,
+                        email: idoso.email || null,
+                        responsavel: idoso.responsavel || null,
+                    },
+                    documentos: {
+                        rg: idoso.rg || null,
+                        cpf: idoso.cpf || null,
+                        cartaoSus: idoso.cartaoSus || null,
+                    },
+                    endereco: {
+                        rua: idoso.rua || null,
+                        numero: idoso.numero || null,
+                        complemento: idoso.complemento || null,
+                        cidade: idoso.cidade || null,
+                        estado: estadoNome,
+                        cep: idoso.cep || null,
+                    },
+                },
+                acomodacao: {
+                    atual: atual ? {
+                        quartoNumero: atual.quarto_numero || atual.quarto_id || null,
+                        cama: atual.cama || null,
+                        dataEntrada: atual.data_entrada || null,
+                    } : null,
+                    historico: historicoQuartos,
+                },
+                medica: {
+                    diagnosticos: [], // Sem repositório de diagnósticos identificado
+                    alergias: [], // Sem repositório de alergias identificado
+                    internacoes: historicoQuartos,
+                },
+                medicamentos: {
+                    emUso: [], // Sem repositório de medicamentos identificado
+                    prescricoesAtivas: [], // Sem repositório de prescrições identificado
+                },
+                observacoes: {
+                    texto: idoso.observacoes || null,
+                    status: idoso.status || null,
+                },
+            };
+
+            return res.json({ success: true, data: ficha });
+        } catch (error) {
+            console.error('Erro em getFichaCompleta:', error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
     // Adicione este método ao IdosoController
 async updateStatus(req, res) {
     try {

@@ -3,9 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
 import ActionIconButton from '../components/ui/ActionIconButton';
-import { BoxSeam, PlusCircle, Funnel, Pencil, Trash, ArrowLeftRight, ClockHistory, ArrowUpCircleFill, ArrowDownCircleFill } from 'react-bootstrap-icons';
+import { BoxSeam, PlusCircle, Funnel, Pencil, Trash, ArrowLeftRight, ClockHistory, ArrowUpCircleFill, ArrowDownCircleFill, Eye } from 'react-bootstrap-icons';
 import { listarProdutos, deletarProduto, movimentarProduto, listarMovimentos } from '../services/produtosService';
-import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
+import { Modal, Button, Spinner, Alert, Collapse } from 'react-bootstrap';
 import { categoriasProdutos } from './validacoesProdutos';
 import { useAuth } from '../hooks/useAuth';
 import { useDialog } from '../context/useDialog';
@@ -57,6 +57,131 @@ export default function Produtos() {
   const [histSearch, setHistSearch] = useState('');
   const [histLoading, setHistLoading] = useState(false);
   const [histError, setHistError] = useState('');
+  const [histPeriodo, setHistPeriodo] = useState('30'); // 'ano','mes','30','7','semana','hoje','custom'
+  const [histCustomStartStr, setHistCustomStartStr] = useState(''); // DD/MM/AAAA
+  const [histCustomEndStr, setHistCustomEndStr] = useState('');   // DD/MM/AAAA
+  const [histDateError, setHistDateError] = useState('');
+
+
+  function parseDateBR(str) {
+    const s = String(str || '').trim();
+    const m = s.match(/^([0-3]?\d)\/(1?\d)\/(\d{4})$/);
+    if (!m) return null;
+    const d = Number(m[1]);
+    const mo = Number(m[2]) - 1;
+    const y = Number(m[3]);
+    const dt = new Date(y, mo, d, 0, 0, 0, 0);
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  }
+
+  function toSQLDateTime(dt, endOfDay = false) {
+    const d = new Date(dt);
+    if (endOfDay) {
+      d.setHours(23, 59, 59, 999);
+    } else {
+      d.setHours(0, 0, 0, 0);
+    }
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    // MySQL DATETIME/TIMESTAMP friendly format without timezone
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+  }
+
+  function getPeriodoRange(periodo) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let start = new Date(today);
+    let end = new Date(today);
+    switch (periodo) {
+      case 'ano': {
+        const lastYear = today.getFullYear() - 1;
+        start = new Date(lastYear, 0, 1);
+        end = new Date(lastYear, 11, 31);
+        break;
+      }
+      case 'mes': {
+        const year = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+        const month = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+        start = new Date(year, month, 1);
+        end = new Date(year, month + 1, 0);
+        break;
+      }
+      case '30': {
+        start = new Date(today);
+        start.setDate(start.getDate() - 29);
+        end = new Date(today);
+        break;
+      }
+      case '7': {
+        start = new Date(today);
+        start.setDate(start.getDate() - 6);
+        end = new Date(today);
+        break;
+      }
+      case 'semana': {
+        const day = today.getDay(); // 0 = domingo, 1 = segunda...
+        const mondayOffset = day === 0 ? -6 : 1 - day; // segunda
+        const sundayOffset = day === 0 ? 0 : 7 - day; // domingo
+        start = new Date(today);
+        start.setDate(today.getDate() + mondayOffset);
+        end = new Date(today);
+        end.setDate(today.getDate() + sundayOffset);
+        break;
+      }
+      case 'hoje':
+      default: {
+        start = new Date(today);
+        end = new Date(today);
+      }
+    }
+    return { start, end };
+  }
+
+  // Removido: aplicarFiltrosHistorico; usamos aplicação automática via eventos e debounce
+
+  // Aplicação imediata dos filtros com valores fornecidos (sem depender do estado assíncrono)
+  function aplicarFiltrosHistoricoInstant(periodo, startStr, endStr) {
+    let startDateISO = '';
+    let endDateISO = '';
+    setHistDateError('');
+    if (periodo === 'custom') {
+      const s = parseDateBR(startStr);
+      const e = parseDateBR(endStr);
+      if (!s || !e) {
+        setHistDateError('Informe datas válidas no formato DD/MM/AAAA.');
+        return;
+      }
+      if (e.getTime() < s.getTime()) {
+        setHistDateError('A data final não pode ser anterior à data inicial.');
+        return;
+      }
+      startDateISO = toSQLDateTime(s, false);
+      endDateISO = toSQLDateTime(e, true);
+    } else {
+      const { start, end } = getPeriodoRange(periodo);
+      startDateISO = toSQLDateTime(start, false);
+      endDateISO = toSQLDateTime(end, true);
+    }
+    setHistStartDate(startDateISO);
+    setHistEndDate(endDateISO);
+    setHistPage(1);
+    carregarHistorico(histProduto?.id);
+  }
+
+  // Debounce da busca para aplicar automaticamente sem excesso de requisições
+  useEffect(() => {
+    if (!showHistModal) return;
+    const handler = setTimeout(() => {
+      setHistPage(1);
+      carregarHistorico(histProduto?.id);
+    }, 300);
+    return () => clearTimeout(handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [histSearch]);
 
   function abrirMovimentacao(item) {
     setMovItem(item || null);
@@ -176,31 +301,7 @@ export default function Produtos() {
     }
   }
 
-  function exportarCSV() {
-    const headers = ['Data/Hora','Operação','Quantidade','Saldo Anterior','Saldo Posterior','Responsável','Observações'];
-    const rows = histItems.map(m => [
-      new Date(m.data_hora).toLocaleString(),
-      m.tipo,
-      m.quantidade,
-      m.saldo_anterior,
-      m.saldo_posterior,
-      m.responsavel_nome || '',
-      m.observacao || '',
-    ]);
-    const csv = [headers.join(';'), ...rows.map(r => r.map(v => String(v).replace(/;/g, ',')).join(';'))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `historico_estoque_${histProduto?.nome || 'produto'}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function exportarPDF() {
-    // Exportação simples via impressão do conteúdo da tabela (usuário pode salvar em PDF)
-    window.print();
-  }
+  // Removidos: exportarCSV e exportarPDF (botões de exportação descontinuados)
 
   async function confirmarMovimentacao() {
     setMovError('');
@@ -432,6 +533,15 @@ export default function Produtos() {
                         <div className="botoes-acao d-flex justify-content-center gap-2">
                           <ActionIconButton
                             as={Link}
+                            to={`/produtos/detalhes/${p.id}`}
+                            variant="outline-secondary"
+                            title="Detalhes"
+                            ariaLabel="Detalhes do produto"
+                          >
+                            <Eye />
+                          </ActionIconButton>
+                          <ActionIconButton
+                            as={Link}
                             to={`/produtos/editar/${p.id}`}
                             variant="outline-primary"
                             title="Editar"
@@ -594,18 +704,20 @@ export default function Produtos() {
           {histError && <div role="alert" className="alert alert-danger">{histError}</div>}
           <div className="row g-3 mb-3">
             <div className="col-md-3">
-              <label className="form-label" htmlFor="histStart">Início</label>
-              <input id="histStart" type="datetime-local" className="form-control" value={histStartDate}
-                     onChange={e => setHistStartDate(e.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label" htmlFor="histEnd">Fim</label>
-              <input id="histEnd" type="datetime-local" className="form-control" value={histEndDate}
-                     onChange={e => setHistEndDate(e.target.value)} />
+              <label className="form-label" htmlFor="histPeriodo">Período</label>
+              <select id="histPeriodo" className="form-select" value={histPeriodo} onChange={e => { const val = e.target.value; setHistPeriodo(val); aplicarFiltrosHistoricoInstant(val, histCustomStartStr, histCustomEndStr); }}>
+                <option value="ano">Último ano</option>
+                <option value="mes">Último mês</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="7">Últimos 7 dias</option>
+                <option value="semana">Esta semana</option>
+                <option value="hoje">Hoje</option>
+                <option value="custom">Personalizar…</option>
+              </select>
             </div>
             <div className="col-md-3">
               <label className="form-label" htmlFor="histOrder">Ordenação</label>
-              <select id="histOrder" className="form-select" value={histOrder} onChange={e => setHistOrder(e.target.value)}>
+              <select id="histOrder" className="form-select" value={histOrder} onChange={e => { setHistOrder(e.target.value); setHistPage(1); carregarHistorico(histProduto?.id); }}>
                 <option value="DESC">Mais recente</option>
                 <option value="ASC">Mais antigo</option>
               </select>
@@ -615,14 +727,40 @@ export default function Produtos() {
               <input id="histSearch" className="form-control" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Observações ou responsável" />
             </div>
           </div>
-          <div className="d-flex gap-2 mb-3">
-            <Button variant="primary" onClick={() => carregarHistorico(histProduto?.id)} disabled={histLoading}>
-              {histLoading ? 'Carregando...' : 'Aplicar Filtros'}
-            </Button>
-            <Button variant="outline-secondary" onClick={() => { setHistStartDate(''); setHistEndDate(''); setHistSearch(''); setHistOrder('DESC'); setHistPage(1); carregarHistorico(histProduto?.id); }}>Limpar</Button>
-            <Button variant="outline-success" onClick={exportarCSV} title="Exportar CSV">Exportar CSV</Button>
-            <Button variant="outline-dark" onClick={exportarPDF} title="Exportar PDF">Exportar PDF</Button>
-          </div>
+          <Collapse in={histPeriodo === 'custom'}>
+            <div>
+              <div className="row g-3 mb-2">
+                <div className="col-md-3">
+                  <label className="form-label" htmlFor="histCustomStart">Data inicial</label>
+                  <input
+                    id="histCustomStart"
+                    type="text"
+                    inputMode="numeric"
+                    className={`form-control ${histDateError ? 'is-invalid' : ''}`}
+                    placeholder="DD/MM/AAAA"
+                    value={histCustomStartStr}
+                    onChange={e => { const v = e.target.value; setHistCustomStartStr(v); if (histPeriodo === 'custom') { aplicarFiltrosHistoricoInstant('custom', v, histCustomEndStr); } }}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label" htmlFor="histCustomEnd">Data final</label>
+                  <input
+                    id="histCustomEnd"
+                    type="text"
+                    inputMode="numeric"
+                    className={`form-control ${histDateError ? 'is-invalid' : ''}`}
+                    placeholder="DD/MM/AAAA"
+                    value={histCustomEndStr}
+                    onChange={e => { const v = e.target.value; setHistCustomEndStr(v); if (histPeriodo === 'custom') { aplicarFiltrosHistoricoInstant('custom', histCustomStartStr, v); } }}
+                  />
+                </div>
+              </div>
+              {histDateError && (
+                <div role="alert" className="alert alert-warning py-2">{histDateError}</div>
+              )}
+            </div>
+          </Collapse>
+          {/* Botões removidos conforme solicitação: Aplicar filtros, Limpar, Exportar CSV/PDF */}
 
           <div className="table-responsive">
             <table className="table table-striped table-hover align-middle">

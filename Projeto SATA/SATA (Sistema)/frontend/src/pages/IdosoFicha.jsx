@@ -1,0 +1,309 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Button, Modal, Spinner } from 'react-bootstrap';
+import idosoService from '../services/idosoService';
+import { removeManualPageBreaks, applySpacingNormalization, removeSpacingNormalization } from '../utils/printSanitizer';
+import './IdosoFicha.css';
+import '../styles/ficha.css';
+
+const formatDate = (v) => {
+  if (!v) return '—';
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return String(v);
+  return d.toLocaleDateString('pt-BR');
+};
+
+// Removido: data/hora não é mais exibida nos cabeçalhos
+
+export default function IdosoFicha() {
+  const { id } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [ficha, setFicha] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [removerQuebrasManuais] = useState(true);
+  const [ajustarEspacamento] = useState(true);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await idosoService.getFicha(id);
+        if (!active) return;
+        setFicha(data);
+        setError('');
+      } catch (e) {
+        console.error('Erro ao carregar ficha:', e);
+        setError(e?.response?.data?.message || e?.message || 'Falha ao carregar ficha');
+      } finally {
+        setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [id]);
+
+  const pageTitle = useMemo(() => `Ficha do Idoso #${id}`, [id]);
+
+  // Removido: data/hora dinâmica no cabeçalho (voltamos ao cabeçalho só na 1ª página)
+
+  const handlePrint = () => {
+    // Sanitização antes da impressão
+    const root = containerRef.current;
+    if (root) {
+      if (removerQuebrasManuais) {
+        // Adiciona uma classe de contexto para CSS global e neutraliza classes/estilos
+        root.classList.add('no-manual-breaks');
+        removeManualPageBreaks(root);
+      }
+      if (ajustarEspacamento) {
+        applySpacingNormalization(root);
+      }
+    }
+    // Print
+    setTimeout(() => {
+      window.print();
+      // Reverter alterações após um curto intervalo
+      setTimeout(() => {
+        if (root) {
+          root.classList.remove('no-manual-breaks');
+          removeSpacingNormalization(root);
+        }
+      }, 1000);
+    }, 0);
+  };
+
+  if (loading) {
+    return (
+      <div className="ficha-root d-flex align-items-center justify-content-center" aria-busy="true">
+        <Spinner animation="border" role="status" />
+        <span className="ms-2">Carregando ficha...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="ficha-root">
+        <div className="alert alert-danger" role="alert">{error}</div>
+      </div>
+    );
+  }
+
+  if (!ficha) {
+    return (
+      <div className="ficha-root">
+        <div className="alert alert-warning" role="alert">Ficha não disponível.</div>
+      </div>
+    );
+  }
+
+  const { dadosPessoais, acomodacao, medica, medicamentos, observacoes } = ficha;
+  // Indicador simples de página atual (UI); constante para evitar hook condicional.
+  const paginaAtual = 1;
+
+  return (
+    <div className="ficha-root" aria-label="Página de Ficha Completa do Idoso">
+      <div className="ficha-container" ref={containerRef}>
+        <div className="no-print controls-row mb-3">
+          <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+          {/* Botão de visualização e controles de intervalo removidos conforme solicitado */}
+        </div>
+
+        {/* Cabeçalho no topo: acima de "Dados Pessoais" */}
+        <header className="ficha-header" role="banner">
+          <div className="d-flex align-items-center gap-2">
+            <img className="ficha-logo" src="/vite.svg" alt="Logo da instituição" />
+            <div>
+              <div className="ficha-title">SATA — Sistema de Assistência</div>
+              <div className="ficha-meta">{pageTitle}</div>
+            </div>
+          </div>
+          <div className="text-end">
+            <div className="ficha-meta">Página {paginaAtual}</div>
+          </div>
+        </header>
+
+        <main className="ficha-content" role="main">
+          {/* Dados Pessoais */}
+          <section className="ficha-section" aria-labelledby="sec-dados">
+            <h3 id="sec-dados">Dados Pessoais</h3>
+            <table className="ficha-table">
+              <tbody>
+                <tr><th>Nome completo</th><td>{dadosPessoais?.nome ?? '—'}</td></tr>
+                <tr><th>Data de nascimento</th><td>{formatDate(dadosPessoais?.dataNascimento)}</td></tr>
+                <tr><th>Idade</th><td>{dadosPessoais?.idade ?? '—'}</td></tr>
+                <tr><th>Telefone</th><td>{dadosPessoais?.contatos?.telefone ?? '—'}</td></tr>
+                <tr><th>E-mail</th><td>{dadosPessoais?.contatos?.email ?? '—'}</td></tr>
+                <tr><th>Responsável</th><td>{dadosPessoais?.contatos?.responsavel ?? '—'}</td></tr>
+                <tr><th>RG</th><td>{dadosPessoais?.documentos?.rg ?? '—'}</td></tr>
+                <tr><th>CPF</th><td>{dadosPessoais?.documentos?.cpf ?? '—'}</td></tr>
+                <tr><th>Cartão SUS</th><td>{dadosPessoais?.documentos?.cartaoSus ?? '—'}</td></tr>
+                <tr>
+                  <th>Endereço</th>
+                  <td>
+                    {(dadosPessoais?.endereco?.rua || '—')}{dadosPessoais?.endereco?.numero ? `, ${dadosPessoais.endereco.numero}` : ''}
+                    {dadosPessoais?.endereco?.complemento ? ` — ${dadosPessoais.endereco.complemento}` : ''}
+                    {dadosPessoais?.endereco?.cidade ? ` — ${dadosPessoais.endereco.cidade}` : ''}
+                    {dadosPessoais?.endereco?.estado ? `/${dadosPessoais.endereco.estado}` : ''}
+                    {dadosPessoais?.endereco?.cep ? ` — CEP: ${dadosPessoais.endereco.cep}` : ''}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          {/* Cabeçalho já exibido acima — não repetir */}
+
+          {/* Acomodação */}
+          <section className="ficha-section" aria-labelledby="sec-acom">
+            <h3 id="sec-acom">Acomodação</h3>
+            <table className="ficha-table">
+              <tbody>
+                <tr><th>Quarto atual</th><td>{acomodacao?.atual?.quartoNumero ?? '—'}</td></tr>
+                <tr><th>Cama</th><td>{acomodacao?.atual?.cama ?? '—'}</td></tr>
+                <tr><th>Data de entrada</th><td>{formatDate(acomodacao?.atual?.dataEntrada)}</td></tr>
+              </tbody>
+            </table>
+
+            {/* Histórico de quartos removido para evitar duplicação com "Histórico de internações" */}
+          </section>
+
+          {/* Histórico de internações — seção própria após Acomodação */}
+          <section className="ficha-section" aria-labelledby="sec-internacoes">
+            <h3 id="sec-internacoes">Histórico de internações</h3>
+            <table className="ficha-table mt-1">
+              <thead>
+                <tr>
+                  <th>Nº do Quarto</th>
+                  <th>Cama</th>
+                  <th>Entrada</th>
+                  <th>Saída</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(medica?.internacoes || []).length === 0 ? (
+                  <tr><td colSpan={5} className="text-center">—</td></tr>
+                ) : (
+                  (medica?.internacoes || []).map((h, idx) => (
+                    <tr key={idx}>
+                      <td>{h?.quartoNumero ?? '—'}</td>
+                      <td>{h?.cama ?? '—'}</td>
+                      <td>{formatDate(h?.dataEntrada)}</td>
+                      <td>{formatDate(h?.dataSaida)}</td>
+                      <td>{String(h?.status || '—')}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </section>
+
+          {/* Seção Médica (sem histórico, focada em diagnóstico/alergias) */}
+          <section className="ficha-section" aria-labelledby="sec-med">
+            <h3 id="sec-med">Seção Médica</h3>
+            <div className="row">
+              <div className="col-md-6">
+                <strong>Diagnósticos principais</strong>
+                <ul className="ficha-list mt-1">
+                  {(medica?.diagnosticos || []).length === 0 ? <li>—</li> : (medica?.diagnosticos || []).map((d, i) => <li key={i}>{String(d)}</li>)}
+                </ul>
+              </div>
+              <div className="col-md-6">
+                <strong>Alergias conhecidas</strong>
+                <ul className="ficha-list mt-1">
+                  {(medica?.alergias || []).length === 0 ? <li>—</li> : (medica?.alergias || []).map((a, i) => <li key={i}>{String(a)}</li>)}
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Seção de Medicamentos */}
+          <section className="ficha-section page-break" aria-labelledby="sec-meds">
+            <h3 id="sec-meds">Seção de Medicamentos</h3>
+            <div className="row">
+              <div className="col-md-6">
+                <strong>Medicamentos em uso</strong>
+                <ul className="ficha-list mt-1">
+                  {(medicamentos?.emUso || []).length === 0 ? <li>—</li> : (medicamentos?.emUso || []).map((m, i) => (
+                    <li key={i}>{m?.nome ?? '—'}{m?.dosagem ? ` — ${m.dosagem}` : ''}{m?.frequencia ? ` (${m.frequencia})` : ''}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="col-md-6">
+                <strong>Prescrições ativas</strong>
+                <ul className="ficha-list mt-1">
+                  {(medicamentos?.prescricoesAtivas || []).length === 0 ? <li>—</li> : (medicamentos?.prescricoesAtivas || []).map((p, i) => (
+                    <li key={i}>{p?.descricao ?? String(p)}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Observações */}
+          <section className="ficha-section" aria-labelledby="sec-obs">
+            <h3 id="sec-obs">Observações</h3>
+            <div className="mt-1">
+              <div><strong>Status:</strong> {observacoes?.status ?? '—'}</div>
+              <div className="mt-1"><strong>Anotações:</strong></div>
+              <div>{observacoes?.texto ? String(observacoes.texto) : '—'}</div>
+            </div>
+          </section>
+        </main>
+
+        {/* Rodapé removido conforme solicitação: excluir rodapés */}
+      </div>
+
+      {/* Modal de visualização de impressão */}
+      <Modal show={showPreview} onHide={() => setShowPreview(false)} size="xl">
+        <Modal.Header closeButton>
+          <Modal.Title>Visualização de impressão</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="preview-sheet">
+            <div className="ficha-container">
+              {/* Cabeçalho na visualização: acima de Dados Pessoais */}
+              <main className="ficha-content">
+                {/* Conteúdo compacto apenas para visualização */}
+                <header className="ficha-header">
+                  <div className="d-flex align-items-center gap-2">
+                    <img className="ficha-logo" src="/vite.svg" alt="Logo da instituição" />
+                    <div>
+                      <div className="ficha-title">SATA — Sistema de Assistência</div>
+                      <div className="ficha-meta">{pageTitle}</div>
+                    </div>
+                  </div>
+                  <div className="text-end">
+                    <div className="ficha-meta">Página {paginaAtual}</div>
+                  </div>
+                </header>
+                <section className="ficha-section">
+                  <h3>Dados Pessoais</h3>
+                  <div><strong>Nome:</strong> {dadosPessoais?.nome ?? '—'}</div>
+                  <div><strong>Nascimento:</strong> {formatDate(dadosPessoais?.dataNascimento)} — Idade {dadosPessoais?.idade ?? '—'}</div>
+                </section>
+                <section className="ficha-section">
+                  <h3>Acomodação Atual</h3>
+                  <div><strong>Quarto:</strong> {acomodacao?.atual?.quartoNumero ?? '—'}</div>
+                  <div><strong>Entrada:</strong> {formatDate(acomodacao?.atual?.dataEntrada)}</div>
+                </section>
+                <section className="ficha-section">
+                  <h3>Observações</h3>
+                  <div>{observacoes?.texto ? String(observacoes.texto) : '—'}</div>
+                </section>
+              </main>
+              {/* Rodapé removido na visualização para refletir exclusão em impressão */}
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowPreview(false)}>Fechar</Button>
+          <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
+}

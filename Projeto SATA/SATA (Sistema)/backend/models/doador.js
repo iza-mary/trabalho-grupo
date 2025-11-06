@@ -17,6 +17,7 @@ class Doador {
             this.complemento = "";
             this.data_cadastro = null;
             this.data_atualizacao = null;
+            this.representante = "";
             return;
         }
 
@@ -38,6 +39,7 @@ class Doador {
             this.complemento = "";
             this.data_cadastro = null;
             this.data_atualizacao = null;
+            this.representante = "";
             return;
         }
 
@@ -57,6 +59,7 @@ class Doador {
         this.complemento = data.complemento || "";
         this.data_cadastro = data.data_cadastro || data.dataCadastro || null;
         this.data_atualizacao = data.data_atualizacao || data.dataAtualizacao || null;
+        this.representante = data.representante || data.representanteLegal || "";
     }
 
     validate() {
@@ -94,7 +97,8 @@ class Doador {
             cep: this.cep,
             complemento: this.complemento,
             data_cadastro: this.data_cadastro,
-            data_atualizacao: this.data_atualizacao
+            data_atualizacao: this.data_atualizacao,
+            representante: this.representante
         }
     }
 }

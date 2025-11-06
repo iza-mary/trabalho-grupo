@@ -1,0 +1,10 @@
+/* CSS compartilhado para impressão de páginas tipo ficha */
+
+@media print {
+  /* Ocultar elementos de controle/ação durante a impressão */
+  .no-print { display: none !important; }
+  .controls-row { display: none !important; }
+
+  /* Garantir fundo claro na impressão */
+  body { background: #ffffff !important; }
+}

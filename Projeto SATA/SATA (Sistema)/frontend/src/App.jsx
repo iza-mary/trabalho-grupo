@@ -13,6 +13,9 @@ import Produtos from "./pages/Produtos";
 import ProdutoNovo from "./pages/ProdutoNovo";
 import ProdutoEditar from "./pages/ProdutoEditar";
 import Notificacoes from "./pages/Notificacoes";
+import IdosoFicha from "./pages/IdosoFicha";
+import DoadorFicha from "./pages/DoadorFicha";
+import ProdutoFicha from "./pages/ProdutoFicha";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -43,6 +46,7 @@ function App() {
         <Route path="/produtos" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Produtos /></ProtectedRoute>} />
         <Route path="/produtos/novo" element={<ProtectedRoute allowedRoles={["Admin"]}><ProdutoNovo /></ProtectedRoute>} />
         <Route path="/produtos/editar/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><ProdutoEditar /></ProtectedRoute>} />
+        <Route path="/produtos/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><ProdutoFicha /></ProtectedRoute>} />
         {/* Notificações restritas a Admin */}
         <Route path="/notificacoes" element={<ProtectedRoute allowedRoles={["Admin"]}><Notificacoes /></ProtectedRoute>} />
         <Route path="/" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><SataListaIdosos /></ProtectedRoute>} />
@@ -50,6 +54,8 @@ function App() {
         <Route path="/editar/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><SataCadastroIdosos /></ProtectedRoute>} />
         <Route path="/editar/:id/internacao" element={<ProtectedRoute allowedRoles={["Admin"]}><SataCadastroIdosos /></ProtectedRoute>} />
         <Route path="/internacoes" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><SataInternacoes /></ProtectedRoute>} />
+        <Route path="/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><IdosoFicha /></ProtectedRoute>} />
+        <Route path="/doadores/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><DoadorFicha /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

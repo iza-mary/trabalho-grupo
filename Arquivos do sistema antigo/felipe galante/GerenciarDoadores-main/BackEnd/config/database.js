@@ -1,6 +1,6 @@
 const mysql = require('mysql2/promise');
 
-const dbCondig = {
+const dbConfig = {
     host: 'localhost',
     user: 'root',
     password: '1234',
@@ -10,7 +10,7 @@ const dbCondig = {
     queueLimit: 0
 }
 
-const pool = mysql.createPool(dbCondig);
+const pool = mysql.createPool(dbConfig);
 
 const testConnection = async ()=> {
     try {

@@ -34,8 +34,11 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
     }
   }, [disableSidebar, open]);
 
+  
+
   return (
     <div className={open ? "menu-open" : ""}> 
+
       {/* Sidebar lateral moderna */}
       <aside id="sidebar" className={`sidebar ${open ? "open" : "collapsed"} ${disableSidebar ? "disabled" : ""}`} aria-disabled={disableSidebar ? 'true' : 'false'}>
         <div className="sidebar-header">

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button, Alert, Card, Modal } from "react-bootstrap";
-import { Pencil, Trash } from "react-bootstrap-icons";
+import { Pencil, Trash, Eye } from "react-bootstrap-icons";
 import StandardTable from "../ui/StandardTable";
 import { formatDate } from "../../utils/dateUtils";
 import { useAuth } from '../../hooks/useAuth';
 import { formatarCPF, formatarCNPJ, validarCPF, validarCNPJ } from '../../pages/validacoes';
+import { Link } from "react-router-dom";
 
 function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handleDeletar }) {
   const [deletar, setDeletar] = useState(false);
@@ -52,6 +53,9 @@ function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handl
                           >
                             <Pencil />
                           </Button>
+                          <Link to={`/doadores/detalhes/${doador.id}`} className="btn btn-outline-secondary btn-sm me-1" title="Detalhes" aria-label={`Abrir ficha do doador ${doador.nome}`}>
+                            <Eye />
+                          </Link>
                           <Button
                             variant="outline-danger"
                             size="sm"

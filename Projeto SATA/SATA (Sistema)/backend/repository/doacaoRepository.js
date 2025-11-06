@@ -82,6 +82,47 @@ class DoacaoRepository {
         }
     }
 
+    async findByDoadorId(doadorId) {
+        try {
+            const sql = `SELECT d.id, d.data, d.tipo, d.obs, d.doador,
+            d.idoso, d.idoso_id, d.evento_id AS eventoId,
+            dd.id as dinheiroId, dd.valor,
+            dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd, dp.unidade_medida AS unidade_medida,
+            dr.id as doadorId, dr.nome as doadorNome,
+            e.titulo AS eventoTitulo
+            FROM doacoes d
+            LEFT JOIN doacaodinheiro dd ON dd.id = (SELECT MIN(id) FROM doacaodinheiro WHERE doacao_id = d.id)
+            LEFT JOIN doacaoproduto dp ON dp.id = (SELECT MIN(id) FROM doacaoproduto WHERE doacao_id = d.id)
+            LEFT JOIN produtos p ON dp.produto_id = p.id
+            LEFT JOIN doadores dr ON d.doador = dr.id
+            LEFT JOIN eventos e ON d.evento_id = e.id
+            WHERE d.doador = ?`;
+            const [rows] = await db.execute(sql, [Number(doadorId)]);
+            return rows.map(r => new Doacao(r));
+        } catch (error) {
+            // Fallback para bancos sem coluna idoso_id (mantém joins equivalentes)
+            try {
+                const sql = `SELECT d.id, d.data, d.tipo, d.obs, d.doador,
+                d.idoso, NULL as idoso_id, d.evento_id AS eventoId,
+                dd.id as dinheiroId, dd.valor,
+                dp.id as produtoId, p.nome AS item, dp.quantidade AS qntd, dp.unidade_medida AS unidade_medida,
+                dr.id as doadorId, dr.nome as doadorNome,
+                e.titulo AS eventoTitulo
+                FROM doacoes d
+                LEFT JOIN doacaodinheiro dd ON d.id = dd.doacao_id
+                LEFT JOIN doacaoproduto dp ON d.id = dp.doacao_id
+                LEFT JOIN produtos p ON dp.produto_id = p.id
+                LEFT JOIN doadores dr ON d.doador = dr.id
+                LEFT JOIN eventos e ON d.evento_id = e.id
+                WHERE d.doador = ?`;
+                const [rows] = await db.execute(sql, [Number(doadorId)]);
+                return rows.map(r => new Doacao(r));
+            } catch (fallbackErr) {
+                throw new Error(`Erro ao buscar doações por doador: ${fallbackErr.message}`);
+            }
+        }
+    }
+
     async findByFiltred(tipo = "todos", data = "todos", destinatario = "todos", busca = "", eventoId = null) {
         try {
             const where = [];

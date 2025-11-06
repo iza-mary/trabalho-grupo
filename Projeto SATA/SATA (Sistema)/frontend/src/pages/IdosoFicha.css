@@ -1,0 +1,88 @@
+/* Estilos da Ficha do Idoso e otimizações de impressão */
+
+/* Base tipográfica e layout */
+.ficha-root {
+  background: #fff;
+  color: #000;
+  padding: 16px;
+}
+.ficha-container {
+  max-width: 820px; /* ~ A4 largura em px a 96dpi */
+  margin: 0 auto;
+  background: #fff;
+}
+
+.ficha-header,
+.ficha-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e6e9ef;
+  padding-bottom: 8px;
+  margin-bottom: 12px; /* Espaçamento claro acima da próxima seção em tela */
+}
+.ficha-footer { border-top: 1px solid #e6e9ef; border-bottom: none; margin-top: 16px; padding-top: 8px; }
+.ficha-title { font-weight: 700; font-size: 1.25rem; }
+.ficha-meta { font-size: 0.95rem; color: #333; }
+.ficha-logo { width: 32px; height: 32px; }
+
+.ficha-section { margin: 16px 0; page-break-inside: avoid; }
+.ficha-section h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+.ficha-table { width: 100%; border-collapse: collapse; font-size: 12pt; }
+.ficha-table th, .ficha-table td { border: 1px solid #ddd; padding: 6px 8px; }
+.ficha-table th { background: #f7f7f7; }
+.ficha-list { margin: 0; padding-left: 18px; }
+.ficha-list li { margin: 2px 0; }
+
+.no-print { margin-bottom: 12px; }
+
+/* Preview do modal: simula página A4 */
+.preview-sheet {
+  width: calc(210mm - 20mm);
+  height: calc(297mm - 20mm);
+  padding: 10mm;
+  border: 1px solid #ccc;
+  margin: 0 auto;
+  overflow: auto;
+  background: #fff;
+}
+
+/* Regras de impressão */
+@page { size: A4; margin: 12mm; }
+
+@media print {
+  html, body { height: auto; }
+  body { background: #fff !important; }
+  .no-print { display: none !important; }
+  .controls-row { display: none !important; }
+  .ficha-root, .ficha-container { margin: 0; padding: 0; }
+  /* Tipografia padrão para leitura */
+  body, .ficha-root, .ficha-container { font-family: Arial, 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; color: #000; }
+  /* Cabeçalho como bloco de conteúdo (apenas na primeira página) */
+  .ficha-header { position: static; height: auto; padding: 4mm 0; border: none; background: transparent; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6mm; }
+  .ficha-footer { display: none !important; }
+  /* Compactar tipografia no cabeçalho para caber no espaço */
+  .ficha-title { font-size: 12pt; }
+  .ficha-meta { font-size: 10pt; }
+  .ficha-logo { height: 12mm; width: auto; }
+  /* Conteúdo inicia no topo, mantendo espaçamento entre seções */
+  .ficha-content { margin-top: 0; margin-bottom: 0; padding-top: 0; }
+  .ficha-section:first-of-type { margin-top: 0; }
+  /* Espaçamento entre seções na saída impressa */
+  .ficha-section { margin: 8mm 0; }
+  /* Tabela: repetir cabeçalho */
+  table { page-break-inside: auto; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  /* Quebras lógicas por seção */
+  .page-break { break-after: page; page-break-after: always; }
+}
+
+/* Tornar conteúdo legível em tela também */
+.ficha-content { background: #fff; padding: 16px; }
+.controls-row { display: flex; gap: 8px; align-items: center; }
+label.range-label { font-size: 0.9rem; color: #333; }
+/* Utilitário: elementos apenas na impressão */
+/* (removido) */
