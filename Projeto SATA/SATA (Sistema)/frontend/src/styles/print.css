@@ -1,6 +1,14 @@
 /* Regras globais para impressão e sanitização de quebras manuais */
 
 @media print {
+  
+  /* Ocultar elementos marcados como não imprimíveis e seus descendentes */
+  .no-print, .no-print * { display: none !important; visibility: hidden !important; }
+  .controls-row, .controls-row * { display: none !important; visibility: hidden !important; }
+
+  /* Garantir que botões não apareçam na ficha impressa */
+  .ficha-root .btn, .ficha-container .btn { display: none !important; visibility: hidden !important; }
+
   /* Neutralizar page-break manual por classe quando sanitização estiver ativa */
   .no-manual-breaks .page-break {
     break-after: auto !important;
@@ -20,4 +28,13 @@
   thead { display: table-header-group; }
   tfoot { display: table-footer-group; }
   tr { page-break-inside: avoid; }
+
+  /* Ocultar menu e barra lateral do sistema na impressão */
+  .navbar-modern,
+  .mobile-header,
+  .sidebar,
+  .backdrop { display: none !important; }
+
+  /* Liberar o conteúdo para ocupar toda a área impressa */
+  .page-content { padding: 0 !important; margin: 0 !important; min-height: auto !important; height: auto !important; }
 }

@@ -66,6 +66,30 @@
   }
 }
 
+/* Contexto de comprimento diagonal do menu aberto (financeiro)
+   - Define a variável --menu-diagonal com a hipotenusa entre altura da viewport e largura colapsada da sidebar
+   - Disponível para efeitos visuais/medidas sem alterar layout por padrão */
+.financeiro-page { position: relative; }
+.menu-open .financeiro-page {
+  --menu-diagonal: hypot(100vh, var(--sidebar-collapsed, 64px));
+}
+
+/* Indicador (opcional) não intrusivo: linha invisível com comprimento igual à diagonal
+   - Mantido oculto para não interferir; útil para depuração/medição se necessário */
+.menu-open .financeiro-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--menu-diagonal);
+  height: 0;
+  border-top: 2px solid rgba(13, 110, 253, 0.35);
+  transform-origin: top left;
+  transform: rotate(atan2(100vh, var(--sidebar-collapsed, 64px)));
+  pointer-events: none;
+  opacity: 0; /* permanece invisível, evitando sobreposição visual */
+}
+
 /* Coluna de botões de ação (Ações) */
 .botoes-acao {
   display: flex;
@@ -113,4 +137,11 @@
     width: 32px;
     height: 32px;
   }
+}
+
+/* Exceção específica: permitir o padding-bottom padrão do utilitário py-3
+   e remover a imposição global de margin/padding inferiores a 0 */
+.container-fluid.py-3.financeiro-page {
+  padding-bottom: 1rem !important;
+  margin-bottom: revert !important;
 }

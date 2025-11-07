@@ -121,8 +121,11 @@
 
 /* Conteúdo principal abaixo da navbar */
 .page-content {
-  min-height: calc(100vh - var(--navbar-height));
+  min-height: auto;
+  height: auto;
   padding: 0;
+  box-sizing: border-box;
+  overflow: auto;
 }
 
 @media (max-width: 768px) {
@@ -209,6 +212,22 @@
   .sidebar.collapsed ~ .page-content { padding-left: calc(var(--sidebar-collapsed, 64px) + 24px); }
 }
 
+/* Impressão/visualização Financeiro: ocupar toda a página quando a sidebar estiver desativada */
+@media (min-width: 768px) {
+  .sidebar.disabled ~ .page-content {
+    padding-left: 0 !important;
+    min-height: 100vh;
+    height: 100vh;
+  }
+}
+@media (max-width: 767.98px) {
+  .sidebar.disabled ~ .page-content {
+    padding-top: 0 !important;
+    min-height: 100vh;
+    height: 100vh;
+  }
+}
+
 /* Header de controle no mobile */
 .mobile-header {
   position: fixed;
@@ -230,7 +249,8 @@
 /* Estado desativado da sidebar durante ações bloqueantes (ex.: Nova Internação) */
 .sidebar.disabled {
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.0;
+  display: none;
 }
 .mobile-header .nav-item[disabled], .nav-toggle[disabled] {
   opacity: 0.6;
@@ -267,3 +287,6 @@
 }
 /* Firefox */
 .sidebar { scrollbar-width: thin; scrollbar-color: rgba(124,58,237,0.65) transparent; }
+@media (min-width: 768px) {
+  .sidebar.disabled ~ .page-content { padding-left: 0 !important; }
+}

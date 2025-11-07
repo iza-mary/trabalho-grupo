@@ -6,6 +6,17 @@
   color: #000;
   padding: 16px;
 }
+.page-content .ficha-root {
+  min-height: calc(100vh - var(--navbar-height));
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content .ficha-container {
+  flex: 1 1 auto;
+}
 .ficha-container {
   max-width: 820px; /* ~ A4 largura em px a 96dpi */
   margin: 0 auto;

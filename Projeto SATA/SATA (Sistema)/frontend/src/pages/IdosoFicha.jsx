@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Button, Modal, Spinner } from 'react-bootstrap';
 import idosoService from '../services/idosoService';
 import { removeManualPageBreaks, applySpacingNormalization, removeSpacingNormalization } from '../utils/printSanitizer';
@@ -106,8 +106,13 @@ export default function IdosoFicha() {
   return (
     <div className="ficha-root" aria-label="Página de Ficha Completa do Idoso">
       <div className="ficha-container" ref={containerRef}>
-        <div className="no-print controls-row mb-3">
-          <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+        <div className="no-print controls-row mb-3 d-flex justify-content-between align-items-center">
+          <div>
+            <Link to="/idosos" className="btn btn-outline-secondary">Voltar</Link>
+          </div>
+          <div>
+            <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+          </div>
           {/* Botão de visualização e controles de intervalo removidos conforme solicitado */}
         </div>
 

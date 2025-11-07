@@ -5,10 +5,12 @@ import StandardTable from '../components/ui/StandardTable';
 import financeiroService from '../services/financeiroService';
 import { CashStack, Funnel, Pencil, Trash, PlusCircle, CalendarEvent } from 'react-bootstrap-icons';
 import { Button, Col, Form, Row, Spinner, Alert, Card, Badge, Modal } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import '../styles/financeiro.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import { useAuth } from '../hooks/useAuth';
+ 
 
 const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v || 0));
 
@@ -39,6 +41,8 @@ const Financeiro = () => {
   const [tableFilter, setTableFilter] = useState({ period: 'all', startDate: '', endDate: '' });
 
   const { isAdmin } = useAuth();
+
+ 
 
   const loadDespesas = async () => {
     setLoading(true);
@@ -386,6 +390,20 @@ const Financeiro = () => {
       .sort((a, b) => new Date(b.data) - new Date(a.data));
   }, [despesas, filter, tableFilter]);
 
+  const buildPrintUrl = () => {
+    const params = new URLSearchParams({
+      tipo: filter.tipo || 'todas',
+      category: filter.category || '',
+      search: filter.search || '',
+      period: tableFilter.period || 'all',
+      startDate: tableFilter.startDate || '',
+      endDate: tableFilter.endDate || '',
+    });
+    return `/financeiro/impressao?${params.toString()}`;
+  };
+
+  
+
   return (
     <Navbar disableSidebar={showModal}>
       <div className="container-fluid py-3 financeiro-page">
@@ -635,7 +653,7 @@ const Financeiro = () => {
           <Card.Header className="d-flex justify-content-between align-items-center">
             <span>Livro Caixa</span>
             <div className="d-flex gap-2">
-              <Button size="sm" variant="outline-secondary" onClick={() => window.print()}>Imprimir</Button>
+              <Link to={buildPrintUrl()} className="btn btn-outline-secondary btn-sm">Imprimir</Link>
             </div>
           </Card.Header>
           <Card.Body>

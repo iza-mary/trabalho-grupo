@@ -106,9 +106,13 @@ export default function ProdutoFicha() {
   return (
     <div className="ficha-root" aria-label="Página de Ficha Completa do Produto">
       <div className="ficha-container" ref={containerRef}>
-        <div className="no-print controls-row mb-3 d-flex gap-2">
-          <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
-          <Link to="/produtos" className="btn btn-outline-secondary">Voltar</Link>
+        <div className="no-print controls-row mb-3 d-flex justify-content-between align-items-center">
+          <div>
+            <Link to="/produtos" className="btn btn-outline-secondary">Voltar</Link>
+          </div>
+          <div>
+            <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+          </div>
         </div>
 
         <header className="ficha-header" role="banner">

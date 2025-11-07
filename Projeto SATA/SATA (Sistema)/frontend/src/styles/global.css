@@ -1,1 +1,30 @@
-/* Global complement � sem imports, tema � carregado via main.jsx */
+/* Estilos globais — carregado via main.jsx */
+
+/* Remoção centralizada de rodapés de páginas (não afeta modais) */
+footer,
+.ficha-footer {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Ajustes de layout para compensar ausência de rodapé */
+.page-content,
+.ficha-root,
+.ficha-container {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Mantém responsividade: evita espaços reservados para rodapés */
+@media (max-width: 768px) {
+  .page-content,
+  .ficha-root,
+  .ficha-container { padding-bottom: 0 !important; }
+}
+
+/* Containers Bootstrap: sem espaçamento inferior implícito */
+.container,
+.container-fluid {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}

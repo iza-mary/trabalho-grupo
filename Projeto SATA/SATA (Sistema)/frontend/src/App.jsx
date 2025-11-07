@@ -16,6 +16,8 @@ import Notificacoes from "./pages/Notificacoes";
 import IdosoFicha from "./pages/IdosoFicha";
 import DoadorFicha from "./pages/DoadorFicha";
 import ProdutoFicha from "./pages/ProdutoFicha";
+import LivroCaixaPrint from "./pages/LivroCaixaPrint";
+import EventosPrint from "./pages/EventosPrint";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -43,6 +45,8 @@ function App() {
         {/* FinanceiroLocal restrito a Admin */}
         <Route path="/financeiro-local" element={<ProtectedRoute allowedRoles={["Admin"]}><FinanceiroLocal /></ProtectedRoute>} />
         <Route path="/financeiro" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Financeiro /></ProtectedRoute>} />
+        <Route path="/financeiro/impressao" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><LivroCaixaPrint /></ProtectedRoute>} />
+        <Route path="/eventos/impressao" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><EventosPrint /></ProtectedRoute>} />
         <Route path="/produtos" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Produtos /></ProtectedRoute>} />
         <Route path="/produtos/novo" element={<ProtectedRoute allowedRoles={["Admin"]}><ProdutoNovo /></ProtectedRoute>} />
         <Route path="/produtos/editar/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><ProdutoEditar /></ProtectedRoute>} />

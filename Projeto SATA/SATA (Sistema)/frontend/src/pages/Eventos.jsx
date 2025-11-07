@@ -13,6 +13,7 @@ import '../styles/Eventos.css';
 import StandardTable from '../components/ui/StandardTable';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 // Importações de CSS do FullCalendar para garantir renderização correta
@@ -20,6 +21,7 @@ import { useAuth } from '../hooks/useAuth';
 
 
 export default function Eventos() {
+  const navigate = useNavigate();
   const [eventos, setEventos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modo, setModo] = useState('criar'); // criar | editar | visualizar
@@ -424,15 +426,24 @@ export default function Eventos() {
         title="Eventos"
         icon={<CalendarEvent />}
         actions={
-          <Button
-            variant="primary"
-            onClick={() => abrirCriar()}
-            className={`d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`}
-            disabled={!isAdmin}
-          >
-            <PlusCircle className="me-1" size={16} />
-            Novo Evento
-          </Button>
+          <div className="d-flex gap-2">
+            <Button
+              variant="outline-secondary"
+              onClick={() => navigate('/eventos/impressao')}
+              className="d-inline-flex align-items-center"
+            >
+              Imprimir
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => abrirCriar()}
+              className={`d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`}
+              disabled={!isAdmin}
+            >
+              <PlusCircle className="me-1" size={16} />
+              Novo Evento
+            </Button>
+          </div>
         }
       />
 
@@ -683,6 +694,13 @@ export default function Eventos() {
           <Card className="mt-2">
             <Card.Header className="d-flex align-items-center justify-content-between">
               <h5 className="mb-0">Todos os Eventos</h5>
+              <Button
+                variant="outline-secondary"
+                onClick={() => navigate('/eventos/impressao')}
+                className="d-inline-flex align-items-center"
+              >
+                Imprimir
+              </Button>
             </Card.Header>
             <Card.Body>
               {eventosFiltradosOrdenados.length === 0 ? (
