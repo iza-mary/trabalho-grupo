@@ -11,6 +11,11 @@
   color: var(--text);
 }
 
+/* Quando dentro de .page-content.nav-themed, herda o fundo branco do layout */
+.page-content.nav-themed .eventos-page {
+  background: transparent;
+}
+
 .eventos-page h4 {
   margin: 0;
   font-weight: 700;

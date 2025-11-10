@@ -1,0 +1,63 @@
+/* Dashboard geral */
+.dashboard-container {
+  background: var(--bg, #f8f9fa);
+  min-height: 100vh;
+}
+
+/* Stat cards */
+.stat-card {
+  border: none;
+  border-radius: 16px;
+  color: #0b1026;
+  box-shadow: 0 6px 24px rgba(16, 24, 40, 0.08);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.12);
+}
+
+.stat-card .stat-label {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.stat-card .stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.stat-card .stat-icon {
+  font-size: 2rem;
+  opacity: 0.9;
+}
+
+/* Variantes com gradiente suave */
+.variant-primary { background: linear-gradient(135deg, #e9f0ff 0%, #f4f7ff 100%); }
+.variant-purple { background: linear-gradient(135deg, #f0eaff 0%, #f7f2ff 100%); }
+.variant-success { background: linear-gradient(135deg, #e8fff3 0%, #f4fff9 100%); }
+.variant-teal { background: linear-gradient(135deg, #e7fbff 0%, #f3fdff 100%); }
+.variant-orange { background: linear-gradient(135deg, #fff2e6 0%, #fff7ef 100%); }
+.variant-pink { background: linear-gradient(135deg, #ffe9f2 0%, #fff3f8 100%); }
+
+/* Chart card */
+.chart-card { border-radius: 16px; border: none; }
+.trend-chart .legend { display: flex; gap: 16px; flex-wrap: wrap; }
+.trend-chart .legend-item { font-size: 0.9rem; color: #495057; display: inline-flex; align-items: center; gap: 8px; }
+.trend-chart .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Quick actions */
+.quick-actions { border-radius: 16px; border: none; }
+.quick-actions .btn { border-radius: 10px; }
+
+/* Recent */
+.recent-card { border-radius: 16px; border: none; }
+.recent-list .list-group-item { border: 0; border-bottom: 1px solid #eef2f6; }
+.recent-list .list-group-item:last-child { border-bottom: 0; }
+
+/* Coluna direita com cards de informação */
+.stats-right-column { display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 992px) {
+  .stats-right-column { position: sticky; top: 16px; }
+}

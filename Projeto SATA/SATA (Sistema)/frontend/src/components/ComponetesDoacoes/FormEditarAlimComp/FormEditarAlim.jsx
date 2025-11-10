@@ -69,23 +69,18 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
   }
 
   const handleChangeItem = (e) => {
-    const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
+    const value = e.target.value;
     setDoaAlimentos(prev => ({
       ...prev, doacao: {
         ...prev.doacao,
         item: value
       }
     }))
-    if (value && isNaN(value)) {
+    if (value && String(value).trim() !== '') {
       setErrors((prev) => ({ ...prev, item: null }));
     } else {
-      if (value === "") {
-        setErrors((prev) => ({ ...prev, item: "O item doado deve ser preenchido" }));
-        setValidated(false);
-      } else if (!isNaN(value)) {
-        setErrors((prev) => ({ ...prev, item: "O item doado deve ser um texto válido" }));
-        setValidated(false);
-      }
+      setErrors((prev) => ({ ...prev, item: "O item doado deve ser preenchido" }));
+      setValidated(false);
     }
   }
 
@@ -204,11 +199,8 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
       newErrors.data = "A data não pode ser maior do que hoje";
       setValidated(false);
     }
-    if (!doaAlimentos.doacao.item) {
+    if (!doaAlimentos.doacao.item || String(doaAlimentos.doacao.item).trim() === '') {
       newErrors.item = "O item doado deve ser preenchido";
-      setValidated(false);
-    } else if (!isNaN(doaAlimentos.doacao.item)) {
-      newErrors.item = "O item doado deve ser um texto válido";
       setValidated(false);
     }
     if (!doaAlimentos.doacao.qntd) {

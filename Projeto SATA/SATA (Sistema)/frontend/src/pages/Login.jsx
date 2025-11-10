@@ -8,7 +8,7 @@ export default function Login() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/idosos';
+  const from = location.state?.from?.pathname || '/';
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

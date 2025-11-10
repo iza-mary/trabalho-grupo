@@ -58,7 +58,7 @@
   padding: 0;
 }
 
-.nav-item {
+.navbar-modern .nav-item {
   display: inline-flex;
   align-items: center;
   color: var(--nav-text);
@@ -69,15 +69,15 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(124, 58, 237, 0.25);
 }
-.nav-item:hover {
+.navbar-modern .nav-item:hover {
   background: rgba(124, 58, 237, 0.15);
   transform: translateY(-1px);
 }
-.nav-item.cta {
+.navbar-modern .nav-item.cta {
   border-color: rgba(34, 211, 238, 0.45);
   background: rgba(34, 211, 238, 0.12);
 }
-.nav-item.cta:hover {
+.navbar-modern .nav-item.cta:hover {
   background: rgba(34, 211, 238, 0.25);
 }
 

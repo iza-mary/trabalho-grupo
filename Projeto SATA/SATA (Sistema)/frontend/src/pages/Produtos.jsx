@@ -57,10 +57,11 @@ export default function Produtos() {
   const [histSearch, setHistSearch] = useState('');
   const [histLoading, setHistLoading] = useState(false);
   const [histError, setHistError] = useState('');
-  const [histPeriodo, setHistPeriodo] = useState('30'); // 'ano','mes','30','7','semana','hoje','custom'
+  const [histPeriodo, setHistPeriodo] = useState('last30'); // 'last7','last15','last30','month','custom'
   const [histCustomStartStr, setHistCustomStartStr] = useState(''); // DD/MM/AAAA
   const [histCustomEndStr, setHistCustomEndStr] = useState('');   // DD/MM/AAAA
   const [histDateError, setHistDateError] = useState('');
+  const HIST_FILTERS_KEY = 'estoqueHistFilters';
 
 
   function parseDateBR(str) {
@@ -91,48 +92,42 @@ export default function Produtos() {
     return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
   }
 
+  function parseSQLDateTimeLocal(s) {
+    // Garantir interpretação no fuso local, evitando ambiguidade
+    const str = String(s || '').replace(' ', 'T');
+    const d = new Date(str);
+    return Number.isNaN(d.getTime()) ? new Date(s) : d;
+  }
+
   function getPeriodoRange(periodo) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     let start = new Date(today);
     let end = new Date(today);
     switch (periodo) {
-      case 'ano': {
-        const lastYear = today.getFullYear() - 1;
-        start = new Date(lastYear, 0, 1);
-        end = new Date(lastYear, 11, 31);
-        break;
-      }
-      case 'mes': {
-        const year = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
-        const month = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
-        start = new Date(year, month, 1);
-        end = new Date(year, month + 1, 0);
-        break;
-      }
-      case '30': {
-        start = new Date(today);
-        start.setDate(start.getDate() - 29);
-        end = new Date(today);
-        break;
-      }
-      case '7': {
+      case 'last7': {
         start = new Date(today);
         start.setDate(start.getDate() - 6);
         end = new Date(today);
         break;
       }
-      case 'semana': {
-        const day = today.getDay(); // 0 = domingo, 1 = segunda...
-        const mondayOffset = day === 0 ? -6 : 1 - day; // segunda
-        const sundayOffset = day === 0 ? 0 : 7 - day; // domingo
+      case 'last15': {
         start = new Date(today);
-        start.setDate(today.getDate() + mondayOffset);
+        start.setDate(start.getDate() - 14);
         end = new Date(today);
-        end.setDate(today.getDate() + sundayOffset);
         break;
       }
-      case 'hoje':
+      case 'last30': {
+        start = new Date(today);
+        start.setDate(start.getDate() - 29);
+        end = new Date(today);
+        break;
+      }
+      case 'month': {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        break;
+      }
       default: {
         start = new Date(today);
         end = new Date(today);
@@ -169,7 +164,7 @@ export default function Produtos() {
     setHistStartDate(startDateISO);
     setHistEndDate(endDateISO);
     setHistPage(1);
-    carregarHistorico(histProduto?.id);
+    carregarHistorico(histProduto?.id, { startDate: startDateISO, endDate: endDateISO });
   }
 
   // Debounce da busca para aplicar automaticamente sem excesso de requisições
@@ -264,6 +259,28 @@ export default function Produtos() {
     setHistProduto(item || null);
     setShowHistModal(true);
     setHistPage(1);
+    // Restaurar filtros da sessão (escopo por produto)
+    try {
+      const raw = sessionStorage.getItem(`${HIST_FILTERS_KEY}:${item?.id}`);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved && typeof saved === 'object') {
+          setHistPeriodo(saved.histPeriodo ?? 'last30');
+          setHistCustomStartStr(saved.histCustomStartStr ?? '');
+          setHistCustomEndStr(saved.histCustomEndStr ?? '');
+          setHistOrder(saved.histOrder ?? 'DESC');
+          setHistSearch(saved.histSearch ?? '');
+          setHistStartDate(saved.histStartDate ?? '');
+          setHistEndDate(saved.histEndDate ?? '');
+        }
+      } else {
+        // Aplicar período padrão ao abrir
+        aplicarFiltrosHistoricoInstant('last30', '', '');
+      }
+    } catch (err) {
+      // Ignorar erros ao restaurar filtros da sessão (dados ausentes/corrompidos)
+      console.debug('Ignorando erro ao restaurar filtros do histórico', err);
+    }
     await carregarHistorico(item?.id);
   }
 
@@ -274,23 +291,35 @@ export default function Produtos() {
     setHistError('');
   }
 
-  async function carregarHistorico(produtoId) {
+  async function carregarHistorico(produtoId, overrides = {}) {
     if (!produtoId) return;
     setHistLoading(true);
     setHistError('');
     try {
+      const useStartDate = overrides.startDate ?? histStartDate;
+      const useEndDate = overrides.endDate ?? histEndDate;
       const res = await listarMovimentos(produtoId, {
         page: histPage,
         pageSize: histPageSize,
         sort: histSort,
         order: histOrder,
-        startDate: histStartDate || undefined,
-        endDate: histEndDate || undefined,
+        startDate: useStartDate || undefined,
+        endDate: useEndDate || undefined,
         search: histSearch || undefined,
       });
       if (res?.success) {
-        setHistItems(Array.isArray(res.data) ? res.data : []);
-        setHistTotal(Number(res.total || 0));
+        const raw = Array.isArray(res.data) ? res.data : [];
+        let filtered = raw;
+        if (useStartDate && useEndDate) {
+          const startMs = parseSQLDateTimeLocal(useStartDate).getTime();
+          const endMs = parseSQLDateTimeLocal(useEndDate).getTime();
+          filtered = raw.filter(m => {
+            const t = parseSQLDateTimeLocal(m.data_hora).getTime();
+            return t >= startMs && t <= endMs;
+          });
+        }
+        setHistItems(filtered);
+        setHistTotal(Number(res.total || filtered.length || 0));
       } else {
         setHistError(res?.error || 'Falha ao carregar histórico');
       }
@@ -300,6 +329,26 @@ export default function Produtos() {
       setHistLoading(false);
     }
   }
+
+  // Persistência dos filtros na sessão (por produto)
+  useEffect(() => {
+    if (!histProduto?.id) return;
+    const data = {
+      histPeriodo,
+      histCustomStartStr,
+      histCustomEndStr,
+      histOrder,
+      histSearch,
+      histStartDate,
+      histEndDate,
+    };
+    try {
+      sessionStorage.setItem(`${HIST_FILTERS_KEY}:${histProduto.id}`, JSON.stringify(data));
+    } catch (err) {
+      // Ignorar falhas ao salvar filtros (quota cheia/navegador bloqueando storage)
+      console.debug('Falha ao salvar filtros do histórico na sessão', err);
+    }
+  }, [histPeriodo, histCustomStartStr, histCustomEndStr, histOrder, histSearch, histStartDate, histEndDate, histProduto?.id]);
 
   // Removidos: exportarCSV e exportarPDF (botões de exportação descontinuados)
 
@@ -702,31 +751,30 @@ export default function Produtos() {
         </Modal.Header>
         <Modal.Body>
           {histError && <div role="alert" className="alert alert-danger">{histError}</div>}
-          <div className="row g-3 mb-3">
-            <div className="col-md-3">
-              <label className="form-label" htmlFor="histPeriodo">Período</label>
-              <select id="histPeriodo" className="form-select" value={histPeriodo} onChange={e => { const val = e.target.value; setHistPeriodo(val); aplicarFiltrosHistoricoInstant(val, histCustomStartStr, histCustomEndStr); }}>
-                <option value="ano">Último ano</option>
-                <option value="mes">Último mês</option>
-                <option value="30">Últimos 30 dias</option>
-                <option value="7">Últimos 7 dias</option>
-                <option value="semana">Esta semana</option>
-                <option value="hoje">Hoje</option>
-                <option value="custom">Personalizar…</option>
-              </select>
+            <div className="row g-3 mb-3">
+              <div className="col-md-3">
+                <label className="form-label" htmlFor="histPeriodo">Período</label>
+                <select id="histPeriodo" className="form-select" value={histPeriodo} onChange={e => { const val = e.target.value; setHistPeriodo(val); aplicarFiltrosHistoricoInstant(val, histCustomStartStr, histCustomEndStr); }} aria-label="Seleção rápida de período">
+                  <option value="last7">Últimos 7 dias</option>
+                  <option value="last15">Últimos 15 dias</option>
+                  <option value="last30">Últimos 30 dias</option>
+                  <option value="month">Mês atual</option>
+                  <option value="custom">Personalizar…</option>
+                </select>
+              </div>
+              <div className="col-md-3">
+                <label className="form-label" htmlFor="histOrder">Ordenação</label>
+                <select id="histOrder" className="form-select" value={histOrder} onChange={e => { setHistOrder(e.target.value); setHistPage(1); carregarHistorico(histProduto?.id); }}>
+                  <option value="DESC">Mais recente</option>
+                  <option value="ASC">Mais antigo</option>
+                </select>
+              </div>
+              <div className="col-md-3">
+                <label className="form-label" htmlFor="histSearch">Buscar</label>
+                <input id="histSearch" className="form-control" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Observações ou responsável" />
+              </div>
             </div>
-            <div className="col-md-3">
-              <label className="form-label" htmlFor="histOrder">Ordenação</label>
-              <select id="histOrder" className="form-select" value={histOrder} onChange={e => { setHistOrder(e.target.value); setHistPage(1); carregarHistorico(histProduto?.id); }}>
-                <option value="DESC">Mais recente</option>
-                <option value="ASC">Mais antigo</option>
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label className="form-label" htmlFor="histSearch">Buscar</label>
-              <input id="histSearch" className="form-control" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Observações ou responsável" />
-            </div>
-          </div>
+            {/* Indicadores removidos conforme solicitado */}
           <Collapse in={histPeriodo === 'custom'}>
             <div>
               <div className="row g-3 mb-2">
@@ -739,6 +787,9 @@ export default function Produtos() {
                     className={`form-control ${histDateError ? 'is-invalid' : ''}`}
                     placeholder="DD/MM/AAAA"
                     value={histCustomStartStr}
+                    required
+                    aria-invalid={!!histDateError}
+                    aria-describedby="histDateErrorMsg"
                     onChange={e => { const v = e.target.value; setHistCustomStartStr(v); if (histPeriodo === 'custom') { aplicarFiltrosHistoricoInstant('custom', v, histCustomEndStr); } }}
                   />
                 </div>
@@ -751,12 +802,15 @@ export default function Produtos() {
                     className={`form-control ${histDateError ? 'is-invalid' : ''}`}
                     placeholder="DD/MM/AAAA"
                     value={histCustomEndStr}
+                    required
+                    aria-invalid={!!histDateError}
+                    aria-describedby="histDateErrorMsg"
                     onChange={e => { const v = e.target.value; setHistCustomEndStr(v); if (histPeriodo === 'custom') { aplicarFiltrosHistoricoInstant('custom', histCustomStartStr, v); } }}
                   />
                 </div>
               </div>
               {histDateError && (
-                <div role="alert" className="alert alert-warning py-2">{histDateError}</div>
+                <div id="histDateErrorMsg" role="alert" aria-live="polite" className="alert alert-warning py-2">{histDateError}</div>
               )}
             </div>
           </Collapse>
@@ -778,7 +832,7 @@ export default function Produtos() {
               <tbody>
                 {histItems.map(m => (
                   <tr key={m.id}>
-                    <td>{new Date(m.data_hora).toLocaleString()}</td>
+                    <td>{parseSQLDateTimeLocal(m.data_hora).toLocaleString()}</td>
                     <td>
                       {m.tipo === 'entrada' && <ArrowUpCircleFill className="text-success me-1" />}
                       {m.tipo === 'saida' && <ArrowDownCircleFill className="text-danger me-1" />}
@@ -791,6 +845,15 @@ export default function Produtos() {
                     <td>{m.observacao || ''}</td>
                   </tr>
                 ))}
+                {histItems.length === 0 && !histLoading && (
+                  <tr>
+                    <td colSpan={7}>
+                      <div className="alert alert-info mb-0" role="status" aria-live="polite">
+                        Nenhuma movimentação encontrada no período selecionado. Ajuste o intervalo ou utilize uma seleção rápida.
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {histItems.length === 0 && !histLoading && (
                   <tr><td colSpan={7} className="text-center text-muted">Nenhuma movimentação encontrada.</td></tr>
                 )}

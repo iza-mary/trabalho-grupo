@@ -8,7 +8,7 @@ import FormOutros from '../components/ComponetesDoacoes/FormOutrosComp/FormOutro
 import Header from '../components/ComponetesDoacoes/HeaderComp/Header'
 import HeaderTabela from '../components/ComponetesDoacoes/HeaderTabelaComp/HeaderTabela'
 import FiltroBusca from '../components/ComponetesDoacoes/FiltroBuscaComp/FiltroBusca'
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import TabelaDoacoes from '../components/ComponetesDoacoes/TabelaDoacoesComp/TabelaDoacoes'
 import doacoesService from '../services/doacaoService'
@@ -29,6 +29,7 @@ function Doacoes() {
     destinatario: 'todos',
     busca: ''
   });
+  const [ordenacao, setOrdenacao] = useState('data_desc');
   const [doacoes, setDoacoes] = useState([]);
 
   useEffect(() => {
@@ -113,7 +114,8 @@ function Doacoes() {
           : {
               item: doacao?.doacao?.item ?? doacao?.item ?? '',
               qntd: Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0),
-              unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade'
+              unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade',
+              produto_id: doacao?.doacao?.produto_id ?? null
             }
     };
 
@@ -184,7 +186,8 @@ function Doacoes() {
           : {
               item: doacao?.doacao?.item ?? doacao?.item ?? '',
               qntd: Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0),
-              unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade'
+              unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade',
+              produto_id: doacao?.doacao?.produto_id ?? null
             }
     };
 
@@ -251,6 +254,37 @@ function Doacoes() {
     setFiltros((prev) => ({ ...prev, busca: busca?.toLowerCase() ?? prev.busca }));
   };
 
+  // Ordenação cliente de doações
+  const doacoesOrdenadas = useMemo(() => {
+    const copia = [...doacoes];
+    const tipoValor = (d) => String(d?.tipo || '').toUpperCase();
+    const getValorOuQuantidade = (d) => {
+      if (tipoValor(d) === 'D') return Number(d?.doacao?.valor ?? d?.valor ?? 0);
+      return Number(d?.doacao?.qntd ?? d?.quantidade ?? 0);
+    };
+    const parseData = (d) => {
+      const raw = d?.data ? String(d.data) : '';
+      const base = raw.length >= 10 ? raw.slice(0, 10) : raw;
+      return new Date(base);
+    };
+    const collate = new Intl.Collator('pt-BR');
+    switch (ordenacao) {
+      case 'data_asc':
+        return copia.sort((a, b) => parseData(a) - parseData(b));
+      case 'valor_desc':
+        return copia.sort((a, b) => getValorOuQuantidade(b) - getValorOuQuantidade(a));
+      case 'valor_asc':
+        return copia.sort((a, b) => getValorOuQuantidade(a) - getValorOuQuantidade(b));
+      case 'doador_asc':
+        return copia.sort((a, b) => collate.compare(String(a?.doador?.nome ?? a?.doador_nome ?? ''), String(b?.doador?.nome ?? b?.doador_nome ?? '')));
+      case 'item_asc':
+        return copia.sort((a, b) => collate.compare(String(a?.doacao?.item ?? a?.item ?? ''), String(b?.doacao?.item ?? b?.item ?? '')));
+      case 'data_desc':
+      default:
+        return copia.sort((a, b) => parseData(b) - parseData(a));
+    }
+  }, [doacoes, ordenacao]);
+
   // Removido filtro por evento: interface passa a filtrar apenas por tipo, período, destinatário e busca
 
   return (
@@ -275,6 +309,7 @@ function Doacoes() {
               onPeriodo={handleFiltrarPeriodo}
               onDestinatario={handleFiltrarDestin}
               onBusca={handleFiltrarBusca}
+              onOrdenacao={setOrdenacao}
             />
             <TabelaDoacoes
               onDelete={handleDeleteDoacao}
@@ -282,7 +317,7 @@ function Doacoes() {
               doacao={doacaoToEdit}
               editando={handleChangeEditando}
               setDoacoesApp={setDoacoes}
-              doacoesApp={doacoes}
+              doacoes={doacoesOrdenadas}
             />
           </>
         )}

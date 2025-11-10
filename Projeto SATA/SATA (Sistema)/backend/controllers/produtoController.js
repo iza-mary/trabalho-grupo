@@ -108,6 +108,7 @@ class ProdutoController {
           quantidade: qty,
           saldo_anterior: atual,
           saldo_posterior: novo,
+          doacao_id: null,
           responsavel_id: req.user?.id ?? null,
           responsavel_nome: req.user?.username ?? null,
           motivo: null,

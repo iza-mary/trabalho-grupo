@@ -421,7 +421,7 @@ export default function Eventos() {
 
   return (
     <Navbar disableSidebar={showModal}>
-    <Container fluid className="eventos-page">
+    <Container fluid className="eventos-page py-4 px-3 px-md-4">
       <PageHeader
         title="Eventos"
         icon={<CalendarEvent />}

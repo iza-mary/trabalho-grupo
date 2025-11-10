@@ -28,3 +28,48 @@ footer,
   padding-bottom: 0 !important;
   margin-bottom: 0 !important;
 }
+
+/* Evitar sobreposição pelo menu lateral (sidebar) e manter espaçamento adequado) */
+/* Cria contexto de empilhamento seguro para o conteúdo principal */
+.page-content {
+  position: relative;
+  z-index: 100; /* abaixo da navbar (1200) e da sidebar (1100), acima do fundo */
+}
+
+/* Tom claro igual ao container da Home quando marcado como nav-themed */
+.page-content.nav-themed {
+  background: #ffffff;
+}
+
+/* Alvo específico: container principal usado nas páginas (Home e demais)
+   com classes utilitárias Bootstrap. Garante que não seja coberto pelo menu,
+   mantendo layout e espaçamento apropriados. */
+.page-content > .container-fluid.py-4.px-3.px-md-4 {
+  position: relative;
+  z-index: 101; /* acima do .page-content base, mas abaixo da sidebar */
+  margin-left: 0 !important; /* evita deslocamentos indevidos */
+  margin-right: 0 !important;
+  /* reforça o espaçamento horizontal sem afetar o grid interno */
+  padding-left: clamp(12px, 1.8vw, 24px);
+  padding-right: clamp(12px, 1.8vw, 24px);
+}
+
+/* Desktop: quando a sidebar está visível, o padding da .page-content
+   já considera a largura da sidebar; evitamos ajustes extras no container */
+@media (min-width: 768px) {
+  .sidebar ~ .page-content > .container-fluid.py-4.px-3.px-md-4 {
+    margin-left: 0 !important;
+    padding-left: clamp(12px, 1.6vw, 24px);
+  }
+  .sidebar.collapsed ~ .page-content > .container-fluid.py-4.px-3.px-md-4 {
+    margin-left: 0 !important;
+  }
+}
+
+/* Mobile: assegura que o conteúdo permaneça visível abaixo do header móvel */
+@media (max-width: 767.98px) {
+  .page-content > .container-fluid.py-4.px-3.px-md-4 {
+    padding-top: 12px; /* complementa padding-top aplicado na .page-content */
+    z-index: 101;
+  }
+}

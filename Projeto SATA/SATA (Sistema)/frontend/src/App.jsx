@@ -19,6 +19,8 @@ import ProdutoFicha from "./pages/ProdutoFicha";
 import LivroCaixaPrint from "./pages/LivroCaixaPrint";
 import EventosPrint from "./pages/EventosPrint";
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -53,7 +55,7 @@ function App() {
         <Route path="/produtos/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><ProdutoFicha /></ProtectedRoute>} />
         {/* Notificações restritas a Admin */}
         <Route path="/notificacoes" element={<ProtectedRoute allowedRoles={["Admin"]}><Notificacoes /></ProtectedRoute>} />
-        <Route path="/" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><SataListaIdosos /></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Home /></ProtectedRoute>} />
         <Route path="/cadastro" element={<ProtectedRoute allowedRoles={["Admin"]}><SataCadastroIdosos /></ProtectedRoute>} />
         <Route path="/editar/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><SataCadastroIdosos /></ProtectedRoute>} />
         <Route path="/editar/:id/internacao" element={<ProtectedRoute allowedRoles={["Admin"]}><SataCadastroIdosos /></ProtectedRoute>} />

@@ -5,6 +5,8 @@ import { BiPlusCircle } from "react-icons/bi";
 import SelectDoador from "./SelectDoador";
 import SelectIdoso from "../Shared/SelectIdoso";
 import SelectEvento from "../Shared/SelectEvento";
+import SimilarProductsDialog from "../Shared/SimilarProductsDialog";
+import donationStockService from "../../../services/donationStockService";
 
 function FormAlimentos({ onSave }) {
 
@@ -36,6 +38,9 @@ function FormAlimentos({ onSave }) {
   });
   const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade");
   const [unidadeOutro, setUnidadeOutro] = useState("");
+  const [showSimilarDialog, setShowSimilarDialog] = useState(false);
+  const [similarOptions, setSimilarOptions] = useState([]);
+  const [pendingSubmission, setPendingSubmission] = useState(null);
 
   useEffect(() => {
     setDoaAlimentos(prev => ({
@@ -62,18 +67,13 @@ function FormAlimentos({ onSave }) {
   }
 
   const handleChangeItem = (e) => {
-    const value = e.target.value.replace(/[^\p{L}\s]/gu, '');
-    setDoaAlimentos(prev => ({ ...prev, doacao: {...prev.doacao, item: value} }))
-    if (value && isNaN(value)) {
+    const value = e.target.value;
+    setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, item: value } }))
+    if (value && String(value).trim() !== '') {
       setErrors((prev) => ({ ...prev, item: null }));
     } else {
-      if (value === "") {
-        setErrors((prev) => ({ ...prev, item: "O item doado deve ser preenchido" }));
-        setValidated(false);
-      } else if (!isNaN(value)) {
-        setErrors((prev) => ({ ...prev, item: "O item doado deve ser um texto válido" }));
-        setValidated(false);
-      }
+      setErrors((prev) => ({ ...prev, item: "O item doado deve ser preenchido" }));
+      setValidated(false);
     }
   }
 
@@ -151,7 +151,7 @@ function FormAlimentos({ onSave }) {
     setValidated(false);
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.currentTarget;
     let newErrors = {};
@@ -166,11 +166,8 @@ function FormAlimentos({ onSave }) {
       newErrors.data = "A data não pode ser maior do que hoje";
       setValidated(false);
     }
-    if (!doaAlimentos.doacao.item) {
+    if (!doaAlimentos.doacao.item || String(doaAlimentos.doacao.item).trim() === '') {
       newErrors.item = "O item doado deve ser preenchido";
-      setValidated(false);
-    } else if (!isNaN(doaAlimentos.doacao.item)) {
-      newErrors.item = "O item doado deve ser um texto válido";
       setValidated(false);
     }
     if (!doaAlimentos.doacao.qntd) {
@@ -190,21 +187,49 @@ function FormAlimentos({ onSave }) {
       setErrors(newErrors);
     } else {
       setErrors({});
+      // Buscar similares antes de salvar
+      try {
+        const similares = await donationStockService.buscarSimilares(
+          doaAlimentos?.doacao?.item ?? '',
+          'Alimentos'
+        );
+        if (Array.isArray(similares) && similares.length > 0) {
+          setSimilarOptions(similares);
+          setPendingSubmission(doaAlimentos);
+          setShowSimilarDialog(true);
+          return;
+        }
+      } catch (err) {
+        console.warn('Falha ao buscar similares, prosseguindo com cadastro.', err?.message || err);
+      }
+
       onSave(doaAlimentos);
       setValidated(true);
       setShowAlert(true);
-      // Limpa o formulário após registrar
       limpaForm();
-      setTimeout(() => {
-        setShowAlert(false);
-      }, 3000);
-    };
+      setTimeout(() => { setShowAlert(false); }, 3000);
+    }
   }
+
+  const handleConfirmSimilar = (produtoId) => {
+    const submission = { ...(pendingSubmission || doaAlimentos) };
+    if (produtoId) {
+      submission.doacao = { ...(submission.doacao || {}), produto_id: produtoId };
+    }
+    onSave(submission);
+    setShowSimilarDialog(false);
+    setPendingSubmission(null);
+    setValidated(true);
+    setShowAlert(true);
+    limpaForm();
+    setTimeout(() => { setShowAlert(false); }, 3000);
+  };
 
 
 
   return (
-    // Formulário comum
+    <>
+    {/* Formulário comum */}
     <Form noValidate validated={validated} onSubmit={handleSubmit} autoComplete="off">
       <Alert variant="success" show={showAlert}> <b> <FaCheckCircle></FaCheckCircle> </b> Doação cadastrada com sucesso! </Alert>
       <Row>
@@ -309,6 +334,14 @@ function FormAlimentos({ onSave }) {
         </Button>
       </div>
     </Form>
+    <SimilarProductsDialog
+      show={showSimilarDialog}
+      onClose={() => { setShowSimilarDialog(false); setPendingSubmission(null); }}
+      options={similarOptions}
+      itemName={doaAlimentos?.doacao?.item || ''}
+      onConfirm={handleConfirmSimilar}
+    />
+    </>
   );
 }
 

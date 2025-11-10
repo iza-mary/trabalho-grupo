@@ -42,6 +42,9 @@ body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
 }
 
+/* Tema escuro: redefine tokens quando body possui classe theme-dark */
+/* Tema escuro removido */
+
 /* Padroniza a fonte de todos os cabeçalhos (headings) */
 h1, h2, h3, h4, h5, h6 {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
@@ -76,6 +79,16 @@ img, svg { vertical-align: middle; }
   width: 100%;
   min-height: inherit;
 }
+
+/* Quando a página usa o tema de navegação, mantém o fundo branco do layout */
+.page-content.nav-themed .content-area.full-main {
+  background: #ffffff;
+}
+
+/* Mesma cor para variantes que usam main-content */
+.page-content.nav-themed .content-area.main-content {
+  background: #ffffff;
+}
 /* Padrão de tabelas */
 .table { width: 100%; margin-bottom: 0; }
 .table th { background-color: #f8f9fa; font-weight: 600; vertical-align: middle; }
@@ -101,6 +114,8 @@ img, svg { vertical-align: middle; }
 .card { border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
 .card-header { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-bottom: 1px solid var(--border); padding: var(--gap-3) var(--gap-4); font-weight: 600; }
 .card-body { padding: var(--gap-4); }
+
+/* Remoção dos ajustes de tema escuro */
 
 /* Botões e formulários */
 .btn { padding: 8px 16px; border-radius: 10px; font-weight: 600; }
