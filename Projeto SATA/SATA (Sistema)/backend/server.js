@@ -13,6 +13,7 @@ const produtoRouters = require('./routers/produtoRouters');
 const notificacaoRouters = require('./routers/notificacaoRouters');
 const authRouters = require('./routers/authRouters');
 const estoqueDonationRouters = require('./routers/estoqueDonationRouters');
+const nomeUpdateRouters = require('./routers/nomeUpdateRouters');
 const db = require('./config/database');
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/financeiro', financeiroRouters);
 app.use('/api/produtos', produtoRouters);
 app.use('/api/notificacoes', notificacaoRouters);
 app.use('/api/estoque/doacoes', estoqueDonationRouters);
+app.use('/api/nomes', nomeUpdateRouters);
 
 app.get('/', (req, res) => {
     res.json({ message: 'API de Sistema de Asilo funcionando!' });

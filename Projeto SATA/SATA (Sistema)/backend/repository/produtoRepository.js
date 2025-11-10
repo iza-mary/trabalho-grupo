@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const MovimentoEstoqueRepository = require('./movimentoEstoqueRepository');
 
 const sortableFields = new Set(['nome','preco','quantidade','data_cadastro','data_atualizacao']);
 
@@ -22,21 +23,78 @@ const ProdutoRepository = {
   },
 
   async update(id, produto) {
-    const sql = `UPDATE produtos SET nome=?, categoria=?, unidade_medida=?, estoque_atual=?, estoque_minimo=?, observacao=?, descricao=?, preco=?, quantidade=? WHERE id=?`;
-    const params = [
-      produto.nome,
-      produto.categoria,
-      produto.unidade_medida,
-      produto.estoque_atual,
-      produto.estoque_minimo,
-      produto.observacao,
-      produto.descricao,
-      produto.preco,
-      produto.quantidade,
-      id,
-    ];
-    const [result] = await db.execute(sql, params);
-    return result.affectedRows > 0;
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      // Ler registro anterior para delta e sincronização
+      const [prevRows] = await conn.execute('SELECT quantidade, unidade_medida, categoria FROM produtos WHERE id=? FOR UPDATE', [id]);
+      if (!Array.isArray(prevRows) || prevRows.length === 0) {
+        await conn.rollback();
+        conn.release();
+        return false;
+      }
+      const prevQuantidade = Number(prevRows[0].quantidade || 0);
+      const prevUnidade = prevRows[0].unidade_medida;
+      const prevCategoria = prevRows[0].categoria;
+
+      const sql = `UPDATE produtos SET nome=?, categoria=?, unidade_medida=?, estoque_atual=?, estoque_minimo=?, observacao=?, descricao=?, preco=?, quantidade=?, data_atualizacao = NOW() WHERE id=?`;
+      const params = [
+        produto.nome,
+        produto.categoria,
+        produto.unidade_medida,
+        produto.estoque_atual,
+        produto.estoque_minimo,
+        produto.observacao,
+        produto.descricao,
+        produto.preco,
+        produto.quantidade,
+        id,
+      ];
+      const [result] = await conn.execute(sql, params);
+      const ok = result.affectedRows > 0;
+
+      if (!ok) {
+        await conn.rollback();
+        conn.release();
+        return false;
+      }
+
+      // Atualizar unidade nas doações vinculadas (metadata sync) — quantidade da doação é imutável
+      try {
+        await conn.execute(
+          `UPDATE doacaoproduto SET unidade_medida = ? WHERE produto_id = ?`,
+          [produto.unidade_medida, id]
+        );
+      } catch (_) {}
+
+      // Registrar movimento de ajuste se a quantidade do produto mudou
+      const delta = Number(produto.quantidade || 0) - prevQuantidade;
+      if (delta !== 0) {
+        try {
+          await MovimentoEstoqueRepository.create({
+            produto_id: id,
+            tipo: 'ajuste',
+            quantidade: Number(delta),
+            saldo_anterior: prevQuantidade,
+            saldo_posterior: Number(produto.quantidade || 0),
+            doacao_id: null,
+            responsavel_id: null,
+            responsavel_nome: null,
+            motivo: 'Ajuste manual de produto',
+            observacao: 'Atualização direta no cadastro do produto',
+          });
+        } catch (_) {}
+      }
+
+      await conn.commit();
+      conn.release();
+      return true;
+    } catch (err) {
+      try { await conn.rollback(); } catch (_) {}
+      conn.release();
+      throw err;
+    }
   },
 
   async delete(id) {

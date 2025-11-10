@@ -41,7 +41,11 @@ class DoacaoController {
 
     async create(req, res) {
         try {
-            const doacao = new Doacao(req.body);
+            const payload = { ...req.body };
+            if (req.user) {
+                payload.actor = { id: req.user.id, nome: req.user.nome };
+            }
+            const doacao = new Doacao(payload);
             const errors = doacao.validate();
             if (errors.length > 0) {
                 return res.status(400).json({
@@ -122,7 +126,11 @@ class DoacaoController {
                 })
             }
 
-            const doacao = new Doacao({ ...req.body, id })
+            const payload = { ...req.body, id };
+            if (req.user) {
+                payload.actor = { id: req.user.id, nome: req.user.nome };
+            }
+            const doacao = new Doacao(payload)
             const errors = doacao.validate();
             if (errors.length > 0) {
                 console.warn('Validação de atualização de doação falhou:', {

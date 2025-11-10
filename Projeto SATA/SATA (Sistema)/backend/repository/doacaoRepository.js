@@ -1,8 +1,11 @@
 const db = require("../config/database");
+const LRUCache = require('../utils/lruCache');
+const nameCache = new LRUCache(1000);
 const Doacao = require("../models/doacao");
 const { computeStockUpdate } = require("../utils/stockUpdateGuard");
 const MovimentoEstoqueRepository = require('./movimentoEstoqueRepository');
 const ProdutoBackupRepository = require('./produtoBackupRepository');
+const { resolveProduto, upsertProdutoFast } = require('../utils/produtoResolver');
 
 class DoacaoRepository {
     async findAll() {
@@ -319,22 +322,10 @@ class DoacaoRepository {
                 const [result] = await conn.execute(`INSERT INTO doacoes (
                 data, tipo, obs, doador, idoso, idoso_id, evento_id) VALUES ( ?, ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idosoNome, idosoId, eventoId ?? null]);
                 const doacaoId = result.insertId;
-                // Resolver produto_id, aceitando produto_id explícito no payload
-                let produtoId = doacaoData?.doacao?.produto_id ?? null;
-                let prodRows;
-                if (!produtoId) {
-                  [prodRows] = await conn.execute(`SELECT id FROM produtos WHERE nome = ? LIMIT 1`, [item]);
-                } else {
-                  [prodRows] = await conn.execute(`SELECT id FROM produtos WHERE id = ? LIMIT 1`, [produtoId]);
-                }
-                if (Array.isArray(prodRows) && prodRows.length > 0) {
-                    produtoId = prodRows[0].id;
-                } else {
-                    const categoriaIns = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
-                    const unidadeIns = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
-                    const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, ?, ?, 0, 0, NULL)`, [item, categoriaIns, unidadeIns]);
-                    produtoId = prodResult.insertId;
-                }
+                // Upsert rápido de produto e obtenção de id
+                const categoriaIns = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                const unidadeIns = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                const { id: produtoId } = await upsertProdutoFast(conn, { nome: item, categoria: categoriaIns, unidade: unidadeIns });
                 // Validação de quantidade positiva
                 if (!qntd || Number(qntd) <= 0) {
                     await conn.rollback();
@@ -357,32 +348,20 @@ class DoacaoRepository {
                     throw new Error("Doação duplicada detectada para o mesmo produto e quantidade");
                 }
 
-                const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                const unidade = unidadeIns;
                 await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, unidade_medida, quantidade, observacao) VALUES (?, ?, ?, ?, ?)`, [doacaoId, produtoId, unidade, qntd, null]);
-                // Harmonizar categoria/unidade e aplicar guard de estoque para evitar duplicidade
-                const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
-                // Bloquear linha do produto e ler quantidade antes
-                const [preRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ? FOR UPDATE`, [produtoId]);
-                const preQty = Array.isArray(preRows) && preRows.length ? Number(preRows[0].quantidade) : 0;
-                // Backup do produto antes da atualização
-                try { await ProdutoBackupRepository.createBackup(produtoId); } catch (_) {}
-                // Ler quantidade após inserção (caso algum trigger tenha atuado)
-                const [postRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [produtoId]);
-                const postQty = Array.isArray(postRows) && postRows.length ? Number(postRows[0].quantidade) : preQty;
-                const decision = computeStockUpdate(preQty, postQty, qntd);
-                if (decision.shouldUpdate) {
-                    await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = ?, estoque_atual = ? WHERE id = ?`, [categoria, unidade, decision.targetQty, decision.targetQty, produtoId]);
-                } else {
-                    await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ? WHERE id = ?`, [categoria, unidade, produtoId]);
-                }
-                // Log estruturado de movimento de estoque
-                const saldoPosterior = decision.shouldUpdate ? decision.targetQty : postQty;
+                // Atualiza estoque rapidamente
+                await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = quantidade + ? WHERE id = ?`, [categoriaIns, unidadeIns, Number(qntd), produtoId]);
+                // Log simples de movimento de estoque com uma leitura
                 try {
+                  const [afterRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [produtoId]);
+                  const saldoPosterior = Array.isArray(afterRows) && afterRows.length ? Number(afterRows[0].quantidade) : Number(qntd);
+                  const saldoAnterior = Math.max(0, saldoPosterior - Number(qntd));
                   await MovimentoEstoqueRepository.create({
                     produto_id: produtoId,
                     tipo: 'entrada',
                     quantidade: Number(qntd),
-                    saldo_anterior: preQty,
+                    saldo_anterior: saldoAnterior,
                     saldo_posterior: saldoPosterior,
                     doacao_id: doacaoId,
                     responsavel_id: null,
@@ -444,17 +423,10 @@ class DoacaoRepository {
                     const [result] = await conn.execute(`INSERT INTO doacoes (
                     data, tipo, obs, doador, idoso, evento_id) VALUES ( ?, ?, ?, ?, ?, ?)`, [data, tipo, obs, doadorId, idosoNome, eventoId ?? null]);
                     const doacaoId = result.insertId;
-                    // garantir produto_id conforme tabela Produtos
-                    let produtoId = null;
-                    const [prodRows] = await conn.execute(`SELECT id FROM produtos WHERE nome = ? LIMIT 1`, [item]);
-                    if (Array.isArray(prodRows) && prodRows.length > 0) {
-                        produtoId = prodRows[0].id;
-                    } else {
-                        const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
-                        const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
-                        const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, ?, ?, 0, 0, NULL)`, [item, categoria, unidade]);
-                        produtoId = prodResult.insertId;
-                    }
+                    // Upsert rápido de produto e obtenção de id sem múltiplos SELECTs
+                    const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
+                    const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
+                    const { id: produtoId } = await upsertProdutoFast(conn, { nome: item, categoria, unidade });
                     // Validação de quantidade positiva
                     if (!qntd || Number(qntd) <= 0) {
                         await conn.rollback();
@@ -477,27 +449,11 @@ class DoacaoRepository {
                     }
 
                     // Harmonizar categoria/unidade
-                    const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
-                    const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
-
-                    // Bloquear linha do produto e ler quantidade antes
-                    const [preRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ? FOR UPDATE`, [produtoId]);
-                    const preQty = Array.isArray(preRows) && preRows.length ? Number(preRows[0].quantidade) : 0;
-
+                    
                     // Registrar item da doação
                     await conn.execute(`INSERT INTO doacaoproduto (doacao_id, produto_id, unidade_medida, quantidade, observacao) VALUES (?, ?, ?, ?, ?)`, [doacaoId, produtoId, unidade, qntd, null]);
-
-                    // Ler quantidade após inserção (caso algum trigger tenha atuado)
-                    const [postRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [produtoId]);
-                    const postQty = Array.isArray(postRows) && postRows.length ? Number(postRows[0].quantidade) : preQty;
-
-                    const decision = computeStockUpdate(preQty, postQty, qntd);
-                    if (decision.shouldUpdate) {
-                        await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = ? WHERE id = ?`, [categoria, unidade, decision.targetQty, produtoId]);
-                    } else {
-                        // Ainda assim manter categoria/unidade coerentes
-                        await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ? WHERE id = ?`, [categoria, unidade, produtoId]);
-                    }
+                    // Atualiza estoque em uma única operação
+                    await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ?, quantidade = quantidade + ? WHERE id = ?`, [categoria, unidade, Number(qntd), produtoId]);
                     await conn.commit();
                     conn.release();
                     return await this.findById(doacaoId);
@@ -560,119 +516,54 @@ class DoacaoRepository {
             } else {
                 await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, idoso_id = ?, evento_id = ? WHERE id = ?`,
                     [data, tipo, obs, doadorId, idosoNome, idosoId, eventoId ?? null, id]);
-                // Obter registro anterior para reconciliar estoque
+                // Obter registro anterior para reconciliar estoque e manter o mesmo produto
                 const [prevDoaRows] = await conn.execute(`SELECT produto_id, quantidade FROM doacaoproduto WHERE doacao_id = ? LIMIT 1`, [id]);
                 const prevProdId = Array.isArray(prevDoaRows) && prevDoaRows.length ? prevDoaRows[0].produto_id : null;
                 const prevQty = Array.isArray(prevDoaRows) && prevDoaRows.length ? Number(prevDoaRows[0].quantidade) : 0;
-
-                // Resolver produto_id (aceita produto_id explícito)
-                let produtoId = doacaoData?.doacao?.produto_id ?? null;
-                let prodRows;
-                if (!produtoId) {
-                  [prodRows] = await conn.execute(`SELECT id FROM produtos WHERE nome = ? LIMIT 1`, [item]);
-                } else {
-                  [prodRows] = await conn.execute(`SELECT id FROM produtos WHERE id = ? LIMIT 1`, [produtoId]);
-                }
-                if (Array.isArray(prodRows) && prodRows.length > 0) {
-                    produtoId = prodRows[0].id;
-                } else {
-                    const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
-                    const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
-                    const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, ?, ?, 0, 0, NULL)`, [item, categoria, unidade]);
-                    produtoId = prodResult.insertId;
+                if (!prevProdId) {
+                    await conn.rollback();
+                    conn.release();
+                    throw new Error("Produto vinculado à doação não encontrado");
                 }
                 const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
                 const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
-                // Validação de quantidade positiva
-                if (!qntd || Number(qntd) <= 0) {
+                const newQty = Number(doacaoData?.doacao?.qntd ?? prevQty);
+                if (!newQty || newQty <= 0) {
                     await conn.rollback();
                     conn.release();
-                    throw new Error("Quantidade doada inválida");
+                    throw new Error("Quantidade atualizada inválida");
                 }
-                await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, unidade, qntd, id]);
-
-                // reconciliar estoque conforme possível mudança de item/quantidade
-                // Guardar estoque com locking para evitar duplicidade
-                const [preRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ? FOR UPDATE`, [produtoId]);
-                const preQtyNow = Array.isArray(preRows) && preRows.length ? Number(preRows[0].quantidade) : 0;
-                // Backup do produto antes da atualização
-                try { await ProdutoBackupRepository.createBackup(produtoId); } catch (_) {}
-
-                if (prevProdId && prevProdId === produtoId) {
-                    const delta = Number(qntd) - prevQty;
-                    const [postRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [produtoId]);
-                    const postQtyNow = Array.isArray(postRows) && postRows.length ? Number(postRows[0].quantidade) : preQtyNow;
-                    const decision = computeStockUpdate(preQtyNow, postQtyNow, delta);
-                    if (decision.shouldUpdate) {
-                        await conn.execute(`UPDATE produtos SET quantidade = ?, estoque_atual = ?, categoria = ?, unidade_medida = ? WHERE id = ?`, [decision.targetQty, decision.targetQty, categoria, unidade, produtoId]);
-                    } else {
-                        await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ? WHERE id = ?`, [categoria, unidade, produtoId]);
-                    }
-                    // Log movimento (ajuste de quantidade)
+                // Validação: impedir renomear para nome já existente em outro produto
+                const nomeNorm = String(item || '').trim().toLowerCase();
+                const [dupRows] = await conn.execute(`SELECT id FROM produtos WHERE nome_norm = ? AND id <> ? LIMIT 1`, [nomeNorm, prevProdId]);
+                if (Array.isArray(dupRows) && dupRows.length > 0) {
+                    await conn.rollback();
+                    conn.release();
+                    const err = new Error("Já existe outro produto com este nome");
+                    err.code = 'PRODUTO_NOME_DUPLICADO';
+                    throw err;
+                }
+                // Atualiza o próprio produto preservando o mesmo ID
+                await conn.execute(`UPDATE produtos SET nome = ?, categoria = ?, unidade_medida = ?, data_atualizacao = NOW() WHERE id = ?`, [item, categoria, unidade, prevProdId]);
+                // Atualiza a linha de doação mantendo produto_id intacto
+                await conn.execute(`UPDATE doacaoproduto SET unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [unidade, newQty, id]);
+                // Ajusta estoque por delta
+                const delta = newQty - prevQty;
+                if (delta !== 0) {
+                    await conn.execute(`UPDATE produtos SET quantidade = quantidade + ? WHERE id = ?`, [delta, prevProdId]);
                     try {
-                      await MovimentoEstoqueRepository.create({
-                        produto_id: produtoId,
-                        tipo: 'ajuste',
-                        quantidade: Number(delta),
-                        saldo_anterior: preQtyNow,
-                        saldo_posterior: decision.shouldUpdate ? decision.targetQty : postQtyNow,
-                        doacao_id: id,
-                        responsavel_id: null,
-                        responsavel_nome: null,
-                        motivo: 'Ajuste por edição de doação',
-                        observacao: `Doação #${id}`,
-                      });
-                    } catch (_) {}
-                } else {
-                    if (prevProdId) {
-                        // Bloquear e ajustar produto anterior
-                        const [prevLockRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ? FOR UPDATE`, [prevProdId]);
-                        const prevPreQty = Array.isArray(prevLockRows) && prevLockRows.length ? Number(prevLockRows[0].quantidade) : 0;
-                        try { await ProdutoBackupRepository.createBackup(prevProdId); } catch (_) {}
-                        const [prevPostRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [prevProdId]);
-                        const prevPostQty = Array.isArray(prevPostRows) && prevPostRows.length ? Number(prevPostRows[0].quantidade) : prevPreQty;
-                        const prevDecision = computeStockUpdate(prevPreQty, prevPostQty, -prevQty);
-                        if (prevDecision.shouldUpdate) {
-                            await conn.execute(`UPDATE produtos SET quantidade = ? WHERE id = ?`, [prevDecision.targetQty, prevProdId]);
-                        }
-                        // Log saída do produto anterior
-                        try {
-                          await MovimentoEstoqueRepository.create({
+                        await MovimentoEstoqueRepository.create({
                             produto_id: prevProdId,
-                            tipo: 'saida',
-                            quantidade: Number(prevQty),
-                            saldo_anterior: prevPreQty,
-                            saldo_posterior: prevDecision.shouldUpdate ? prevDecision.targetQty : prevPostQty,
+                            tipo: delta > 0 ? 'entrada' : 'saida',
+                            quantidade: Math.abs(delta),
+                            saldo_anterior: null,
+                            saldo_posterior: null,
                             doacao_id: id,
                             responsavel_id: null,
                             responsavel_nome: null,
-                            motivo: 'Reversão por edição de doação',
-                            observacao: `Doação #${id}`,
-                          });
-                        } catch (_) {}
-                    }
-                    const [postRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [produtoId]);
-                    const postQtyNow = Array.isArray(postRows) && postRows.length ? Number(postRows[0].quantidade) : preQtyNow;
-                    const decision = computeStockUpdate(preQtyNow, postQtyNow, qntd);
-                    if (decision.shouldUpdate) {
-                        await conn.execute(`UPDATE produtos SET quantidade = ?, estoque_atual = ?, categoria = ?, unidade_medida = ? WHERE id = ?`, [decision.targetQty, decision.targetQty, categoria, unidade, produtoId]);
-                    } else {
-                        await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ? WHERE id = ?`, [categoria, unidade, produtoId]);
-                    }
-                    // Log entrada no novo produto
-                    try {
-                      await MovimentoEstoqueRepository.create({
-                        produto_id: produtoId,
-                        tipo: 'entrada',
-                        quantidade: Number(qntd),
-                        saldo_anterior: preQtyNow,
-                        saldo_posterior: decision.shouldUpdate ? decision.targetQty : postQtyNow,
-                        doacao_id: id,
-                        responsavel_id: null,
-                        responsavel_nome: null,
-                        motivo: 'Doação de item (edição)',
-                        observacao: `Doação #${id}`,
-                      });
+                            motivo: delta > 0 ? 'Ajuste de doação (entrada)' : 'Ajuste de doação (saída)',
+                            observacao: `Atualização da doação #${id}`,
+                        });
                     } catch (_) {}
                 }
                 await conn.commit();
@@ -685,13 +576,12 @@ class DoacaoRepository {
                 await conn.beginTransaction();
                 const { data, tipo, obs, evento, eventoId } = doacaoData;
                 const { item, qntd, valor } = doacaoData.doacao;
-                const {doadorId} = doacaoData.doador
+                const { doadorId } = doacaoData.doador;
                 const idosoNome = doacaoData.idoso?.nome || doacaoData.idoso || null;
                 if (tipo.toUpperCase() === "D") {
                     await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento_id = ? WHERE id = ?`,
                         [data, tipo, obs, doadorId, idosoNome, eventoId ?? null, id]);
                     await conn.execute(`UPDATE doacaodinheiro SET valor = ? WHERE doacao_id = ?`, [valor, id]);
-                    // ... existing code ...
                     const [colChk] = await conn.query(`
                         SELECT COUNT(*) AS cnt
                         FROM information_schema.columns
@@ -723,60 +613,37 @@ class DoacaoRepository {
                 } else {
                     await conn.execute(`UPDATE doacoes SET data = ?, tipo = ?, obs = ?, doador = ?, idoso = ?, evento_id = ? WHERE id = ?`,
                         [data, tipo, obs, doadorId, idosoNome, eventoId ?? null, id]);
-                    // Obter registro anterior para reconciliar estoque
                     const [prevDoaRows] = await conn.execute(`SELECT produto_id, quantidade FROM doacaoproduto WHERE doacao_id = ? LIMIT 1`, [id]);
                     const prevProdId = Array.isArray(prevDoaRows) && prevDoaRows.length ? prevDoaRows[0].produto_id : null;
                     const prevQty = Array.isArray(prevDoaRows) && prevDoaRows.length ? Number(prevDoaRows[0].quantidade) : 0;
-                    // mapear item -> produto_id e atualizar quantidade
-                    let produtoId = null;
-                    const [prodRows] = await conn.execute(`SELECT id FROM produtos WHERE nome = ? LIMIT 1`, [item]);
-                    if (Array.isArray(prodRows) && prodRows.length > 0) {
-                        produtoId = prodRows[0].id;
-                    } else {
-                        const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
-                        const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
-                        const [prodResult] = await conn.execute(`INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, ?, ?, 0, 0, NULL)`, [item, categoria, unidade]);
-                        produtoId = prodResult.insertId;
+                    if (!prevProdId) {
+                        await conn.rollback();
+                        conn.release();
+                        throw new Error("Produto vinculado à doação não encontrado");
                     }
                     const categoria = (doacaoData?.tipo === 'A' ? 'Alimentos' : 'Outros');
                     const unidade = (doacaoData?.doacao?.unidade_medida ?? 'Unidade');
-                    await conn.execute(`UPDATE doacaoproduto SET produto_id = ?, unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [produtoId, unidade, qntd, id]);
-
-                    // reconciliar estoque conforme possível mudança de item/quantidade, com guarda
-                if (prevProdId && prevProdId === produtoId) {
-                    const delta = Number(qntd) - prevQty;
-                    const [preRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ? FOR UPDATE`, [produtoId]);
-                    const preQtyNow = Array.isArray(preRows) && preRows.length ? Number(preRows[0].quantidade) : 0;
-                    const [postRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [produtoId]);
-                    const postQtyNow = Array.isArray(postRows) && postRows.length ? Number(postRows[0].quantidade) : preQtyNow;
-                    const decision = computeStockUpdate(preQtyNow, postQtyNow, delta);
-                    if (decision.shouldUpdate) {
-                        await conn.execute(`UPDATE produtos SET quantidade = ?, estoque_atual = ?, categoria = ?, unidade_medida = ? WHERE id = ?`, [decision.targetQty, decision.targetQty, categoria, unidade, produtoId]);
-                    } else {
-                        await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ? WHERE id = ?`, [categoria, unidade, produtoId]);
+                    const newQty = Number(doacaoData?.doacao?.qntd ?? prevQty);
+                    if (!newQty || newQty <= 0) {
+                        await conn.rollback();
+                        conn.release();
+                        throw new Error("Quantidade atualizada inválida");
                     }
-                } else {
-                    if (prevProdId) {
-                        const [prevLockRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ? FOR UPDATE`, [prevProdId]);
-                        const prevPreQty = Array.isArray(prevLockRows) && prevLockRows.length ? Number(prevLockRows[0].quantidade) : 0;
-                        const [prevPostRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [prevProdId]);
-                        const prevPostQty = Array.isArray(prevPostRows) && prevPostRows.length ? Number(prevPostRows[0].quantidade) : prevPreQty;
-                        const prevDecision = computeStockUpdate(prevPreQty, prevPostQty, -prevQty);
-                        if (prevDecision.shouldUpdate) {
-                            await conn.execute(`UPDATE produtos SET quantidade = ?, estoque_atual = ? WHERE id = ?`, [prevDecision.targetQty, prevDecision.targetQty, prevProdId]);
-                        }
+                    const nomeNorm = String(item || '').trim().toLowerCase();
+                    const [dupRows] = await conn.execute(`SELECT id FROM produtos WHERE nome_norm = ? AND id <> ? LIMIT 1`, [nomeNorm, prevProdId]);
+                    if (Array.isArray(dupRows) && dupRows.length > 0) {
+                        await conn.rollback();
+                        conn.release();
+                        const err = new Error("Já existe outro produto com este nome");
+                        err.code = 'PRODUTO_NOME_DUPLICADO';
+                        throw err;
                     }
-                    const [preRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ? FOR UPDATE`, [produtoId]);
-                    const preQtyNow = Array.isArray(preRows) && preRows.length ? Number(preRows[0].quantidade) : 0;
-                    const [postRows] = await conn.execute(`SELECT quantidade FROM produtos WHERE id = ?`, [produtoId]);
-                    const postQtyNow = Array.isArray(postRows) && postRows.length ? Number(postRows[0].quantidade) : preQtyNow;
-                    const decision = computeStockUpdate(preQtyNow, postQtyNow, qntd);
-                    if (decision.shouldUpdate) {
-                        await conn.execute(`UPDATE produtos SET quantidade = ?, estoque_atual = ?, categoria = ?, unidade_medida = ? WHERE id = ?`, [decision.targetQty, decision.targetQty, categoria, unidade, produtoId]);
-                    } else {
-                        await conn.execute(`UPDATE produtos SET categoria = ?, unidade_medida = ? WHERE id = ?`, [categoria, unidade, produtoId]);
+                    await conn.execute(`UPDATE produtos SET nome = ?, categoria = ?, unidade_medida = ?, data_atualizacao = NOW() WHERE id = ?`, [item, categoria, unidade, prevProdId]);
+                    await conn.execute(`UPDATE doacaoproduto SET unidade_medida = ?, quantidade = ? WHERE doacao_id = ?`, [unidade, newQty, id]);
+                    const delta = newQty - prevQty;
+                    if (delta !== 0) {
+                        await conn.execute(`UPDATE produtos SET quantidade = quantidade + ? WHERE id = ?`, [delta, prevProdId]);
                     }
-                }
                     await conn.commit();
                     conn.release();
                 }
@@ -845,8 +712,17 @@ class DoacaoRepository {
 
     async getDoadorByName(nome) {
         try {
+            const key = String(nome || '').toLowerCase();
+            const cached = nameCache.get(key);
+            if (cached) return cached;
+            // Otimiza consulta: tenta busca por prefixo para aproveitar índice em nome; faz fallback para contém
+            const [prefRows] = await db.execute("SELECT id, nome FROM doadores WHERE nome LIKE ?", [`${nome}%`]);
+            if (prefRows.length > 0) {
+                nameCache.set(key, prefRows);
+                return prefRows;
+            }
             const [rows] = await db.execute("SELECT id, nome FROM doadores WHERE nome LIKE ?", [`%${nome}%`]);
-            if (rows.length === 0) return [];
+            nameCache.set(key, rows);
             return rows;
         } catch (error) {
             throw new Error("Erro ao buscar doador: " + error.message);

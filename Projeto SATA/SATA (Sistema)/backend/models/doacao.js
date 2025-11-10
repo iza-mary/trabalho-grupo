@@ -8,6 +8,8 @@ class Doacao {
         this.data = data.data;
         this.tipo = data.tipo;
         this.obs = data.obs || null;
+        // Quem está realizando a operação (opcional, vindo de req.user)
+        this.actor = data.actor || null;
         // Aceita objeto aninhado { doador: { doadorId, nome, ... } } ou flat
         // Quando o SELECT inclui aliases doadorId/doadorNome, prioriza-os para montar o objeto doador
         const doadorPayload = (data?.doadorId !== undefined || data?.doadorNome !== undefined)
@@ -51,6 +53,7 @@ class Doacao {
             data: this.data,
             tipo: this.tipo,
             obs: this.obs,
+            actor: this.actor,
             idosoId: this.idosoId,
             idoso: this.idoso,
             doador: this.doador.toJSON(),

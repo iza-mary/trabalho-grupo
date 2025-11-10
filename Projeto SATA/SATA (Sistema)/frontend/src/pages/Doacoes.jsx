@@ -83,6 +83,40 @@ function Doacoes() {
     fetchFiltros();
   }, [filtros]);
 
+  // Atualização automática: polling leve respeitando filtros e pausa durante edição/modal
+  useEffect(() => {
+    const REFRESH_MS = 10000; // 10s
+    let timerId = null;
+
+    const tick = async () => {
+      if (mostrarModal || modoEdicao) return; // evita sobrescrever enquanto edita
+      const filtrosBackend = {
+        tipo: mapTipoFiltro(filtros.tipo),
+        data: filtros.data,
+        destinatario: filtros.destinatario,
+        busca: filtros.busca
+      };
+      try {
+        const dados = await doacoesService.getByFiltred(filtrosBackend);
+        if (Array.isArray(dados)) {
+          setDoacoes(dados);
+        }
+      } catch {
+        try {
+          const dados = await doacoesService.getAll();
+          setDoacoes(dados);
+        } catch (err) {
+          console.error('Auto-atualização de doações falhou:', err?.response?.data?.message || err?.message || err);
+        }
+      }
+    };
+
+    timerId = setInterval(tick, REFRESH_MS);
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [filtros, mostrarModal, modoEdicao]);
+
   const handleChangeEditando = (editando) => {
     if (editando === false) {
       setModoEdicao(true);
@@ -119,7 +153,16 @@ function Doacoes() {
             }
     };
 
-    await doacoesService.add(payload);
+    try {
+      const criada = await doacoesService.add(payload);
+      setDoacoes((prev) => Array.isArray(prev) ? [...prev, criada] : [criada]);
+      console.log('Doação registrada com sucesso:', criada);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Falha ao registrar doação';
+      console.error('Erro ao registrar doação:', msg, err);
+      // Feedback simples; manter minimalista para não adicionar dependências de UI
+      alert(msg);
+    }
   };
 
   const handleEditDoacao = (doacao) => {

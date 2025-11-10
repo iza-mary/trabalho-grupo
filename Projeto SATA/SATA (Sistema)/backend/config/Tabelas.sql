@@ -79,6 +79,7 @@ CREATE TABLE `produtos` (
   `quantidade` int(11) NOT NULL DEFAULT 0,
   `data_cadastro` datetime NOT NULL DEFAULT current_timestamp(),
   `data_atualizacao` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `nome_norm` varchar(255) GENERATED ALWAYS AS (LOWER(TRIM(`nome`))) STORED,
   PRIMARY KEY (`id`),
   KEY `idx_produtos_nome` (`nome`),
   KEY `idx_produtos_categoria` (`categoria`)
@@ -200,6 +201,7 @@ CREATE TABLE `doacaoproduto` (
   `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp(),
   `data_atualizacao` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_doacaoproduto_doacao_produto` (`doacao_id`, `produto_id`),
   KEY `idx_doacaoproduto_doacao_id` (`doacao_id`),
   KEY `idx_doacaoproduto_produto_id` (`produto_id`),
   CONSTRAINT `fk_doacaoproduto_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,

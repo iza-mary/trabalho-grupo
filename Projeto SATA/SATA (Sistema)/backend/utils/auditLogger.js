@@ -1,5 +1,5 @@
-// Audit logger no-op: remove interação com o sistema de arquivos.
-// Mantém API compatível para que os controllers possam importar sem erros.
+// Audit logger simples: evita escrita em disco, mas registra eventos no console.
+// Mantém API compatível e oferece um método genérico para métricas.
 
 function logDeletion() {
   // Intencionalmente vazio para evitar escrita em disco.
@@ -8,5 +8,12 @@ function logDeletion() {
 function logSecurityEvent() {
   // Intencionalmente vazio para evitar escrita em disco.
 }
+function log(event, payload) {
+  try {
+    const ts = new Date().toISOString();
+    // Minimiza verbosidade; pode ser integrado a sistemas de observabilidade futuramente
+    console.log(`[AUDIT ${ts}] ${event}:`, JSON.stringify(payload));
+  } catch (_) {}
+}
 
-module.exports = { logDeletion, logSecurityEvent };
+module.exports = { logDeletion, logSecurityEvent, log };

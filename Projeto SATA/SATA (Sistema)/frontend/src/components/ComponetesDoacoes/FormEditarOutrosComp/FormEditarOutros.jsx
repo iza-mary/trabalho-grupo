@@ -266,11 +266,11 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                                         </Form.Control.Feedback>
                                     </Form.Group>
                                     <Form.Group className="mb-3">
-                                        <Form.Label>Quantidade (Obrigatório)</Form.Label>
+                                        <Form.Label>Quantidade (Somente leitura)</Form.Label>
                                         <Form.Control name="quantidade" onChange={handleChangeQuantidade} autoComplete="off"
                                             value={doaOutros.doacao.qntd || ""}
                                             isInvalid={!!errors.quantidade}
-                                            type="number" required />
+                                            type="number" readOnly disabled title="Quantidade original da doação é imutável" />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.quantidade}
                                         </Form.Control.Feedback>
