@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Navbar from '../components/Navbar';
 import { Button, Badge, Spinner } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import financeiroService from '../services/financeiroService';
@@ -127,67 +126,64 @@ const LivroCaixaPrint = () => {
   })();
 
   return (
-    <Navbar disableSidebar={true}>
-      <div className="container-fluid py-3 ficha-root">
-        <div ref={containerRef} className="ficha-container">
-          <div className="no-print controls-row mb-3 d-flex justify-content-between align-items-center">
+    <div className="container-fluid py-3 ficha-root">
+      <div ref={containerRef} className="ficha-container">
+        <div className="no-print controls-row mb-3 d-flex justify-content-between align-items-center">
+          <div>
+            <Link to="/financeiro" className="btn btn-outline-secondary">Voltar</Link>
+          </div>
+          <div>
+            <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+          </div>
+        </div>
+        <header className="ficha-header d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center gap-3">
+            <img src="/vite.svg" alt="Logo" className="ficha-logo" />
             <div>
-              <Link to="/financeiro" className="btn btn-outline-secondary">Voltar</Link>
-            </div>
-            <div>
-              <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+              <div className="ficha-title h5 mb-0">{pageTitle}</div>
+              <div className="ficha-meta small text-muted">Período: {rangeLabel} · Gerado em {new Date().toLocaleDateString('pt-BR')}</div>
             </div>
           </div>
-          <header className="ficha-header d-flex justify-content-between align-items-center">
-            <div className="d-flex align-items-center gap-3">
-              <img src="/vite.svg" alt="Logo" className="ficha-logo" />
-              <div>
-                <div className="ficha-title h5 mb-0">{pageTitle}</div>
-                <div className="ficha-meta small text-muted">Período: {rangeLabel} · Gerado em {new Date().toLocaleDateString('pt-BR')}</div>
-              </div>
-            </div>
-          </header>
-          <main className="ficha-content">
-            {error && <div className="alert alert-danger">{error}</div>}
-            {loading && <div className="text-center py-3"><Spinner animation="border" /></div>}
-            {!loading && (
-              <section className="ficha-section">
-                <table className="ficha-table">
-                  <thead>
-                    <tr>
-                      <th>Descrição</th>
-                      <th>Tipo</th>
-                      <th className="text-end">Valor</th>
-                      <th>Categoria</th>
-                      <th>Recorrente</th>
+        </header>
+        <main className="ficha-content">
+          {error && <div className="alert alert-danger">{error}</div>}
+          {loading && <div className="text-center py-3"><Spinner animation="border" /></div>}
+          {!loading && (
+            <section className="ficha-section">
+              <table className="ficha-table">
+                <thead>
+                  <tr>
+                    <th>Descrição</th>
+                    <th>Tipo</th>
+                    <th className="text-end">Valor</th>
+                    <th>Categoria</th>
+                    <th>Recorrente</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(visibleDespesas || []).map((d) => (
+                    <tr key={d.id}>
+                      <td>{d.descricao}</td>
+                      <td>
+                        <Badge bg={String(d.tipo) === 'Entrada' ? 'success' : 'danger'} className="text-capitalize">{d.tipo}</Badge>
+                      </td>
+                      <td className="text-end">{formatCurrency(d.valor)}</td>
+                      <td>{d.categoria ?? '-'}</td>
+                      <td>{d.recorrente ? 'Sim' : 'Não'}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {(visibleDespesas || []).map((d) => (
-                      <tr key={d.id}>
-                        <td>{d.descricao}</td>
-                        <td>
-                          <Badge bg={String(d.tipo) === 'Entrada' ? 'success' : 'danger'} className="text-capitalize">{d.tipo}</Badge>
-                        </td>
-                        <td className="text-end">{formatCurrency(d.valor)}</td>
-                        <td>{d.categoria ?? '-'}</td>
-                        <td>{d.recorrente ? 'Sim' : 'Não'}</td>
-                      </tr>
-                    ))}
-                    {(!loading && visibleDespesas?.length === 0) && (
-                      <tr>
-                        <td colSpan={5} className="text-center text-muted py-3">Nenhuma despesa encontrada no intervalo selecionado</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </section>
-            )}
-          </main>
-          
-        </div>
+                  ))}
+                  {(!loading && visibleDespesas?.length === 0) && (
+                    <tr>
+                      <td colSpan={5} className="text-center text-muted py-3">Nenhuma despesa encontrada no intervalo selecionado</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+          )}
+        </main>
       </div>
-    </Navbar>
+    </div>
   );
 };
 

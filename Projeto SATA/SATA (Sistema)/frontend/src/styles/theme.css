@@ -35,6 +35,8 @@
 /* Resets essenciais */
 *, *::before, *::after { box-sizing: border-box; }
 html, body, #root { height: 100%; }
+/* Garantir que o fundo do app (#root) combine com páginas nav-themed */
+#root { background: #ffffff; }
 body {
   margin: 0;
   background: var(--page-bg);

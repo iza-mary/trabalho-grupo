@@ -1,0 +1,29 @@
+@startuml
+title Diagrama de Componentes - Camadas Simples (UML 2.0)
+' Version: 1.2.0
+' Tool: PlantUML 1.2024.6
+' Date: 2025-11-11
+
+skinparam style strictuml
+skinparam componentBackgroundColor #FFFFFF
+skinparam componentBorderColor #333333
+skinparam ArrowColor #333333
+
+package "Camadas" {
+  component View <<View>>
+  component Control <<Control>>
+  component Model <<Model>>
+}
+
+View --> Control : entrada do usuário
+Control --> Model : regras e acesso ao domínio
+
+note bottom
+  Fluxo desejado: View -> Control -> Model
+  Não há comunicação direta View -> Model
+end note
+
+legend left
+  Setas indicam ordem de comunicação entre camadas
+end legend
+@enduml
