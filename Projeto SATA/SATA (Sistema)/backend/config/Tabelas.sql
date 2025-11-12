@@ -39,7 +39,7 @@ CREATE TABLE `doadores` (
   UNIQUE KEY `cpf` (`cpf`),
   UNIQUE KEY `cnpj` (`cnpj`),
   KEY `idx_nome` (`nome`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 4. Eventos
 CREATE TABLE `eventos` (
@@ -220,4 +220,50 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_users_username` (`username`),
   UNIQUE KEY `uk_users_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 13. MovimentosEstoque
+CREATE TABLE `movimentos_estoque` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `produto_id` int(11) NOT NULL,
+  `data_hora` timestamp NOT NULL DEFAULT current_timestamp(),
+  `tipo` enum('entrada','saida','ajuste') NOT NULL,
+  `quantidade` int(11) NOT NULL,
+  `saldo_anterior` int(11) NOT NULL,
+  `saldo_posterior` int(11) NOT NULL,
+  `doacao_id` int(11) DEFAULT NULL,
+  `responsavel_id` int(11) DEFAULT NULL,
+  `responsavel_nome` varchar(100) DEFAULT NULL,
+  `motivo` text DEFAULT NULL,
+  `observacao` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_produto_data` (`produto_id`,`data_hora`),
+  KEY `idx_doacao` (`doacao_id`),
+  CONSTRAINT `fk_mov_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_mov_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 14. Notificacoes
+CREATE TABLE `notificacoes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `tipo` enum('cadastro','estoque_baixo','transacao_financeira','evento_proximo') NOT NULL,
+  `titulo` varchar(200) NOT NULL,
+  `descricao` text NOT NULL,
+  `prioridade` enum('baixa','normal','alta','critica') NOT NULL DEFAULT 'normal',
+  `lida` tinyint(1) NOT NULL DEFAULT 0,
+  `usuario_id` int(11) DEFAULT NULL,
+  `referencia_id` int(11) DEFAULT NULL,
+  `referencia_tipo` enum('produto','evento','doacao','financeiro','idoso','doador','quarto') DEFAULT NULL,
+  `data_criacao` datetime NOT NULL DEFAULT current_timestamp(),
+  `data_leitura` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_notificacoes_usuario` (`usuario_id`),
+  KEY `idx_notificacoes_tipo` (`tipo`),
+  KEY `idx_notificacoes_prioridade` (`prioridade`),
+  KEY `idx_notificacoes_data_criacao` (`data_criacao`),
+  KEY `idx_notificacoes_lida` (`lida`),
+  KEY `idx_notificacoes_referencia` (`referencia_tipo`,`referencia_id`),
+  CONSTRAINT `fk_notificacoes_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
