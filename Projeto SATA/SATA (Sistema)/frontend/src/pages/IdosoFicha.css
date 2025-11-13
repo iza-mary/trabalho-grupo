@@ -81,14 +81,25 @@
   .ficha-content { margin-top: 0; margin-bottom: 0; padding-top: 0; }
   .ficha-section:first-of-type { margin-top: 0; }
   /* Espaçamento entre seções na saída impressa */
-  .ficha-section { margin: 8mm 0; }
+  .ficha-section { margin: 8mm 0; break-inside: avoid; page-break-inside: avoid; }
   /* Tabela: repetir cabeçalho */
   table { page-break-inside: auto; }
   thead { display: table-header-group; }
   tfoot { display: table-footer-group; }
   tr { page-break-inside: avoid; page-break-after: auto; }
+  /* Bordas com unidade física para consistência cross-browser */
+  .ficha-table th, .ficha-table td { border-width: 0.2mm !important; }
+  .ficha-table th { background: #f7f7f7 !important; }
+  /* Preservar cores na impressão */
+  html, body, .ficha-root { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   /* Quebras lógicas por seção */
   .page-break { break-after: page; page-break-after: always; }
+
+  /* Ajustes específicos para Firefox: reforço de bordas horizontais */
+  @supports (-moz-appearance: none) {
+    .ficha-table { border-collapse: separate !important; border-spacing: 0 !important; }
+    .ficha-table th, .ficha-table td { border-color: #999 !important; border-width: 1px !important; background-clip: padding-box; }
+  }
 }
 
 /* Tornar conteúdo legível em tela também */

@@ -1,6 +1,12 @@
 /* Regras globais para impressão e sanitização de quebras manuais */
 
+@page { size: A4; margin: 12mm; }
+
 @media print {
+  html, body, .ficha-root {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   
   /* Ocultar elementos marcados como não imprimíveis e seus descendentes */
   .no-print, .no-print * { display: none !important; visibility: hidden !important; }
@@ -27,7 +33,10 @@
   /* Preservar estrutura de tabela e cabeçalho/rodapé */
   thead { display: table-header-group; }
   tfoot { display: table-footer-group; }
-  tr { page-break-inside: avoid; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
+  table { border-collapse: collapse; }
+  .ficha-table th, .ficha-table td { border: 0.2mm solid #dddddd !important; }
+  .ficha-table th { background: #f7f7f7 !important; color: #000 !important; }
 
   /* Ocultar menu e barra lateral do sistema na impressão */
   .navbar-modern,
@@ -37,4 +46,23 @@
 
   /* Liberar o conteúdo para ocupar toda a área impressa */
   .page-content { padding: 0 !important; margin: 0 !important; min-height: auto !important; height: auto !important; }
+
+  /* Ajustes específicos por motor de renderização */
+  @supports (-webkit-hyphens: none) {
+    /* WebKit/Blink (Chrome) */
+    .ficha-table th, .ficha-table td { -webkit-print-color-adjust: exact; }
+    .page-break { -webkit-column-break-after: always; }
+  }
+
+  @supports (-moz-appearance: none) {
+    /* Firefox */
+    .ficha-table { border-collapse: separate !important; border-spacing: 0 !important; }
+    .ficha-table th, .ficha-table td {
+      print-color-adjust: exact;
+      border-color: #999 !important;
+      border-width: 1px !important;
+      background-clip: padding-box;
+    }
+    .page-break { break-after: page; page-break-after: always; }
+  }
 }
