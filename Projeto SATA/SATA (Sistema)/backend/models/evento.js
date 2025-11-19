@@ -90,3 +90,7 @@ class Evento {
 }
 
 module.exports = Evento;
+/*
+  Modelo Evento
+  - Intervalos de datas, título e descrição de eventos.
+*/

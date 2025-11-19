@@ -61,3 +61,7 @@ class Produto {
 }
 
 module.exports = Produto;
+/*
+  Modelo Produto
+  - Define estrutura e validações de produtos e limites de estoque.
+*/

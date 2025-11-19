@@ -17,3 +17,8 @@ router.post('/batch-update', async (req, res) => {
 });
 
 module.exports = router;
+/*
+  Rotas de Atualização de Nomes
+  - Endpoints utilitários para atualização e correção de nomes.
+  - Prefixo: `/api/nomes`.
+*/

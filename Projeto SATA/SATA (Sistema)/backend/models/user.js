@@ -45,3 +45,8 @@ class User {
 }
 
 module.exports = User;
+/*
+  Modelo User
+  - Representa usuário do sistema (atributos, validações, regras).
+  - Utilizado por repositórios e controladores de autenticação/usuários.
+*/

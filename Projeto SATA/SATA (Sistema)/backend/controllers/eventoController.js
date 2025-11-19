@@ -132,3 +132,7 @@ class EventoController {
 }
 
 module.exports = new EventoController();
+/*
+  Controlador de Eventos
+  - CRUD e listagem de eventos; lida com intervalos de data e ordenação.
+*/

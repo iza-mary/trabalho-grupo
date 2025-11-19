@@ -148,3 +148,8 @@ class ProdutoController {
 }
 
 module.exports = ProdutoController;
+/*
+  Controlador de Produtos
+  - CRUD de produtos, validações e movimentação de estoque.
+  - Integra com repositórios de produto e movimentação para registrar histórico.
+*/

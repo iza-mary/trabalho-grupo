@@ -159,3 +159,7 @@ class Idoso {
 }
 
 module.exports = Idoso;
+/*
+  Modelo Idoso
+  - Estrutura de dados para residentes, com validações.
+*/

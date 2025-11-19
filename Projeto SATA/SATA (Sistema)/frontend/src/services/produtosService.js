@@ -35,3 +35,7 @@ export async function listarMovimentos(id, params = {}) {
   const { data } = await api.get(`/produtos/${id}/historico`, { params });
   return data;
 }
+/*
+  Serviço de Produtos
+  - CRUD, movimentação e histórico de estoque.
+*/

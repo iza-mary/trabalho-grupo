@@ -24,16 +24,64 @@ export function AuthProvider({ children }) {
     return () => { mounted = false; };
   }, []);
 
+
+  const canAttempt = () => {
+    const now = Date.now();
+    const lockUntil = Number(localStorage.getItem('auth_lock_until') || 0);
+    if (lockUntil && now < lockUntil) {
+      const ms = lockUntil - now;
+      const s = Math.ceil(ms / 1000);
+      return { ok: false, error: `Bloqueado temporariamente. Tente novamente em ${s}s.` };
+    }
+    const windowStart = Number(localStorage.getItem('auth_attempts_window') || 0);
+    const windowMs = 10 * 60 * 1000;
+    if (!windowStart || now - windowStart > windowMs) {
+      localStorage.setItem('auth_attempts_window', String(now));
+      localStorage.setItem('auth_attempts_count', '0');
+    }
+    return { ok: true };
+  };
+
+  const registerFailure = () => {
+    const now = Date.now();
+    const windowStart = Number(localStorage.getItem('auth_attempts_window') || 0);
+    const count = Number(localStorage.getItem('auth_attempts_count') || 0);
+    const windowMs = 10 * 60 * 1000;
+    let newWindowStart = windowStart;
+    let newCount = count + 1;
+    if (!windowStart || now - windowStart > windowMs) {
+      newWindowStart = now;
+      newCount = 1;
+    }
+    localStorage.setItem('auth_attempts_window', String(newWindowStart));
+    localStorage.setItem('auth_attempts_count', String(newCount));
+    if (newCount >= 5) {
+      const lockMs = 5 * 60 * 1000;
+      localStorage.setItem('auth_lock_until', String(now + lockMs));
+    }
+  };
+
   const login = async (username, password) => {
+    const gate = canAttempt();
+    if (!gate.ok) return gate;
+    const u = String(username || '').trim();
+    const p = String(password || '');
+    if (!u || !p) return { ok: false, error: 'Informe o nome do usuário e a senha.' };
     try {
-      const res = await authService.login(username, password);
-      if (res?.success) {
+      const res = await authService.login(u, p);
+      if (res?.success && res?.user) {
         setUser(res.user);
+        localStorage.removeItem('auth_lock_until');
+        localStorage.removeItem('auth_attempts_window');
+        localStorage.removeItem('auth_attempts_count');
         return { ok: true };
       }
-      return { ok: false, error: res?.error || 'Falha no login' };
+      registerFailure();
+      return { ok: false, error: res?.error || 'Credenciais inválidas.' };
     } catch (e) {
-      return { ok: false, error: e?.response?.data?.error || e.message || 'Erro ao autenticar' };
+      registerFailure();
+      const msg = e?.response?.data?.error || e.message || 'Erro ao conectar ao servidor';
+      return { ok: false, error: msg };
     }
   };
 
@@ -105,3 +153,7 @@ export function AuthProvider({ children }) {
 }
 
 // Removido export useAuth daqui para evitar incompatibilidades do Fast Refresh
+/*
+  AuthContext
+  - Contexto global para estado de autenticação e métodos.
+*/

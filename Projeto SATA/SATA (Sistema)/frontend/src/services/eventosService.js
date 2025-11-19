@@ -66,3 +66,7 @@ const eventosService = {
 };
 
 export default eventosService;
+/*
+  Serviço de Eventos (coleção)
+  - Listagem e utilitários para eventos.
+*/

@@ -67,3 +67,7 @@ export async function criarNotificacaoEstoqueBaixo(produto, usuario_id = null) {
   });
   return data;
 }
+/*
+  Serviço de Notificações
+  - Contadores, listagem e marcação de leitura.
+*/

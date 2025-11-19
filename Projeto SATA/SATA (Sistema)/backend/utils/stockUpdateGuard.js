@@ -22,3 +22,7 @@ function computeStockUpdate(preQty, postQty, donatedQty) {
 }
 
 module.exports = { computeStockUpdate };
+/*
+  Guarda de Atualização de Estoque
+  - Impede alterações concorrentes ou inválidas em saldos de estoque.
+*/

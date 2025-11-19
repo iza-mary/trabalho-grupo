@@ -88,3 +88,7 @@ const internacaoService = {
 };
 
 export default internacaoService;
+/*
+  Serviço de Internações
+  - Abertura/encerramento e listagem de internações.
+*/

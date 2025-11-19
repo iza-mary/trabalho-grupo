@@ -54,3 +54,7 @@ export default {
   applySpacingNormalization,
   removeSpacingNormalization,
 };
+/*
+  PrintSanitizer
+  - Funções para sanitizar conteúdo antes de gerar impressão/relatórios.
+*/

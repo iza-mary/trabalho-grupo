@@ -9,3 +9,8 @@ router.post('/', DoacaoController.create);
 router.put("/:id", DoacaoController.update);
 router.delete("/:id", DoacaoController.delete);
 module.exports = router;
+/*
+  Rotas de Doações
+  - Endpoints para registrar e consultar doações (alimentos, dinheiro, outros).
+  - Prefixo: `/api/doacoes`.
+*/

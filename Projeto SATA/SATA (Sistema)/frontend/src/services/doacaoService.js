@@ -134,3 +134,7 @@ const doacoesService = {
 };
 
 export default doacoesService;
+/*
+  Serviço de Doações
+  - Operações de registro e consulta de doações.
+*/

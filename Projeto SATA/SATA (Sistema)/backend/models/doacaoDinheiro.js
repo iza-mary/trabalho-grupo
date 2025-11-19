@@ -10,3 +10,7 @@ class DoacaoDinheiro {
     }
 }
 module.exports = DoacaoDinheiro
+/*
+  Modelo Doação em Dinheiro
+  - Valores monetários e finalidade.
+*/

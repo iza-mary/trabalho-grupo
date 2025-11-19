@@ -149,3 +149,7 @@ const ProdutoRepository = {
 };
 
 module.exports = ProdutoRepository;
+/*
+  Repositório de Produtos
+  - Persistência e consultas paginadas de produtos, atualizações e deleções.
+*/

@@ -94,3 +94,7 @@ export const internacaoService = {
 };
 
 export default { quartoService, internacaoService };
+/*
+  Serviço de Quartos
+  - Consultas de ocupação e manutenção.
+*/

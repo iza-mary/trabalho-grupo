@@ -25,3 +25,7 @@ export function formatDateTime(raw) {
     return '-';
   }
 }
+/*
+  Utilitários de Data
+  - Funções para formatar e operar datas em padrão brasileiro.
+*/

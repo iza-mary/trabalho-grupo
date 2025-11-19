@@ -25,3 +25,7 @@ class DoacaoProduto {
 }
 
 module.exports = DoacaoProduto
+/*
+  Modelo Doação de Produto
+  - Detalha itens, quantidades e vínculo com estoque.
+*/

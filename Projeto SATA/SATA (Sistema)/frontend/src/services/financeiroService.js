@@ -30,3 +30,7 @@ export const financeiroService = {
 };
 
 export default financeiroService;
+/*
+  Serviço Financeiro
+  - Lançamentos e relatórios locais.
+*/

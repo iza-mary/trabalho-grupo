@@ -42,3 +42,7 @@ class Quarto {
 }
 
 module.exports = Quarto;
+/*
+  Modelo Quartos
+  - Estrutura para unidades de quarto e capacidade/ocupação.
+*/

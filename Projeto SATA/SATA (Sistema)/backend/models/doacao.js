@@ -64,3 +64,7 @@ class Doacao {
     }
 }
 module.exports = Doacao
+/*
+  Modelo Doação
+  - Estrutura comum de doações e campos compartilhados.
+*/

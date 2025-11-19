@@ -12,3 +12,8 @@ router.put('/:id', quartoController.update);
 router.delete('/:id', quartoController.delete);
 
 module.exports = router;
+/*
+  Rotas de Quartos
+  - Endpoints para ocupação, disponibilidade e manutenção de quartos.
+  - Prefixo: `/api/quartos`.
+*/

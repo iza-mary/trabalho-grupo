@@ -11,3 +11,7 @@ function isDuplicateDonation(existing, incoming) {
 }
 
 module.exports = { isDuplicateDonation };
+/*
+  Deduplicação de Doações
+  - Agrupa e evita registros duplicados de entradas de doação.
+*/

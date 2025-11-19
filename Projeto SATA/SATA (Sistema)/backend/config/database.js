@@ -216,3 +216,8 @@ module.exports = {
   ensureIndexes,
   ensureIntegrity,
 };
+/*
+  Configuração de Banco de Dados
+  - Inicializa conexão (MySQL/PostgreSQL/MSSQL) conforme variáveis de ambiente.
+  - Expõe métodos utilitários como `testConnection` para verificação.
+*/

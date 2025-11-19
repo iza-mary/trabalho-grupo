@@ -112,3 +112,7 @@ export function DialogProvider({ children }) {
 }
 
 // Observação: o hook useDialog foi movido para ./useDialog.js
+/*
+  DialogContext
+  - Contexto para modais/diálogos reutilizáveis na aplicação.
+*/

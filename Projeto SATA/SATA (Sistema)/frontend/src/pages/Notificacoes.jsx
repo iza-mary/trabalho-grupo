@@ -375,3 +375,7 @@ const Notificacoes = () => {
 };
 
 export default Notificacoes;
+/*
+  Página Notificações
+  - Lista notificações do usuário, contadores e marcações de leitura.
+*/

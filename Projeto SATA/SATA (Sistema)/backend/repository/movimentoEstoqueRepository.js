@@ -131,3 +131,7 @@ const MovimentoEstoqueRepository = {
 };
 
 module.exports = MovimentoEstoqueRepository;
+/*
+  Repositório de Movimentação de Estoque
+  - Registra entradas/saídas e oferece consultas paginadas por produto.
+*/

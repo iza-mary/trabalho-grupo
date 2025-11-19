@@ -209,3 +209,8 @@ class DoacaoController {
 }
 
 module.exports = new DoacaoController();
+/*
+  Controlador de Doações
+  - Gerencia registro e consulta de doações (alimentos, dinheiro e outros).
+  - Aplica validações e integra fluxo com estoque quando necessário.
+*/

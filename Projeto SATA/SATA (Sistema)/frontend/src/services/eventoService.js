@@ -38,3 +38,7 @@ export default {
     }
   }
 };
+/*
+  Serviço de Evento
+  - CRUD de eventos e filtros por intervalo.
+*/

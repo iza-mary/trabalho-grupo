@@ -17,3 +17,8 @@ function log(event, payload) {
 }
 
 module.exports = { logDeletion, logSecurityEvent, log };
+/*
+  Logger de Auditoria
+  - Utilitário para registro de ações e eventos de segurança.
+  - Não deve quebrar fluxo principal em caso de falhas.
+*/

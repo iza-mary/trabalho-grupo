@@ -166,3 +166,7 @@ export default function Register() {
     </Container>
   );
 }
+/*
+  Página Registro
+  - Cria contas de usuário com validações de formulário.
+*/

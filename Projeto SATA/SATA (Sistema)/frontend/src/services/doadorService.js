@@ -30,3 +30,7 @@ const doadorService = {
 };
 
 export default doadorService;
+/*
+  Serviço de Doadores
+  - Operações de CRUD e busca de doadores.
+*/

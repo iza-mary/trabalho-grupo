@@ -154,3 +154,8 @@ const DonationStockService = {
 };
 
 module.exports = { DonationStockService, ERROR_CODES };
+/*
+  Serviço de Estoque de Doações
+  - Consolida e deduplica movimentações de estoque provenientes de doações.
+  - Garante consistência ao atualizar saldos e registrar históricos.
+*/

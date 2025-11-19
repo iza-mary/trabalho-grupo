@@ -75,3 +75,7 @@ class Financeiro {
 }
 
 module.exports = Financeiro;
+/*
+  Modelo Financeiro
+  - Lançamentos de entradas/saídas e metadados de registro.
+*/

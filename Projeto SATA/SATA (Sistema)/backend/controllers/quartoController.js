@@ -197,3 +197,7 @@ class QuartoController {
 }
 
 module.exports = new QuartoController();
+/*
+  Controlador de Quartos
+  - Gestão de quartos: ocupação, disponibilidade e manutenção.
+*/

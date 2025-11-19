@@ -115,3 +115,7 @@ class Notificacao {
 }
 
 module.exports = Notificacao;
+/*
+  Modelo Notificação
+  - Representa alertas e status de leitura por usuário.
+*/

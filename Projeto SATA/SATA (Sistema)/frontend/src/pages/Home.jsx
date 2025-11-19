@@ -1,3 +1,9 @@
+/*
+  Página Home (Dashboard)
+  - Apresenta ações principais por módulo e métricas rápidas do sistema.
+  - Filtra ações por papel do usuário e carrega métricas em paralelo.
+  - Mantém UI acessível com rótulos ARIA e feedbacks visuais.
+*/
 import { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import Navbar from '../components/Navbar';
@@ -13,9 +19,11 @@ import financeiroService from '../services/financeiroService';
 import { listarProdutos } from '../services/produtosService';
 import { obterContadores } from '../services/notificacoesService';
 
+// Componente principal do dashboard
 export default function Home() {
   const { user } = useAuth();
 
+  // Grade de ações disponíveis por módulo; controlada por papel
   const actions = useMemo(() => ([
     { to: '/idosos', label: 'Idosos', icon: <PeopleFill />, desc: 'Listar e gerenciar idosos', variant: 'primary', roles: ['Admin', 'Funcionário'] },
     { to: '/internacoes', label: 'Internações', icon: <Building />, desc: 'Acompanhar internações ativas', variant: 'purple', roles: ['Admin', 'Funcionário'] },
@@ -25,14 +33,16 @@ export default function Home() {
     { to: '/financeiro', label: 'Financeiro', icon: <CashStack />, desc: 'Entradas e saídas locais', variant: 'indigo', roles: ['Admin', 'Funcionário'] },
     { to: '/doacoes', label: 'Doações', icon: <GiftFill />, desc: 'Registrar e revisar doações', variant: 'pink', roles: ['Admin', 'Funcionário'] },
     { to: '/doadores', label: 'Doadores', icon: <HeartFill />, desc: 'Cadastro e histórico', variant: 'cyan', roles: ['Admin', 'Funcionário'] },
-    { to: '/notificacoes', label: 'Notificações', icon: <BellFill />, desc: 'Alertas e pendências', variant: 'gray', roles: ['Admin'] },
+    { to: '/notificacoes', label: 'Notificações', icon: <BellFill />, desc: 'Alertas e pendências', variant: 'gray', roles: ['Admin', 'Funcionário'], disabledFor: ['Funcionário'] },
   ]), []);
 
+  // Aplica filtro por papel; defensivo para ausência de usuário
   const filteredActions = useMemo(() => {
-    if (!user) return actions; // página é protegida, mas defensivo
+    if (!user) return actions;
     return actions.filter(a => !a.roles || a.roles.includes(user.role));
   }, [actions, user]);
 
+  // Estado de métricas exibidas no painel
   const [metricas, setMetricas] = useState({
     idososAtivos: null,
     internacoesAtivas: null,
@@ -44,6 +54,7 @@ export default function Home() {
 
   const formatBRL = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v || 0));
 
+  // Carrega métricas em paralelo; calcula indicadores do mês corrente
   useEffect(() => {
     let mounted = true;
     const carregarMetricas = async () => {
@@ -132,6 +143,7 @@ export default function Home() {
     return () => { mounted = false; };
   }, [user?.id]);
 
+  // Mapeamento das métricas para cartões exibidos
   const stats = useMemo(() => ([
     { title: 'Idosos ativos', value: metricas.idososAtivos ?? '—', icon: <PeopleFill />, variant: 'primary' },
     { title: 'Internações em andamento', value: metricas.internacoesAtivas ?? '—', icon: <DoorClosed />, variant: 'purple' },
@@ -161,7 +173,15 @@ export default function Home() {
               <Col xs={12} lg={8}>
                 <section aria-label="Ações principais" className="action-grid fade-in">
                   {filteredActions.map((a) => (
-                    <ActionTile key={a.label} to={a.to} label={a.label} description={a.desc} icon={a.icon} variant={a.variant} />
+                    <ActionTile
+                      key={a.label}
+                      to={a.to}
+                      label={a.label}
+                      description={a.desc}
+                      icon={a.icon}
+                      variant={a.variant}
+                      disabled={user && a.disabledFor && a.disabledFor.includes(user.role)}
+                    />
                   ))}
                 </section>
               </Col>

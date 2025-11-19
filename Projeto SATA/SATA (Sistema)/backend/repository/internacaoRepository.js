@@ -264,3 +264,7 @@ class InternacaoRepository {
 }
 
 module.exports = new InternacaoRepository();
+/*
+  Repositório de Internações
+  - Persistência e consultas de internações ativas e histórico.
+*/

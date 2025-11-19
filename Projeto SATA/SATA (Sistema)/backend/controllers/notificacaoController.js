@@ -249,3 +249,7 @@ class NotificacaoController {
 }
 
 module.exports = new NotificacaoController();
+/*
+  Controlador de Notificações
+  - Consulta, contadores e marcação de leitura de notificações do usuário.
+*/

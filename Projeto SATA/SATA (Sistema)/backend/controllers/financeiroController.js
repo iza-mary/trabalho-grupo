@@ -56,3 +56,7 @@ class FinanceiroController {
 }
 
 module.exports = new FinanceiroController();
+/*
+  Controlador Financeiro
+  - Entradas e saídas locais, com filtros e cálculo de saldos.
+*/

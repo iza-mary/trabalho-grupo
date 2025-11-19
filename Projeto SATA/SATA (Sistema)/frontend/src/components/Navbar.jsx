@@ -96,11 +96,13 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
                   <CashStack className="me-2" size={18} /> <span className="label">Financeiro</span>
                 </Link>
               </li>
-              <li>
-                <Link to="/perfil" className="nav-item" onClick={closeOnNavigate}>
-                  <BsKeyFill className="me-2" size={18} /> <span className="label">Alterar senha</span>
-                </Link>
-              </li>
+              {user?.role === 'Admin' && (
+                <li>
+                  <Link to="/perfis" className="nav-item" onClick={closeOnNavigate}>
+                    <BsKeyFill className="me-2" size={18} /> <span className="label">Perfis</span>
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
           <div className="nav-right">
@@ -200,12 +202,14 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
             {/* Alternância de tema escuro/claro */}
             
 
-            {/* Conta: alterar senha */}
-            <li>
-              <Link to="/perfil" className="nav-item" onClick={closeOnNavigate}>
-                <BsKeyFill className="me-2" size={18} /> <span className="label">Alterar senha</span>
-              </Link>
-            </li>
+            {/* Gestão de perfis (somente Admin) */}
+            {user?.role === 'Admin' && (
+              <li>
+                <Link to="/perfis" className="nav-item" onClick={closeOnNavigate}>
+                  <BsKeyFill className="me-2" size={18} /> <span className="label">Perfis</span>
+                </Link>
+              </li>
+            )}
           </ul>
 
           {/* Área inferior fixa: info do usuário e botão sair */}
@@ -283,3 +287,7 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
 };
 
 export default Navbar;
+/*
+  Navbar
+  - Barra de navegação principal com contexto do usuário e ações.
+*/

@@ -15,3 +15,8 @@ router.put('/:id', eventoController.update);
 router.delete('/:id', eventoController.remove);
 
 module.exports = router;
+/*
+  Rotas de Eventos
+  - Endpoints para agenda, edição e consulta de eventos.
+  - Prefixo: `/api/eventos`.
+*/

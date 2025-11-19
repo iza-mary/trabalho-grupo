@@ -260,3 +260,7 @@ if (camaOcupada) {
 }
 
 module.exports = new InternacaoController();
+/*
+  Controlador de Internações
+  - Abertura, acompanhamento e encerramento de internações.
+*/

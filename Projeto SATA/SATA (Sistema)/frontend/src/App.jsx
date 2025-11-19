@@ -25,7 +25,9 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import Perfil from "./pages/Perfil";
+import Usuarios from "./pages/Usuarios";
+import Perfis from "./pages/Perfis";
+import ValidateEmail from "./pages/ValidateEmail";
 // Removido layout lateral; páginas usam o novo Navbar interno
 
 function App() {
@@ -36,7 +38,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/perfil" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Perfil /></ProtectedRoute>} />
+        <Route path="/perfis" element={<ProtectedRoute allowedRoles={["Admin"]}><Perfis /></ProtectedRoute>} />
+        <Route path="/validate-email" element={<ValidateEmail />} />
         <Route path="/doacoes" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Doacoes /></ProtectedRoute>} />
         <Route path="/idosos" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><SataListaIdosos /></ProtectedRoute>} />
         <Route path="/doadores" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><SataDoadores /></ProtectedRoute>} />
@@ -55,6 +58,7 @@ function App() {
         <Route path="/produtos/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><ProdutoFicha /></ProtectedRoute>} />
         {/* Notificações restritas a Admin */}
         <Route path="/notificacoes" element={<ProtectedRoute allowedRoles={["Admin"]}><Notificacoes /></ProtectedRoute>} />
+        <Route path="/usuarios" element={<ProtectedRoute allowedRoles={["Admin"]}><Usuarios /></ProtectedRoute>} />
         <Route path="/" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Home /></ProtectedRoute>} />
         <Route path="/cadastro" element={<ProtectedRoute allowedRoles={["Admin"]}><SataCadastroIdosos /></ProtectedRoute>} />
         <Route path="/editar/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><SataCadastroIdosos /></ProtectedRoute>} />

@@ -20,3 +20,8 @@ router.post('/cadastro', (req, res) => notificacaoController.criarNotificacaoCad
 router.post('/estoque-baixo', (req, res) => notificacaoController.criarNotificacaoEstoqueBaixo(req, res));
 
 module.exports = router;
+/*
+  Rotas de Notificações
+  - Endpoints para consulta, contadores e marcação de notificações.
+  - Prefixo: `/api/notificacoes`.
+*/

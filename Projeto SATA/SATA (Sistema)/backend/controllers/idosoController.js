@@ -423,3 +423,7 @@ async updateStatus(req, res) {
 }
 
 module.exports = new IdosoController();
+/*
+  Controlador de Idosos
+  - Cadastro, listagem e atualização de residentes.
+*/

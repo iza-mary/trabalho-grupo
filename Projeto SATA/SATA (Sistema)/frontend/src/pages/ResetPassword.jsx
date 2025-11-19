@@ -1,111 +1,102 @@
-import { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, Alert } from 'react-bootstrap';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import PasswordField from '../components/ui/PasswordField';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import { Container, Card, Form, Button, InputGroup, Alert } from 'react-bootstrap';
+import { Eye, EyeSlash } from 'react-bootstrap-icons';
+import authService from '../services/authService';
 
 export default function ResetPassword() {
-  const { resetPassword } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const [token, setToken] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [status, setStatus] = useState({ type: '', message: '' });
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  const isAcceptablePassword = (pw) => {
-    if (!pw || pw.length < 8) return false;
-    const lower = pw.toLowerCase();
-    const common = ['12345678','123456789','password','qwerty','abc123','111111','123123','senha','admin'];
-    if (common.includes(lower)) return false;
-    if (/^(.)\1{7,}$/.test(pw)) return false; // caracteres repetidos
-    if (lower.includes('abcdefghijklmnopqrstuvwxyz') || lower.includes('12345678')) return false; // sequências muito simples
-    return true;
-  };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const t = params.get('token');
-    if (t) setToken(t);
+    const t = params.get('token') || '';
+    setToken(t);
   }, [location.search]);
 
-  const handleSubmit = async (e) => {
+  const validate = () => {
+    const p = String(password || '');
+    const c = String(confirm || '');
+    if (p.length < 8 || !/\d/.test(p)) return 'A senha deve ter ao menos 8 caracteres e 1 número';
+    if (p !== c) return 'As senhas não coincidem';
+    return null;
+  };
+
+  const submit = async (e) => {
     e.preventDefault();
-    setStatus({ type: '', message: '' });
-
-    if (!token) {
-      setStatus({ type: 'danger', message: 'Link inválido ou expirado. Acesse o link enviado por email.' });
-      return;
-    }
-    if (!newPassword || !isAcceptablePassword(newPassword)) {
-      setStatus({
-        type: 'danger',
-        message: 'Senha fraca: mínimo 8 caracteres e evite senhas comuns (ex.: 12345678, password).',
-      });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setStatus({ type: 'danger', message: 'A confirmação da nova senha não confere.' });
-      return;
-    }
-
+    setError(''); setSuccess('');
+    const err = validate();
+    if (err) { setError(err); return; }
     setSubmitting(true);
-    const res = await resetPassword(token.trim(), newPassword);
-    setSubmitting(false);
-
-    if (res.ok) {
-      setStatus({ type: 'success', message: 'Senha redefinida com sucesso! Você já pode entrar.' });
-      setTimeout(() => navigate('/login'), 1500);
-    } else {
-      setStatus({ type: 'danger', message: res.error || 'Não foi possível redefinir a senha.' });
+    try {
+      const res = await authService.resetPassword(token, password);
+      if (res?.success) {
+        setSuccess('Senha redefinida com sucesso. Você já pode fazer login.');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError(res?.error || 'Falha ao redefinir senha');
+      }
+    } catch (e2) {
+      setError(e2?.response?.data?.error || e2.message || 'Erro ao redefinir senha');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <Container className="mt-5">
-      <Row className="justify-content-center">
-        <Col md={6} lg={5}>
-          <h1 className="mb-4">Redefinir Senha</h1>
-          {status.message && (
-            <Alert variant={status.type} role="alert">
-              {status.message}
-            </Alert>
-          )}
-          <Form onSubmit={handleSubmit} noValidate>
+    <Navbar>
+      <div className="content-area full-main">
+        <Container className="py-4" style={{ maxWidth: 680 }}>
+          <Card>
+            <Card.Body>
+              <h4 className="mb-3">Redefinir senha</h4>
+              {error && <Alert variant="danger">{error}</Alert>}
+              {success && <Alert variant="success">{success}</Alert>}
+              <Form onSubmit={submit} noValidate>
+                <Form.Group className="mb-3" controlId="password">
+                  <Form.Label>Nova senha</Form.Label>
+                  <InputGroup>
+                    <Form.Control type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <Button variant="outline-secondary" onClick={() => setShowPw(v => !v)} aria-label={showPw ? 'Ocultar senha' : 'Mostrar senha'}>
+                      {showPw ? <EyeSlash /> : <Eye />}
+                    </Button>
+                  </InputGroup>
+                  <Form.Text className="text-muted">A senha deve ter ao menos 8 caracteres e 1 número.</Form.Text>
+                </Form.Group>
 
-            {/* Nova senha com toggle */}
-            <PasswordField
-              id="newPassword"
-              label="Nova senha"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Digite a nova senha"
-              autoComplete="new-password"
-              required={true}
-              ariaRequired={true}
-            />
+                <Form.Group className="mb-3" controlId="confirm">
+                  <Form.Label>Confirmar nova senha</Form.Label>
+                  <InputGroup>
+                    <Form.Control type={showConfirm ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+                    <Button variant="outline-secondary" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? 'Ocultar confirmação' : 'Mostrar confirmação'}>
+                      {showConfirm ? <EyeSlash /> : <Eye />}
+                    </Button>
+                  </InputGroup>
+                </Form.Group>
 
-            {/* Confirmar nova senha com toggle */}
-            <PasswordField
-              id="confirmPassword"
-              label="Confirmar nova senha"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirme a nova senha"
-              autoComplete="new-password"
-              required={true}
-              ariaRequired={true}
-            />
-
-            <div className="d-grid">
-              <Button type="submit" variant="primary" disabled={submitting} aria-disabled={submitting}>
-                {submitting ? 'Redefinindo...' : 'Redefinir senha'}
-              </Button>
-            </div>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+                <div className="d-grid">
+                  <Button type="submit" variant="primary" disabled={submitting || !token}>
+                    {submitting ? 'Enviando...' : 'Redefinir senha'}
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Container>
+      </div>
+    </Navbar>
   );
 }
+/*
+  Página Reset de Senha
+  - Consome token e aplica nova senha conforme política.
+*/

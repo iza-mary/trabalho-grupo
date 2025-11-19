@@ -115,3 +115,7 @@ const idosoService = {
 };
 
 export default idosoService;
+/*
+  Serviço de Idosos
+  - CRUD e consultas de residentes.
+*/

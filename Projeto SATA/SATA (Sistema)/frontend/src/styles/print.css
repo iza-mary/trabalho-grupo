@@ -50,7 +50,7 @@
   /* Ajustes específicos por motor de renderização */
   @supports (-webkit-hyphens: none) {
     /* WebKit/Blink (Chrome) */
-    .ficha-table th, .ficha-table td { -webkit-print-color-adjust: exact; }
+    .ficha-table th, .ficha-table td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .page-break { -webkit-column-break-after: always; }
   }
 

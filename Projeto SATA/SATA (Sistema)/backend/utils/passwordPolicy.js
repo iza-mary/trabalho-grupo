@@ -29,3 +29,7 @@ function checkPassword(password) {
 }
 
 module.exports = { checkPassword };
+/*
+  Política de Senha
+  - Valida regras mínimas de senha e retorna mensagens de erro amigáveis.
+*/

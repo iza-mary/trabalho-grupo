@@ -1,3 +1,9 @@
+/*
+  Middleware de Autenticação e Autorização
+  - `authenticate`: valida `JWT` obtido de cookie httpOnly ou header Bearer.
+  - `authorizeRoles`: restringe acesso a papéis específicos.
+  - `roleAccessControl`: leitura liberada; escrita somente para Admin.
+*/
 const jwt = require('jsonwebtoken');
 
 const normalizeRole = (role) => {
@@ -21,9 +27,10 @@ function authenticate(req, res, next) {
     const secret = process.env.JWT_SECRET;
     if (!secret) return res.status(500).json({ success: false, error: 'Configuração de JWT ausente' });
     const payload = jwt.verify(token, secret);
-    // Normaliza papel no payload para consistência
+    // Normaliza papel no payload
     payload.role = normalizeRole(payload.role);
-    req.user = payload; // { id, username, role }
+    // Define usuário na requisição
+    req.user = payload;
     next();
   } catch (err) {
     return res.status(401).json({ success: false, error: 'Token inválido ou expirado' });

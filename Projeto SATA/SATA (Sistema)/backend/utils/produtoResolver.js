@@ -142,3 +142,7 @@ async function upsertProdutoFast(conn, { nome, categoria, unidade }) {
 }
 
 module.exports = { resolveProduto, normalizeName, upsertProdutoFast };
+/*
+  Resolver de Produto
+  - Funções auxiliares para normalização e validações de produtos.
+*/

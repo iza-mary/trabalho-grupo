@@ -178,3 +178,7 @@ class IdosoRepository {
 }
 
 module.exports = new IdosoRepository();
+/*
+  Repositório de Idosos
+  - CRUD e buscas relacionadas a residentes.
+*/

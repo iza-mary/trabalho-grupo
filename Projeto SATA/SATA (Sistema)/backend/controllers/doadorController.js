@@ -256,3 +256,7 @@ class DoadorController {
 }
 
 module.exports = new DoadorController();
+/*
+  Controlador de Doadores
+  - CRUD de doadores, filtros e histórico de contribuições.
+*/

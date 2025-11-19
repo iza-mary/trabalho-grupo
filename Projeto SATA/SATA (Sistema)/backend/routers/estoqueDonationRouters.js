@@ -47,3 +47,8 @@ router.post('/processar-item', async (req, res) => {
 });
 
 module.exports = router;
+/*
+  Rotas de Estoque de Doações
+  - Endpoints para consulta e ajustes de estoque relacionado a doações.
+  - Prefixo: `/api/estoque/doacoes`.
+*/

@@ -99,3 +99,7 @@ async function batchUpdate({ tipo, updates, chunkSize = 200, concurrency = 3 }) 
 }
 
 module.exports = { batchUpdate };
+/*
+  Serviço de Atualização de Nomes
+  - Regras utilitárias para atualização/correção de nomes em registros.
+*/

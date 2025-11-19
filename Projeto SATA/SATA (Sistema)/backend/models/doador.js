@@ -104,3 +104,7 @@ class Doador {
 }
 
 module.exports = Doador;
+/*
+  Modelo Doador
+  - Representa doadores com dados de contato e histórico.
+*/

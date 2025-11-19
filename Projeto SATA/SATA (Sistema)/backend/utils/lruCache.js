@@ -23,3 +23,7 @@ class LRUCache {
 }
 
 module.exports = LRUCache;
+/*
+  Cache LRU simples
+  - Evita recomputação e acessos frequentes a dados com política LRU.
+*/

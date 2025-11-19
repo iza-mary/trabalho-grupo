@@ -11,3 +11,8 @@ router.put("/:id", doadorController.update);
 router.delete("/:id", doadorController.delete);
 router.post("/filtrar", doadorController.getByBusca);
 module.exports = router;
+/*
+  Rotas de Doadores
+  - Endpoints para cadastro, busca e histórico de doadores.
+  - Prefixo: `/api/doadores`.
+*/

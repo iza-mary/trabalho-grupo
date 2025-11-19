@@ -25,3 +25,7 @@ const donationStockService = {
 };
 
 export default donationStockService;
+/*
+  Serviço de Estoque de Doações (Frontend)
+  - Chamadas relacionadas a saldo e histórico de estoque de doações.
+*/
