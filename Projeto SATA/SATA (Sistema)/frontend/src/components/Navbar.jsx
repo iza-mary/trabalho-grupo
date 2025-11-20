@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import './Navbar.css';
 import { Modal, Button } from 'react-bootstrap';
 
-const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
+const Navbar = ({ children, disableSidebar = false, sidebarInactive = false, sidebarExtra = null, minimal = false, noMainPadding = false }) => {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -28,12 +28,53 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
     }
   };
 
-  // Se a sidebar estiver desativada, garantir que não fique aberta
   useEffect(() => {
     if (disableSidebar && open) {
       setOpen(false);
     }
   }, [disableSidebar, open]);
+
+  useEffect(() => {
+    const el = document.getElementById('sidebar');
+    if (!el) return;
+    const stop = (e) => {
+      if (!sidebarInactive) return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    const focusables = el.querySelectorAll('a, button, input, select, textarea, [tabindex]');
+    if (sidebarInactive) {
+      focusables.forEach((node) => {
+        const prev = node.getAttribute('tabindex');
+        if (prev !== null) node.dataset.prevTabIndex = prev;
+        node.setAttribute('tabindex', '-1');
+        node.setAttribute('aria-disabled', 'true');
+        node.addEventListener('click', stop, true);
+        node.addEventListener('keydown', stop, true);
+        node.addEventListener('mousedown', stop, true);
+        node.addEventListener('touchstart', stop, true);
+      });
+    } else {
+      focusables.forEach((node) => {
+        const prev = node.dataset.prevTabIndex;
+        if (prev !== undefined) node.setAttribute('tabindex', prev);
+        else node.removeAttribute('tabindex');
+        node.removeAttribute('aria-disabled');
+        node.removeEventListener('click', stop, true);
+        node.removeEventListener('keydown', stop, true);
+        node.removeEventListener('mousedown', stop, true);
+        node.removeEventListener('touchstart', stop, true);
+      });
+    }
+    return () => {
+      focusables.forEach((node) => {
+        node.removeEventListener('click', stop, true);
+        node.removeEventListener('keydown', stop, true);
+        node.removeEventListener('mousedown', stop, true);
+        node.removeEventListener('touchstart', stop, true);
+      });
+    };
+  }, [sidebarInactive]);
 
   
 
@@ -41,7 +82,7 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
     <div className={open ? "menu-open" : ""}>
 
       {/* Navbar superior quando sidebar estiver desativada */}
-      {disableSidebar && (
+      {disableSidebar && !minimal && (
         <header className="navbar-modern" role="navigation" aria-label="Menu superior">
           <div className="nav-left">
             <span className="brand">SATA</span>
@@ -117,7 +158,11 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
 
       {/* Sidebar lateral moderna (renderiza quando não desativada) */}
       {!disableSidebar && (
-        <aside id="sidebar" className={`sidebar ${open ? "open" : "collapsed"}`} aria-disabled={'false'}>
+        <aside
+          id="sidebar"
+          className={`sidebar ${open ? "open" : "collapsed"}${sidebarInactive ? ' inactive' : ''}`}
+          aria-disabled={sidebarInactive ? 'true' : 'false'}
+        >
           <div className="sidebar-header">
             <div className="brand">SATA</div>
             <button
@@ -127,6 +172,7 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
               aria-controls="sidebar"
               aria-expanded={open ? 'true' : 'false'}
               onClick={() => setOpen(!open)}
+              disabled={sidebarInactive}
             >
               {open ? <BsChevronLeft size={18} /> : <BsChevronRight size={18} />}
             </button>
@@ -265,7 +311,7 @@ const Navbar = ({ children, disableSidebar = false, sidebarExtra = null }) => {
       {open && !disableSidebar && <div className="backdrop d-md-none" onClick={() => setOpen(false)} />}
 
       {/* Conteúdo principal */}
-      <main className="page-content nav-themed">
+      <main className={`page-content nav-themed${noMainPadding ? ' no-padding' : ''}`}>
         {children}
       </main>
 

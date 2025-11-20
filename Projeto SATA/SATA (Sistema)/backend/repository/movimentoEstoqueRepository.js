@@ -67,7 +67,6 @@ const MovimentoEstoqueRepository = {
   },
 
   async create(mov) {
-    await this.ensureTable();
     const sql = `INSERT INTO movimentos_estoque
       (produto_id, tipo, quantidade, saldo_anterior, saldo_posterior, doacao_id, responsavel_id, responsavel_nome, motivo, observacao)
       VALUES (?,?,?,?,?,?,?,?,?,?)`;
@@ -83,12 +82,23 @@ const MovimentoEstoqueRepository = {
       mov.motivo ?? null,
       mov.observacao ?? null,
     ];
-    const [result] = await db.execute(sql, params);
-    return result.insertId;
+    try {
+      const [result] = await db.execute(sql, params);
+      return result.insertId;
+    } catch (err) {
+      const msg = String(err?.message || '');
+      const code = String(err?.code || '');
+      const isLockTimeout = msg.includes('Lock wait timeout') || code === 'ER_LOCK_WAIT_TIMEOUT';
+      if (isLockTimeout) {
+        try { await new Promise(r => setTimeout(r, 50)); } catch (_) {}
+        const [retry] = await db.execute(sql, params);
+        return retry.insertId;
+      }
+      throw err;
+    }
   },
 
   async searchPaginated({ produtoId, startDate, endDate, search, sort = 'data_hora', order = 'DESC', page = 1, pageSize = 10 }) {
-    await this.ensureTable();
     const where = ['produto_id = ?'];
     const params = [produtoId];
     if (startDate) { where.push('data_hora >= ?'); params.push(startDate); }

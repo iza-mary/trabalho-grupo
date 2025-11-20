@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Container, Row, Col, Form, Button, Alert, Card } from 'react-bootstrap';
+import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
+import Navbar from '../components/Navbar';
+import PasswordField from '../components/ui/PasswordField';
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -43,39 +45,36 @@ export default function Login() {
   };
 
   return (
-    <div className="content-area full-main d-flex align-items-center" style={{ minHeight: '100vh' }}>
-      <Container>
-        <Row className="justify-content-center">
-          <Col md={6} lg={4}>
-            <Card>
-              <Card.Body>
-                <div className="mb-3 text-center">
-                  <h1 className="h4 mb-1">Autenticação</h1>
-                  <div className="text-muted">Digite seu usuário e senha</div>
-                </div>
-                {error && <Alert variant="danger" role="alert">{error}</Alert>}
-                <Form onSubmit={handleSubmit} noValidate>
-                  <Form.Group className="mb-3" controlId="username">
-                    <Form.Label>Usuário</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      autoComplete="username"
-                      required
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3" controlId="password">
-                    <Form.Label>Senha</Form.Label>
-                    <Form.Control
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      autoComplete="current-password"
-                      required
-                    />
+    <Navbar disableSidebar minimal noMainPadding>
+      <div className="content-area full-main d-flex justify-content-center align-items-start" style={{ minHeight: '100vh', paddingTop: '12vh' }}>
+        <Container fluid>
+          <Card style={{ width: '100%', maxWidth: 500 }} className="p-3 mx-auto">
+            <Card.Body>
+              <div className="mb-3 text-center">
+                <h1 className="h4 mb-1">Autenticação</h1>
+                <div className="text-muted">Digite seu usuário e senha</div>
+              </div>
+              {error && <Alert variant="danger" role="alert">{error}</Alert>}
+              <Form onSubmit={handleSubmit} noValidate>
+                <Form.Group className="mb-3" controlId="username">
+                  <Form.Label>Usuário</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    required
+                  />
                 </Form.Group>
-                <div className="d-grid">
+                <PasswordField
+                  id="password"
+                  label="Senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+                <div className="d-grid" style={{ marginTop: 24 }}>
                   <Button type="submit" variant="primary" disabled={submitting}>
                     {submitting ? 'Entrando...' : 'Entrar'}
                   </Button>
@@ -85,11 +84,10 @@ export default function Login() {
                 </div>
               </Form>
             </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </div>
+          </Card>
+        </Container>
+      </div>
+    </Navbar>
   );
 }
 /*

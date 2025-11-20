@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Badge, Spinner } from 'react-bootstrap';
+import logo from '../styles/Logo sem fundo.png';
+import { downloadPdf } from '../utils/pdf';
 import { Link, useLocation } from 'react-router-dom';
 import financeiroService from '../services/financeiroService';
 import { removeManualPageBreaks, applySpacingNormalization, removeSpacingNormalization } from '../utils/printSanitizer';
@@ -118,6 +120,20 @@ const LivroCaixaPrint = () => {
   }, [loading]);
 
   const pageTitle = 'Livro Caixa';
+  
+  const handleDownloadPdf = async () => {
+    const root = containerRef.current;
+    if (!root) return;
+    root.classList.add('no-manual-breaks');
+    removeManualPageBreaks(root);
+    applySpacingNormalization(root);
+    try {
+      await downloadPdf(root, `${pageTitle}.pdf`);
+    } finally {
+      root.classList.remove('no-manual-breaks');
+      removeSpacingNormalization(root);
+    }
+  };
   const rangeLabel = (() => {
     if (period === 'custom') {
       return `${startDate || 'início'} - ${endDate || 'fim'}`;
@@ -134,14 +150,16 @@ const LivroCaixaPrint = () => {
           </div>
           <div>
             <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+            <Button variant="outline-secondary" className="ms-2" onClick={handleDownloadPdf}>Baixar PDF</Button>
           </div>
         </div>
         <header className="ficha-header d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center gap-3">
-            <img src="/vite.svg" alt="Logo" className="ficha-logo" />
+            <img src={logo} alt="Logo" className="ficha-logo" />
             <div>
               <div className="ficha-title h5 mb-0">{pageTitle}</div>
               <div className="ficha-meta small text-muted">Período: {rangeLabel} · Gerado em {new Date().toLocaleDateString('pt-BR')}</div>
+              
             </div>
           </div>
         </header>
@@ -182,6 +200,7 @@ const LivroCaixaPrint = () => {
             </section>
           )}
         </main>
+        
       </div>
     </div>
   );

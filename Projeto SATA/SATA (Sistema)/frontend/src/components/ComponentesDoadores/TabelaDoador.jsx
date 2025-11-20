@@ -5,15 +5,22 @@ import StandardTable from "../ui/StandardTable";
 import { formatDate } from "../../utils/dateUtils";
 import { useAuth } from '../../hooks/useAuth';
 import { formatarCPF, formatarCNPJ, validarCPF, validarCNPJ } from '../../pages/validacoes';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handleDeletar }) {
+function TabelaDoadores({ doadores, ativaModal, setDoadorEditar, onDelete, handleDeletar, printUrl }) {
   const [deletar, setDeletar] = useState(false);
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
       <Card>
+        <Card.Header className="d-flex align-items-center justify-content-between">
+          <h5 className="mb-0">Doadores</h5>
+          <Button variant="outline-secondary" onClick={() => navigate(printUrl || '/doadores/impressao')}>
+            Imprimir
+          </Button>
+        </Card.Header>
         <Card.Body>
           <div className="table-responsive">
             {doadores.length === 0 ? (

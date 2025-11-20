@@ -71,10 +71,7 @@ const authService = {
     return data;
   },
 
-  async adminSetStatus(id, status) {
-    const { data } = await api.patch(`/users/${id}/status`, { status }, { headers: csrfHeader() });
-    return data;
-  },
+  // Removido: endpoint de atualização de status de usuários
 
   async resendEmailValidation(id) {
     const { data } = await api.post(`/users/${id}/resend-validation`, {}, { headers: csrfHeader() });

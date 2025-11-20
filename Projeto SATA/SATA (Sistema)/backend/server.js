@@ -28,6 +28,7 @@ const estoqueDonationRouters = require('./routers/estoqueDonationRouters');
 const nomeUpdateRouters = require('./routers/nomeUpdateRouters');
 const db = require('./config/database');
 const { mountSwagger } = require('./swagger');
+const MovimentoEstoqueRepository = require('./repository/movimentoEstoqueRepository');
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -95,4 +96,5 @@ mountSwagger(app);
 app.listen(port, '0.0.0.0', () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
     db.testConnection().catch(err => console.error('Falha na verificação do banco:', err.message));
+    try { MovimentoEstoqueRepository.ensureTable(); } catch (e) { console.error('Falha ao garantir tabela de movimentos:', e.message); }
 });

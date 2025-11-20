@@ -37,6 +37,16 @@ export default {
       throw err;
     }
   }
+  ,
+  async getById(id) {
+    try {
+      const ev = await eventosService.getById(id);
+      return ev || null;
+    } catch (err) {
+      console.error('Erro ao obter evento por ID (frontend):', err?.response?.data?.message || err?.message || err);
+      throw err;
+    }
+  }
 };
 /*
   Serviço de Evento

@@ -50,7 +50,6 @@ function authorizeRoles(...roles) {
 }
 
 function roleAccessControl(req, res, next) {
-  // Libera leitura e preflight para Funcionário; escrita só Admin
   const fullPath = `${req.baseUrl || ''}${req.path || ''}`;
   const allowedReadPosts = ['/api/doacoes/filtrar', '/api/doadores/filtrar'];
   const isReadOp = req.method === 'GET' || req.method === 'OPTIONS' || (req.method === 'POST' && allowedReadPosts.includes(fullPath));
@@ -58,7 +57,10 @@ function roleAccessControl(req, res, next) {
   if (!req.user) return res.status(401).json({ success: false, error: 'Não autenticado' });
   const current = normalizeRole(req.user.role);
   if (current !== 'Admin') {
-    return res.status(403).json({ success: false, error: 'Acesso restrito a Administradores' });
+    const canWriteFuncionario = fullPath.startsWith('/api/idosos');
+    if (!canWriteFuncionario) {
+      return res.status(403).json({ success: false, error: 'Acesso restrito a Administradores' });
+    }
   }
   next();
 }

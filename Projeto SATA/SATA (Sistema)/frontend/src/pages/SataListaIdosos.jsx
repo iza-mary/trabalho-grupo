@@ -279,6 +279,18 @@ const SataListaIdosos = () => {
               </Card>
 
               <Card>
+                <Card.Header className="d-flex align-items-center justify-content-between">
+                  <h5 className="mb-0">Idosos</h5>
+                  <Button variant="outline-secondary" onClick={() => {
+                    const params = new URLSearchParams();
+                    if (filtroStatus) params.set('status', filtroStatus);
+                    if (filtroOrdenacao) params.set('ordenacao', filtroOrdenacao);
+                    if (termoBusca) params.set('busca', termoBusca);
+                    navigate(`/idosos/impressao?${params.toString()}`)
+                  }}>
+                    Imprimir
+                  </Button>
+                </Card.Header>
                 <Card.Body>
                     {idososOrdenados.length === 0 ? (
                       <Alert variant="warning">

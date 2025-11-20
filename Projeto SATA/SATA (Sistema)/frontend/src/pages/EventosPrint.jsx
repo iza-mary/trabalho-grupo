@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Badge, Spinner } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import logo from '../styles/Logo sem fundo.png';
+import { downloadPdf } from '../utils/pdf';
+import { Link, useLocation } from 'react-router-dom';
 import eventoService from '../services/eventoService';
 import { removeManualPageBreaks, applySpacingNormalization, removeSpacingNormalization } from '../utils/printSanitizer';
 import '../styles/ficha.css';
@@ -39,6 +41,13 @@ const EventosPrint = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const containerRef = useRef(null);
+  const location = useLocation();
+  const q = new URLSearchParams(location.search);
+  const filtroTipo = q.get('tipo') || '';
+  const termoBusca = q.get('busca') || '';
+  const dataInicio = q.get('dataInicio') || '';
+  const dataFim = q.get('dataFim') || '';
+  const ordenacao = q.get('ordenacao') || 'data_desc';
 
   const loadEventos = async () => {
     setLoading(true);
@@ -56,13 +65,60 @@ const EventosPrint = () => {
   useEffect(() => { loadEventos(); }, []);
 
   const visibleEventos = useMemo(() => {
-    return [...eventos]
-      .sort((a, b) => {
-        const ad = new Date(a.dataInicio || a.dataFim || '0001-01-01').getTime();
-        const bd = new Date(b.dataInicio || b.dataFim || '0001-01-01').getTime();
-        return bd - ad; // mais recentes primeiro
+    let lista = Array.isArray(eventos) ? [...eventos] : [];
+    if (filtroTipo) {
+      const ft = filtroTipo.toLowerCase();
+      lista = lista.filter(e => (e.tipo || '').toLowerCase().includes(ft));
+    }
+    if (termoBusca) {
+      const t = termoBusca.toLowerCase();
+      lista = lista.filter(e => (e.titulo || '').toLowerCase().includes(t) || (e.descricao || '').toLowerCase().includes(t) || (e.local || '').toLowerCase().includes(t));
+    }
+    const parseDate = (dStr) => {
+      if (!dStr) return null;
+      const d = new Date(dStr);
+      return isNaN(d.getTime()) ? null : d;
+    };
+    const di = parseDate(dataInicio);
+    const df = parseDate(dataFim);
+    if (di) {
+      lista = lista.filter(e => {
+        const start = parseDate(e.dataInicio) || parseDate(e.dataFim);
+        return start ? start >= di : true;
       });
-  }, [eventos]);
+    }
+    if (df) {
+      lista = lista.filter(e => {
+        const end = parseDate(e.dataFim) || parseDate(e.dataInicio);
+        return end ? end <= df : true;
+      });
+    }
+    switch (ordenacao) {
+      case 'data_asc':
+        lista.sort((a, b) => {
+          const aStart = parseDate(a.dataInicio) || parseDate(a.dataFim) || new Date('9999-12-31');
+          const bStart = parseDate(b.dataInicio) || parseDate(b.dataFim) || new Date('9999-12-31');
+          return aStart - bStart;
+        });
+        break;
+      case 'data_desc':
+        lista.sort((a, b) => {
+          const aStart = parseDate(a.dataInicio) || parseDate(a.dataFim) || new Date('0001-01-01');
+          const bStart = parseDate(b.dataInicio) || parseDate(b.dataFim) || new Date('0001-01-01');
+          return bStart - aStart;
+        });
+        break;
+      case 'titulo_asc':
+        lista.sort((a, b) => (a.titulo || '').localeCompare(b.titulo || ''));
+        break;
+      case 'titulo_desc':
+        lista.sort((a, b) => (b.titulo || '').localeCompare(a.titulo || ''));
+        break;
+      default:
+        break;
+    }
+    return lista;
+  }, [eventos, filtroTipo, termoBusca, dataInicio, dataFim, ordenacao]);
 
   const handlePrint = () => {
     const root = containerRef.current;
@@ -90,6 +146,20 @@ const EventosPrint = () => {
   }, [loading]);
 
   const pageTitle = 'Eventos';
+  
+  const handleDownloadPdf = async () => {
+    const root = containerRef.current;
+    if (!root) return;
+    root.classList.add('no-manual-breaks');
+    removeManualPageBreaks(root);
+    applySpacingNormalization(root);
+    try {
+      await downloadPdf(root, `${pageTitle}.pdf`);
+    } finally {
+      root.classList.remove('no-manual-breaks');
+      removeSpacingNormalization(root);
+    }
+  };
 
   return (
     <div className="container-fluid py-3 ficha-root">
@@ -100,15 +170,17 @@ const EventosPrint = () => {
           </div>
           <div>
             <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+            <Button variant="outline-secondary" className="ms-2" onClick={handleDownloadPdf}>Baixar PDF</Button>
           </div>
         </div>
 
         <header className="ficha-header d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center gap-3">
-            <img src="/vite.svg" alt="Logo" className="ficha-logo" />
+            <img src={logo} alt="Logo" className="ficha-logo" />
             <div>
               <div className="ficha-title h5 mb-0">{pageTitle}</div>
               <div className="ficha-meta small text-muted">Gerado em {new Date().toLocaleDateString('pt-BR')}</div>
+              
             </div>
           </div>
         </header>
@@ -158,6 +230,7 @@ const EventosPrint = () => {
             </section>
           )}
         </main>
+        
       </div>
     </div>
   );

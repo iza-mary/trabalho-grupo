@@ -25,6 +25,18 @@ const eventosService = {
     }
   },
 
+  async getById(id) {
+    try {
+      const res = await api.get(`/eventos/${id}`);
+      const data = res.data;
+      if (data?.success) return data.data || null;
+      return data || null;
+    } catch (err) {
+      console.error('Erro ao buscar evento por ID:', err?.response?.data?.message || err?.message || err);
+      throw err;
+    }
+  },
+
   async create(payload) {
     try {
       const res = await api.post('/eventos', payload);

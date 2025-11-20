@@ -3,7 +3,7 @@ import api from './api';
 const donationStockService = {
   async buscarSimilares(nome = '', categoria = '') {
     try {
-      const { data } = await api.post('/estoque/doacoes/similares', { nome, categoria });
+      const { data } = await api.post('/estoque/doacoes/similares', { nome, categoria }, { timeout: 1200 });
       if (data?.success) return Array.isArray(data?.data) ? data.data : [];
       return Array.isArray(data) ? data : [];
     } catch (err) {

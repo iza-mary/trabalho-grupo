@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Container, Row, Col, Form, Button, Alert } from 'react-bootstrap';
+import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import Navbar from '../components/Navbar';
 
 export default function ForgotPassword() {
   const { forgotPassword } = useAuth();
@@ -36,37 +37,41 @@ export default function ForgotPassword() {
   };
 
   return (
-    <Container className="mt-5">
-      <Row className="justify-content-center">
-        <Col md={6} lg={5}>
-          <h1 className="mb-4">Esqueci minha senha</h1>
-          {status.message && (
-            <Alert variant={status.type} role="alert">
-              {status.message}
-            </Alert>
-          )}
-          <Form onSubmit={handleSubmit} noValidate>
-            <Form.Group className="mb-3" controlId="email">
-              <Form.Label>Email cadastrado</Form.Label>
-              <Form.Control
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seuemail@exemplo.com"
-                autoComplete="email"
-                required
-                aria-required="true"
-              />
-            </Form.Group>
+    <Navbar disableSidebar minimal noMainPadding>
+      <div className="content-area full-main d-flex justify-content-center align-items-start" style={{ minHeight: '100vh', paddingTop: '12vh' }}>
+        <Container fluid>
+          <Card style={{ width: '100%', maxWidth: 500 }} className="p-3 mx-auto">
+            <Card.Body>
+              <Card.Title className="mb-3">Esqueci minha senha</Card.Title>
+              {status.message && (
+                <Alert variant={status.type} role="alert" className="mb-3">
+                  {status.message}
+                </Alert>
+              )}
+              <Form onSubmit={handleSubmit} noValidate>
+                <Form.Group className="mb-3" controlId="email">
+                  <Form.Label>Email cadastrado</Form.Label>
+                  <Form.Control
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seuemail@exemplo.com"
+                    autoComplete="email"
+                    required
+                    aria-required="true"
+                  />
+                </Form.Group>
 
-            <div className="d-grid">
-              <Button type="submit" variant="primary" disabled={submitting} aria-disabled={submitting}>
-                {submitting ? 'Enviando...' : 'Enviar instruções'}
-              </Button>
-            </div>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+                <div className="d-grid" style={{ marginTop: 24 }}>
+                  <Button type="submit" variant="primary" disabled={submitting} aria-disabled={submitting}>
+                    {submitting ? 'Enviando...' : 'Enviar instruções'}
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Container>
+      </div>
+    </Navbar>
   );
 }

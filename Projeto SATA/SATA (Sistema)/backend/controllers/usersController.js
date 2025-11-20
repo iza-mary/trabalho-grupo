@@ -115,30 +115,7 @@ class UsersController {
     }
   }
 
-  /*
-    Atualizar status
-    Parâmetros: `id` (params), `status` (body: 'ativo'|'inativo')
-    - Impede inativação do admin padrão e registra auditoria.
-  */
-  async setStatus(req, res) {
-    try {
-      const { id } = req.params;
-      const { status } = req.body;
-      if (!['ativo','inativo'].includes(String(status))) return res.status(400).json({ success: false, error: 'Status inválido' });
-      const target = await UserRepository.findById(id);
-      if (!target) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
-      const defaultAdminUser = process.env.DEFAULT_ADMIN_USER || 'S4TAdmin';
-      if (String(target.username) === defaultAdminUser && String(status) === 'inativo') {
-        return res.status(400).json({ success: false, error: 'Não é possível inativar o usuário administrador padrão' });
-      }
-      const ok = await UserRepository.setStatus(id, status);
-      if (!ok) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
-      try { const { log } = require('../utils/auditLogger'); log('user.status', { id, status, actor: req.user || null }); } catch {}
-      return res.json({ success: true });
-    } catch (err) {
-      return res.status(500).json({ success: false, error: 'Erro ao atualizar status', detail: err.message });
-    }
-  }
+  // Removido: atualização de status via endpoint administrativo
 
   /*
     Validar email

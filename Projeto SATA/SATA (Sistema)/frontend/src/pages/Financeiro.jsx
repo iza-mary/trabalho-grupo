@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
 import StandardTable from '../components/ui/StandardTable';
 import financeiroService from '../services/financeiroService';
-import { CashStack, Funnel, Pencil, Trash, PlusCircle, CalendarEvent } from 'react-bootstrap-icons';
+import { CashStack, Funnel, Pencil, Trash, PlusCircle, CalendarEvent, Eye } from 'react-bootstrap-icons';
 import { Button, Col, Form, Row, Spinner, Alert, Card, Badge, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import '../styles/financeiro.css';
@@ -679,7 +679,18 @@ const Financeiro = () => {
                      <td>{d.categoria ?? '-'}</td>
                      <td>{d.recorrente ? 'Sim' : 'Não'}</td>
                      <td className="botoes-acao">
-                       <ActionIconButton
+                        <ActionIconButton
+                          variant="outline-secondary"
+                          size="sm"
+                          title="Detalhes"
+                          ariaLabel={`Abrir ficha de ${d.descricao}`}
+                          className="me-2"
+                          as={Link}
+                          to={`/financeiro/detalhes/${d.id}`}
+                        >
+                          <Eye />
+                        </ActionIconButton>
+                        <ActionIconButton
                           variant="outline-primary"
                           size="sm"
                           title="Editar"

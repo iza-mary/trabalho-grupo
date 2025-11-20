@@ -53,38 +53,42 @@ export default function ResetPassword() {
   };
 
   return (
-    <Navbar>
-      <div className="content-area full-main">
-        <Container className="py-4" style={{ maxWidth: 680 }}>
-          <Card>
+    <Navbar disableSidebar minimal noMainPadding>
+      <div className="content-area full-main d-flex justify-content-center align-items-start" style={{ minHeight: '100vh', paddingTop: '12vh' }}>
+        <Container fluid>
+          <Card style={{ width: '100%', maxWidth: 500 }} className="p-3 mx-auto">
             <Card.Body>
-              <h4 className="mb-3">Redefinir senha</h4>
-              {error && <Alert variant="danger">{error}</Alert>}
-              {success && <Alert variant="success">{success}</Alert>}
+              <Card.Title className="mb-3">Redefinir senha</Card.Title>
+              {error && <Alert variant="danger" role="alert" className="mb-3">{error}</Alert>}
+              {success && <Alert variant="success" role="alert" className="mb-3">{success}</Alert>}
               <Form onSubmit={submit} noValidate>
-                <Form.Group className="mb-3" controlId="password">
-                  <Form.Label>Nova senha</Form.Label>
-                  <InputGroup>
-                    <Form.Control type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
-                    <Button variant="outline-secondary" onClick={() => setShowPw(v => !v)} aria-label={showPw ? 'Ocultar senha' : 'Mostrar senha'}>
-                      {showPw ? <EyeSlash /> : <Eye />}
-                    </Button>
-                  </InputGroup>
-                  <Form.Text className="text-muted">A senha deve ter ao menos 8 caracteres e 1 número.</Form.Text>
-                </Form.Group>
+                <div style={{ marginTop: 0 }}>
+                  <Form.Group controlId="password">
+                    <Form.Label>Nova senha</Form.Label>
+                    <InputGroup>
+                      <Form.Control type={showPw ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required aria-required />
+                      <Button variant="outline-secondary" onClick={() => setShowPw(v => !v)} aria-label={showPw ? 'Ocultar senha' : 'Mostrar senha'}>
+                        {showPw ? <EyeSlash /> : <Eye />}
+                      </Button>
+                    </InputGroup>
+                    <Form.Text className="text-muted">A senha deve ter ao menos 8 caracteres e 1 número.</Form.Text>
+                  </Form.Group>
+                </div>
 
-                <Form.Group className="mb-3" controlId="confirm">
-                  <Form.Label>Confirmar nova senha</Form.Label>
-                  <InputGroup>
-                    <Form.Control type={showConfirm ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
-                    <Button variant="outline-secondary" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? 'Ocultar confirmação' : 'Mostrar confirmação'}>
-                      {showConfirm ? <EyeSlash /> : <Eye />}
-                    </Button>
-                  </InputGroup>
-                </Form.Group>
+                <div style={{ marginTop: 24 }}>
+                  <Form.Group controlId="confirm">
+                    <Form.Label>Confirmar nova senha</Form.Label>
+                    <InputGroup>
+                      <Form.Control type={showConfirm ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} required aria-required />
+                      <Button variant="outline-secondary" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? 'Ocultar confirmação' : 'Mostrar confirmação'}>
+                        {showConfirm ? <EyeSlash /> : <Eye />}
+                      </Button>
+                    </InputGroup>
+                  </Form.Group>
+                </div>
 
-                <div className="d-grid">
-                  <Button type="submit" variant="primary" disabled={submitting || !token}>
+                <div style={{ marginTop: 24 }} className="d-grid">
+                  <Button type="submit" variant="primary" disabled={submitting || !token} aria-disabled={submitting || !token}>
                     {submitting ? 'Enviando...' : 'Redefinir senha'}
                   </Button>
                 </div>

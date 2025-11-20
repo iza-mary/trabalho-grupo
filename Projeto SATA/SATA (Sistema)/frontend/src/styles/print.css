@@ -2,6 +2,10 @@
 
 @page { size: A4; margin: 12mm; }
 
+.no-manual-breaks .no-print, .no-manual-breaks .no-print * { display: none !important; visibility: hidden !important; }
+.no-manual-breaks .controls-row, .no-manual-breaks .controls-row * { display: none !important; visibility: hidden !important; }
+.no-manual-breaks .btn { display: none !important; visibility: hidden !important; }
+
 @media print {
   html, body, .ficha-root {
     -webkit-print-color-adjust: exact;

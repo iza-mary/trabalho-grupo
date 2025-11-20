@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import { BoxSeam, PlusCircle, Funnel, Pencil, Trash, ArrowLeftRight, ClockHistory, ArrowUpCircleFill, ArrowDownCircleFill, Eye } from 'react-bootstrap-icons';
-import { listarProdutos, deletarProduto, movimentarProduto, listarMovimentos } from '../services/produtosService';
+import { listarProdutos, deletarProduto, listarMovimentos } from '../services/produtosService';
 import { Modal, Button, Spinner, Alert, Collapse } from 'react-bootstrap';
 import { categoriasProdutos } from './validacoesProdutos';
 import { useAuth } from '../hooks/useAuth';
 import { useDialog } from '../context/useDialog';
+import MovimentacaoModal from '../components/produtos/MovimentacaoModal';
 
 export default function Produtos() {
+  const lastFocusEl = useRef(null);
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -30,12 +32,7 @@ export default function Produtos() {
   // Estado da movimentação de estoque
   const [showMovModal, setShowMovModal] = useState(false);
   const [movItem, setMovItem] = useState(null);
-  const [movProdutoId, setMovProdutoId] = useState('');
-  const [movType, setMovType] = useState('entrada'); // 'entrada' ou 'saida'
-  const [movQty, setMovQty] = useState('');
-  const [movNotes, setMovNotes] = useState('');
-  const [movError, setMovError] = useState('');
-  const [movSubmitting, setMovSubmitting] = useState(false);
+  
 
   // Estado de exclusão (modal customizado)
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -178,22 +175,19 @@ export default function Produtos() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [histSearch]);
 
+  
+
   function abrirMovimentacao(item) {
+    lastFocusEl.current = document.activeElement;
     setMovItem(item || null);
-    setMovProdutoId(item?.id ? String(item.id) : '');
-    setMovType('entrada');
-    setMovQty('');
-    setMovNotes('');
-    setMovError('');
     setShowMovModal(true);
   }
 
   function fecharMovimentacao() {
     setShowMovModal(false);
     setMovItem(null);
-    setMovProdutoId('');
-    setMovError('');
-    setMovSubmitting(false);
+    const el = lastFocusEl.current;
+    if (el && typeof el.focus === 'function') el.focus();
   }
 
   function abrirConfirmarExclusao(item) {
@@ -352,52 +346,7 @@ export default function Produtos() {
 
   // Removidos: exportarCSV e exportarPDF (botões de exportação descontinuados)
 
-  async function confirmarMovimentacao() {
-    setMovError('');
-    let item = movItem;
-    if (!item) {
-      const idSel = Number(movProdutoId);
-      if (!Number.isFinite(idSel) || idSel <= 0) {
-        setMovError('Selecione um produto para movimentar.');
-        return;
-      }
-      item = items.find((x) => Number(x.id) === idSel);
-      if (!item) {
-        setMovError('Produto selecionado não encontrado.');
-        return;
-      }
-    }
-    const qty = Number(movQty);
-    if (!Number.isFinite(qty) || qty <= 0) {
-      setMovError('Informe uma quantidade válida maior que zero.');
-      return;
-    }
-    const atual = Number(item.quantidade || 0);
-    if (movType === 'saida' && qty > atual) {
-      setMovError('Não é possível remover quantidade superior ao estoque atual.');
-      return;
-    }
-    try {
-      setMovSubmitting(true);
-      const res = await movimentarProduto(item.id, { tipo: movType, quantidade: qty, observacao: movNotes });
-      if (res?.success) {
-        const abaixoMinimo = !!res?.abaixoMinimo;
-        setSuccess(
-          abaixoMinimo
-            ? 'Movimentação realizada. Atenção: estoque abaixo do mínimo.'
-            : 'Movimentação realizada com sucesso.'
-        );
-        fecharMovimentacao();
-        await load();
-      } else {
-        setMovError(res?.error || 'Falha ao registrar movimentação de estoque.');
-      }
-    } catch (err) {
-      setMovError(err?.message || 'Erro ao realizar movimentação.');
-    } finally {
-      setMovSubmitting(false);
-    }
-  }
+  
 
   const formatBRL = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v || 0));
 
@@ -430,7 +379,7 @@ export default function Produtos() {
   }, [search, categoria, minPreco, maxPreco, sort, order]);
 
   return (
-    <Navbar disableSidebar={showMovModal}>
+    <Navbar sidebarInactive={showMovModal}>
       <div className="container-fluid" style={{ padding: 'var(--gap-2)' }}>
         <PageHeader
           title="Estoque"
@@ -554,10 +503,25 @@ export default function Produtos() {
           </div>
         </div>
 
-        <div className="card">
+          <div className="card">
           <div className="card-header d-flex justify-content-between align-items-center">
             <h5 className="mb-0">Produtos</h5>
-
+            <Button
+              variant="outline-secondary"
+              onClick={() => {
+                const params = new URLSearchParams();
+                if (search) params.set('search', search);
+                if (categoria) params.set('categoria', categoria);
+                if (minPreco !== '') params.set('minPreco', String(minPreco));
+                if (maxPreco !== '') params.set('maxPreco', String(maxPreco));
+                if (sort) params.set('sort', sort);
+                if (order) params.set('order', order);
+                navigate(`/produtos/impressao?${params.toString()}`);
+              }}
+              className="d-inline-flex align-items-center"
+            >
+              Imprimir
+            </Button>
           </div>
           <div className="card-body">
             <div className="table-responsive" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
@@ -642,74 +606,13 @@ export default function Produtos() {
           </div>
         </div>
       </div>
-      {/* Modal de Movimentação de Estoque */}
-      <Modal show={showMovModal} onHide={fecharMovimentacao} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Movimentar Estoque</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {!movItem && (
-            <div className="mb-3">
-              <label className="form-label" htmlFor="movProduto">Produto</label>
-              <select
-                id="movProduto"
-                className="form-select"
-                value={movProdutoId}
-                onChange={(e) => setMovProdutoId(e.target.value)}
-              >
-                <option value="">Selecione um produto</option>
-                {items.map((it) => (
-                  <option key={it.id} value={it.id}>{it.nome}</option>
-                ))}
-              </select>
-            </div>
-          )}
-          {movItem && (
-            <div className="mb-3">
-              <div className="mb-2"><strong>Produto:</strong> {movItem.nome}</div>
-              <div className="mb-2"><strong>Estoque atual:</strong> {Number(movItem.quantidade || 0)}</div>
-              <div className="mb-2"><strong>Estoque mínimo:</strong> {Number(movItem.estoque_minimo || 0)}</div>
-            </div>
-          )}
-          <div className="mb-3">
-            <label className="form-label">Tipo de operação</label>
-            <select className="form-select" value={movType} onChange={e => setMovType(e.target.value)}>
-              <option value="entrada">Entrada (Adicionar)</option>
-              <option value="saida">Saída (Remover)</option>
-            </select>
-          </div>
-          <div className="mb-3">
-            <label className="form-label" htmlFor="movQty">Quantidade</label>
-            <input
-              id="movQty"
-              type="number"
-              className="form-control"
-              min={1}
-              value={movQty}
-              onChange={e => setMovQty(e.target.value)}
-              placeholder="Informe a quantidade"
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label" htmlFor="movNotes">Observação (opcional)</label>
-            <textarea
-              id="movNotes"
-              className="form-control"
-              rows={3}
-              value={movNotes}
-              onChange={e => setMovNotes(e.target.value)}
-              placeholder="Ex.: ajuste de inventário, compra, perda, etc."
-            />
-          </div>
-          {movError && <div role="alert" className="alert alert-danger">{movError}</div>}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={fecharMovimentacao} disabled={movSubmitting}>Cancelar</Button>
-          <Button variant="primary" onClick={confirmarMovimentacao} disabled={movSubmitting}>
-            {movSubmitting ? 'Salvando...' : 'Confirmar'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <MovimentacaoModal
+        show={showMovModal}
+        onClose={fecharMovimentacao}
+        item={movItem}
+        items={items}
+        onSuccess={async (msg) => { setSuccess(msg); await load(); }}
+      />
 
       {/* Modal de Exclusão de Produto (padronizado) */}
       <Modal show={showDeleteModal} onHide={fecharDeleteModal} dialogClassName="modal-top" aria-labelledby="excluir-title" aria-describedby="excluir-desc">

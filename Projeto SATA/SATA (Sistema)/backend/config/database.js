@@ -155,6 +155,27 @@ async function ensureIntegrity() {
         errors.push({ action: 'doacaoproduto.uk_doacao_produto', error: e.message });
       }
     }
+
+    const [estadoCntRows] = await conn.query(
+      `SELECT COUNT(*) AS cnt FROM estados`
+    );
+    const estadosCount = Number(estadoCntRows?.[0]?.cnt || 0);
+    if (estadosCount === 0) {
+      try {
+        const estados = [
+          ['Acre','AC'], ['Alagoas','AL'], ['Amapá','AP'], ['Amazonas','AM'], ['Bahia','BA'], ['Ceará','CE'],
+          ['Distrito Federal','DF'], ['Espírito Santo','ES'], ['Goiás','GO'], ['Maranhão','MA'], ['Mato Grosso','MT'], ['Mato Grosso do Sul','MS'],
+          ['Minas Gerais','MG'], ['Pará','PA'], ['Paraíba','PB'], ['Paraná','PR'], ['Pernambuco','PE'], ['Piauí','PI'],
+          ['Rio de Janeiro','RJ'], ['Rio Grande do Norte','RN'], ['Rio Grande do Sul','RS'], ['Rondônia','RO'], ['Roraima','RR'],
+          ['Santa Catarina','SC'], ['São Paulo','SP'], ['Sergipe','SE'], ['Tocantins','TO']
+        ];
+        const values = estados.map(e => `('${e[0]}','${e[1]}')`).join(',');
+        await conn.query(`INSERT INTO estados (nome, uf) VALUES ${values}`);
+        changes.push('estados.seed');
+      } catch (e) {
+        errors.push({ action: 'estados.seed', error: e.message });
+      }
+    }
   } finally {
     conn.release();
   }

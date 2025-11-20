@@ -32,7 +32,7 @@ class IdosoController {
     async create(req, res) {
         try {
             // Verifica se o estado existe
-            const [estado] = await db.execute('SELECT id FROM estados WHERE nome = ?', [req.body.estado]);
+            const [estado] = await db.execute('SELECT id FROM estados WHERE nome = ? OR uf = ?', [req.body.estado, req.body.estado]);
             if (!estado || estado.length === 0) {
                 return res.status(400).json({
                     success: false,
@@ -127,7 +127,7 @@ class IdosoController {
     async update(req, res) {
         try {
             // Verifica se o estado existe
-            const [estado] = await db.execute('SELECT id FROM estados WHERE nome = ?', [req.body.estado]);
+            const [estado] = await db.execute('SELECT id FROM estados WHERE nome = ? OR uf = ?', [req.body.estado, req.body.estado]);
             if (!estado || estado.length === 0) {
                 return res.status(400).json({
                     success: false,

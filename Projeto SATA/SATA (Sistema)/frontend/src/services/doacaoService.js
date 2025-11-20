@@ -71,7 +71,7 @@ const getById = async (id) => {
 const add = async (doacao) => {
   try {
     const doacaoData = { ...doacao };
-    const response = await api.post('/doacoes', doacaoData);
+    const response = await api.post('/doacoes', doacaoData, { timeout: 7000 });
     const result = response.data;
     if (!result.success) throw new Error(result.message || 'Erro na requisição');
     return { ...result.data };

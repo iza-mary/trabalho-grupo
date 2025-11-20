@@ -1,13 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
-import { Pencil, Trash } from 'react-bootstrap-icons';
+import { useNavigate } from 'react-router-dom';
+import { Pencil, Trash, Eye } from 'react-bootstrap-icons';
 import ActionIconButton from '../../ui/ActionIconButton';
 import StandardTable from '../../ui/StandardTable';
 import { useAuth } from '../../../hooks/useAuth';
 import { formatDate } from '../../../utils/dateUtils';
 
-function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, editando, loaderRef: externalLoaderRef, showDelete: externalShowDelete, setShowDelete: externalSetShowDelete }) {
+function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, editando, loaderRef: externalLoaderRef, showDelete: externalShowDelete, setShowDelete: externalSetShowDelete, printUrl }) {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   // Compatibilidade com props antigas da página Doacoes.jsx
   const items = Array.isArray(doacoes) ? doacoes : (Array.isArray(doacoesApp) ? doacoesApp : []);
@@ -41,6 +43,12 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
 
   return (
     <Card>
+      <Card.Header className="d-flex align-items-center justify-content-between">
+        <h5 className="mb-0">Doações</h5>
+        <Button variant="outline-secondary" onClick={() => navigate(printUrl || '/doacoes/impressao')}>
+          Imprimir
+        </Button>
+      </Card.Header>
       <Card.Body>
         <div className="table-responsive">
           {items.length === 0 ? (
@@ -81,6 +89,15 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
                     <td>{d?.obs ?? '-'}</td>
                     <td>
                       <div className='botoes-acao'>
+                        <ActionIconButton
+                          title={'Detalhes'}
+                          size='sm'
+                          onClick={() => navigate(`/doacoes/detalhes/${d.id}`)}
+                          variant='outline-secondary'
+                          ariaLabel={`Abrir ficha da doação ${d.id}`}
+                        >
+                          <Eye />
+                        </ActionIconButton>
                         <ActionIconButton
                           className={!isAdmin ? 'disabled-action' : undefined}
                           title={!isAdmin ? 'Apenas Administradores podem editar' : 'Editar'}

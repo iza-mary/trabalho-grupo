@@ -60,8 +60,9 @@ const add = async (idoso) => {
         if (!data?.success) throw new Error(data?.message || 'Erro ao adicionar');
         return { ...data.data };
     } catch (error) {
-        console.error('Erro ao adicionar idoso', error);
-        throw error;
+        const msg = error?.response?.data?.message || error?.response?.data?.error || error.message || 'Erro ao adicionar idoso';
+        console.error('Erro ao adicionar idoso', msg);
+        throw new Error(msg);
     }
 };
 
@@ -74,11 +75,9 @@ const update = async (id, idoso) => {
         if (!data?.success) throw new Error(data?.message || 'Erro ao atualizar');
         return data;
     } catch (error) {
-        console.error('Erro no service:', {
-            message: error.message,
-            payload: idoso
-        });
-        throw error;
+        const msg = error?.response?.data?.message || error?.response?.data?.error || error.message || 'Erro ao atualizar';
+        console.error('Erro no service:', { message: msg, payload: idoso });
+        throw new Error(msg);
     }
 };
 

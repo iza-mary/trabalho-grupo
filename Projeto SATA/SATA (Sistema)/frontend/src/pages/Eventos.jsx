@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import ptLocale from '@fullcalendar/core/locales/pt-br';
-import { CalendarEvent, PlusCircle, Pencil, Trash, Funnel, Search, Calendar3, Clock, GeoAlt } from 'react-bootstrap-icons';
+import { CalendarEvent, PlusCircle, Pencil, Trash, Funnel, Calendar3, Clock, GeoAlt, Eye } from 'react-bootstrap-icons';
 import eventoService from '../services/eventoService';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
@@ -428,13 +428,6 @@ export default function Eventos() {
         actions={
           <div className="d-flex gap-2">
             <Button
-              variant="outline-secondary"
-              onClick={() => navigate('/eventos/impressao')}
-              className="d-inline-flex align-items-center"
-            >
-              Imprimir
-            </Button>
-            <Button
               variant="primary"
               onClick={() => abrirCriar()}
               className={`d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`}
@@ -601,7 +594,7 @@ export default function Eventos() {
                   onChange={(e) => setTermoBusca(e.target.value)}
                   aria-label="Campo de busca"
                 />
-                <InputGroup.Text><Search size={16} /></InputGroup.Text>
+                {/* ícone de lupa removido */}
               </InputGroup>
             </Col>
           </Row>
@@ -696,7 +689,15 @@ export default function Eventos() {
               <h5 className="mb-0">Todos os Eventos</h5>
               <Button
                 variant="outline-secondary"
-                onClick={() => navigate('/eventos/impressao')}
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (filtroTipo) params.set('tipo', filtroTipo);
+                  if (termoBusca) params.set('busca', termoBusca);
+                  if (filtroDataInicio) params.set('dataInicio', filtroDataInicio);
+                  if (filtroDataFim) params.set('dataFim', filtroDataFim);
+                  if (ordenacao) params.set('ordenacao', ordenacao);
+                  navigate(`/eventos/impressao?${params.toString()}`);
+                }}
                 className="d-inline-flex align-items-center"
               >
                 Imprimir
@@ -745,6 +746,16 @@ export default function Eventos() {
                           <Badge bg={getTipoBadgeVariant(e.tipo)}>{e.tipo || 'Geral'}</Badge>
                         </td>
                         <td className="botoes-acao text-center" onClick={(ev) => ev.stopPropagation()}>
+                          <ActionIconButton
+                            variant="outline-secondary"
+                            size="sm"
+                            title="Detalhes"
+                            ariaLabel={`Abrir ficha de ${e.titulo}`}
+                            className="me-2"
+                            onClick={(ev2) => { ev2.stopPropagation(); navigate(`/eventos/detalhes/${e.id}`) }}
+                          >
+                            <Eye />
+                          </ActionIconButton>
                           <ActionIconButton
                             variant="outline-primary"
                             size="sm"

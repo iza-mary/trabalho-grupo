@@ -97,6 +97,30 @@ const ProdutoRepository = {
     }
   },
 
+  async updateQuantidadeFast(id, novaQuantidade) {
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [prevRows] = await conn.execute('SELECT quantidade FROM produtos WHERE id=? FOR UPDATE', [id]);
+      if (!Array.isArray(prevRows) || prevRows.length === 0) {
+        await conn.rollback();
+        conn.release();
+        return { ok: false, prevQuantidade: 0, updated: null };
+      }
+      const prevQuantidade = Number(prevRows[0].quantidade || 0);
+      const [upd] = await conn.execute('UPDATE produtos SET quantidade=?, data_atualizacao = NOW() WHERE id=?', [novaQuantidade, id]);
+      const ok = upd.affectedRows > 0;
+      const [updatedRows] = await conn.execute('SELECT * FROM produtos WHERE id=?', [id]);
+      await conn.commit();
+      conn.release();
+      return { ok, prevQuantidade, updated: updatedRows[0] || null };
+    } catch (err) {
+      try { await conn.rollback(); } catch (_) {}
+      conn.release();
+      throw err;
+    }
+  },
+
   async delete(id) {
     const [result] = await db.execute('DELETE FROM produtos WHERE id=?', [id]);
     return result.affectedRows > 0;

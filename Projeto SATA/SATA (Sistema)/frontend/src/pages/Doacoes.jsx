@@ -8,7 +8,7 @@ import FormOutros from '../components/ComponetesDoacoes/FormOutrosComp/FormOutro
 import Header from '../components/ComponetesDoacoes/HeaderComp/Header'
 import HeaderTabela from '../components/ComponetesDoacoes/HeaderTabelaComp/HeaderTabela'
 import FiltroBusca from '../components/ComponetesDoacoes/FiltroBuscaComp/FiltroBusca'
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import TabelaDoacoes from '../components/ComponetesDoacoes/TabelaDoacoesComp/TabelaDoacoes'
 import doacoesService from '../services/doacaoService'
@@ -57,31 +57,49 @@ function Doacoes() {
     }
   };
 
-  useEffect(() => {
-    const fetchFiltros = async () => {
-      const filtrosBackend = {
-        tipo: mapTipoFiltro(filtros.tipo),
-        data: filtros.data,
-        destinatario: filtros.destinatario,
-        busca: filtros.busca
-      };
+  const reloadDoacoes = useCallback(async () => {
+    const filtrosBackend = {
+      tipo: mapTipoFiltro(filtros.tipo),
+      data: filtros.data,
+      destinatario: filtros.destinatario,
+      busca: filtros.busca
+    };
+    try {
+      const dados = await doacoesService.getByFiltred(filtrosBackend);
+      if (Array.isArray(dados)) {
+        setDoacoes(dados);
+      }
+    } catch (e) {
+      console.error('Erro ao filtrar doações', e);
       try {
-        const dados = await doacoesService.getByFiltred(filtrosBackend);
-        if (Array.isArray(dados)) {
-          setDoacoes(dados);
-        }
-      } catch (e) {
-        console.error('Erro ao filtrar doações', e);
-        try {
-          const dados = await doacoesService.getAll();
-          setDoacoes(dados);
-        } catch (err) {
-          console.error('Erro ao carregar doações sem filtro', err);
-        }
+        const dados = await doacoesService.getAll();
+        setDoacoes(dados);
+      } catch (err) {
+        console.error('Erro ao carregar doações sem filtro', err);
+      }
+    }
+  }, [filtros]);
+
+  useEffect(() => { reloadDoacoes(); }, [reloadDoacoes]);
+
+  const buildPrintUrl = () => {
+    const mapTipo = (t) => {
+      switch (t) {
+        case 'dinheiro': return 'D';
+        case 'alimento': return 'A';
+        case 'outros': return 'O';
+        default: return 'todos';
       }
     };
-    fetchFiltros();
-  }, [filtros]);
+    const params = new URLSearchParams();
+    const tipo = mapTipo(filtros.tipo);
+    if (tipo !== 'todos') params.set('tipo', tipo);
+    if (filtros.data && filtros.data !== 'todos') params.set('data', filtros.data);
+    if (filtros.destinatario && filtros.destinatario !== 'todos') params.set('destinatario', filtros.destinatario);
+    if (filtros.busca) params.set('busca', filtros.busca);
+    if (ordenacao) params.set('ordenacao', ordenacao);
+    return `/doacoes/impressao?${params.toString()}`;
+  };
 
   // Atualização automática: polling leve respeitando filtros e pausa durante edição/modal
   useEffect(() => {
@@ -90,32 +108,14 @@ function Doacoes() {
 
     const tick = async () => {
       if (mostrarModal || modoEdicao) return; // evita sobrescrever enquanto edita
-      const filtrosBackend = {
-        tipo: mapTipoFiltro(filtros.tipo),
-        data: filtros.data,
-        destinatario: filtros.destinatario,
-        busca: filtros.busca
-      };
-      try {
-        const dados = await doacoesService.getByFiltred(filtrosBackend);
-        if (Array.isArray(dados)) {
-          setDoacoes(dados);
-        }
-      } catch {
-        try {
-          const dados = await doacoesService.getAll();
-          setDoacoes(dados);
-        } catch (err) {
-          console.error('Auto-atualização de doações falhou:', err?.response?.data?.message || err?.message || err);
-        }
-      }
+      await reloadDoacoes();
     };
 
     timerId = setInterval(tick, REFRESH_MS);
     return () => {
       if (timerId) clearInterval(timerId);
     };
-  }, [filtros, mostrarModal, modoEdicao]);
+  }, [filtros, mostrarModal, modoEdicao, reloadDoacoes]);
 
   const handleChangeEditando = (editando) => {
     if (editando === false) {
@@ -153,14 +153,39 @@ function Doacoes() {
             }
     };
 
+    // Atualização otimista: insere entrada temporária antes da resposta do servidor
+    const tempId = `temp-${Date.now()}`;
+    const tempDoacao = {
+      id: tempId,
+      data: payload.data + 'T03:00:00.000Z',
+      tipo: payload.tipo,
+      idoso: payload.idoso || '',
+      doador: {
+        doadorId: payload.doador.doadorId,
+        nome: payload.doador.nome
+      },
+      evento: payload.evento,
+      eventoId: payload.eventoId ?? null,
+      obs: payload.obs,
+      doacao:
+        payload.tipo === 'D'
+          ? { valor: payload.doacao.valor }
+          : { qntd: payload.doacao.qntd, item: payload.doacao.item, unidade_medida: payload.doacao.unidade_medida }
+    };
+
+    setDoacoes((prev) => Array.isArray(prev) ? [tempDoacao, ...prev] : [tempDoacao]);
+    setMostraTabela(true);
+
     try {
       const criada = await doacoesService.add(payload);
-      setDoacoes((prev) => Array.isArray(prev) ? [...prev, criada] : [criada]);
+      setDoacoes((prev) => prev.map(d => (d.id === tempId ? criada : d)));
+      await reloadDoacoes();
       console.log('Doação registrada com sucesso:', criada);
     } catch (err) {
+      // Reverte otimista em caso de falha
+      setDoacoes((prev) => prev.filter(d => d.id !== tempId));
       const msg = err?.response?.data?.message || err?.message || 'Falha ao registrar doação';
       console.error('Erro ao registrar doação:', msg, err);
-      // Feedback simples; manter minimalista para não adicionar dependências de UI
       alert(msg);
     }
   };
@@ -361,6 +386,7 @@ function Doacoes() {
               editando={handleChangeEditando}
               setDoacoesApp={setDoacoes}
               doacoes={doacoesOrdenadas}
+              printUrl={buildPrintUrl()}
             />
           </>
         )}

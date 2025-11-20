@@ -10,6 +10,19 @@ const api = axios.create({
   withCredentials: true
 });
 
+api.interceptors.request.use((config) => {
+  try {
+    const t = typeof localStorage !== 'undefined' ? localStorage.getItem('csrfToken') : null;
+    if (t) {
+      config.headers = config.headers || {};
+      if (!config.headers['x-csrf-token']) config.headers['x-csrf-token'] = t;
+    }
+  } catch (e) {
+    void e;
+  }
+  return config;
+});
+
 export default api;
 /*
   Cliente HTTP (API)

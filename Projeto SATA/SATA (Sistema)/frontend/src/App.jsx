@@ -9,7 +9,9 @@ import SataCadastroQuartos from "./pages/SataCadastroQuartos";
 import Eventos from "./pages/Eventos";
 import FinanceiroLocal from "./pages/FinanceiroLocal";
 import Financeiro from "./pages/Financeiro";
+import FinanceiroFicha from "./pages/FinanceiroFicha";
 import Produtos from "./pages/Produtos";
+import ProdutosPrint from "./pages/ProdutosPrint";
 import ProdutoNovo from "./pages/ProdutoNovo";
 import ProdutoEditar from "./pages/ProdutoEditar";
 import Notificacoes from "./pages/Notificacoes";
@@ -18,6 +20,11 @@ import DoadorFicha from "./pages/DoadorFicha";
 import ProdutoFicha from "./pages/ProdutoFicha";
 import LivroCaixaPrint from "./pages/LivroCaixaPrint";
 import EventosPrint from "./pages/EventosPrint";
+import EventoFicha from "./pages/EventoFicha";
+import DoadoresPrint from "./pages/DoadoresPrint";
+import IdososPrint from "./pages/IdososPrint";
+import DoacoesPrint from "./pages/DoacoesPrint";
+import DoacaoFicha from "./pages/DoacaoFicha";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
@@ -25,6 +32,7 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ChangePassword from "./pages/ChangePassword";
 import Usuarios from "./pages/Usuarios";
 import Perfis from "./pages/Perfis";
 import ValidateEmail from "./pages/ValidateEmail";
@@ -38,6 +46,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/change-password" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><ChangePassword /></ProtectedRoute>} />
         <Route path="/perfis" element={<ProtectedRoute allowedRoles={["Admin"]}><Perfis /></ProtectedRoute>} />
         <Route path="/validate-email" element={<ValidateEmail />} />
         <Route path="/doacoes" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Doacoes /></ProtectedRoute>} />
@@ -50,9 +59,15 @@ function App() {
         {/* FinanceiroLocal restrito a Admin */}
         <Route path="/financeiro-local" element={<ProtectedRoute allowedRoles={["Admin"]}><FinanceiroLocal /></ProtectedRoute>} />
         <Route path="/financeiro" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Financeiro /></ProtectedRoute>} />
+        <Route path="/financeiro/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><FinanceiroFicha /></ProtectedRoute>} />
         <Route path="/financeiro/impressao" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><LivroCaixaPrint /></ProtectedRoute>} />
         <Route path="/eventos/impressao" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><EventosPrint /></ProtectedRoute>} />
+        <Route path="/eventos/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><EventoFicha /></ProtectedRoute>} />
+        <Route path="/doadores/impressao" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><DoadoresPrint /></ProtectedRoute>} />
+        <Route path="/idosos/impressao" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><IdososPrint /></ProtectedRoute>} />
+        <Route path="/doacoes/impressao" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><DoacoesPrint /></ProtectedRoute>} />
         <Route path="/produtos" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><Produtos /></ProtectedRoute>} />
+        <Route path="/produtos/impressao" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><ProdutosPrint /></ProtectedRoute>} />
         <Route path="/produtos/novo" element={<ProtectedRoute allowedRoles={["Admin"]}><ProdutoNovo /></ProtectedRoute>} />
         <Route path="/produtos/editar/:id" element={<ProtectedRoute allowedRoles={["Admin"]}><ProdutoEditar /></ProtectedRoute>} />
         <Route path="/produtos/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><ProdutoFicha /></ProtectedRoute>} />
@@ -66,6 +81,7 @@ function App() {
         <Route path="/internacoes" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><SataInternacoes /></ProtectedRoute>} />
         <Route path="/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><IdosoFicha /></ProtectedRoute>} />
         <Route path="/doadores/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><DoadorFicha /></ProtectedRoute>} />
+        <Route path="/doacoes/detalhes/:id" element={<ProtectedRoute allowedRoles={["Admin", "Funcionário"]}><DoacaoFicha /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

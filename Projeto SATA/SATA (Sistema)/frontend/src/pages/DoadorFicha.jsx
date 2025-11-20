@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Button, Modal, Spinner } from 'react-bootstrap';
+import { Button, Spinner } from 'react-bootstrap';
+import logo from '../styles/Logo sem fundo.png';
+import { downloadPdf } from '../utils/pdf';
 import doadorService from '../services/doadorService';
 import { removeManualPageBreaks, applySpacingNormalization, removeSpacingNormalization } from '../utils/printSanitizer';
 import './IdosoFicha.css';
@@ -19,7 +21,7 @@ export default function DoadorFicha() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [ficha, setFicha] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
+  
   const [removerQuebrasManuais] = useState(true);
   const [ajustarEspacamento] = useState(true);
   const containerRef = useRef(null);
@@ -66,6 +68,20 @@ export default function DoadorFicha() {
         }
       }, 1000);
     }, 0);
+  };
+
+  const handleDownloadPdf = async () => {
+    const root = containerRef.current;
+    if (!root) return;
+    root.classList.add('no-manual-breaks');
+    removeManualPageBreaks(root);
+    applySpacingNormalization(root);
+    try {
+      await downloadPdf(root, `${pageTitle}.pdf`);
+    } finally {
+      root.classList.remove('no-manual-breaks');
+      removeSpacingNormalization(root);
+    }
   };
 
   if (loading) {
@@ -118,12 +134,13 @@ export default function DoadorFicha() {
           </div>
           <div>
             <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+            <Button variant="outline-secondary" className="ms-2" onClick={handleDownloadPdf}>Baixar PDF</Button>
           </div>
         </div>
 
         <header className="ficha-header" role="banner">
           <div className="d-flex align-items-center gap-2">
-            <img className="ficha-logo" src="/vite.svg" alt="Logo da instituição" />
+            <img className="ficha-logo" src={logo} alt="Logo da instituição" />
             <div>
               <div className="ficha-title">SATA — Sistema de Assistência</div>
               <div className="ficha-meta">{pageTitle}</div>
@@ -217,41 +234,7 @@ export default function DoadorFicha() {
         </main>
       </div>
 
-      {/* Modal de visualização de impressão */}
-      <Modal show={showPreview} onHide={() => setShowPreview(false)} size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>Visualização de impressão</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="preview-sheet">
-            <div className="ficha-container">
-              <main className="ficha-content">
-                <header className="ficha-header">
-                  <div className="d-flex align-items-center gap-2">
-                    <img className="ficha-logo" src="/vite.svg" alt="Logo da instituição" />
-                    <div>
-                      <div className="ficha-title">SATA — Sistema de Assistência</div>
-                      <div className="ficha-meta">{pageTitle}</div>
-                    </div>
-                  </div>
-                  <div className="text-end">
-                    <div className="ficha-meta">Página {paginaAtual}</div>
-                  </div>
-                </header>
-                <section className="ficha-section">
-                  <h3>Dados do Doador</h3>
-                  <div><strong>Nome:</strong> {dadosPessoais?.nome ?? '—'}</div>
-                  <div><strong>Tipo:</strong> {dadosPessoais?.tipo ?? '—'}</div>
-                </section>
-                <section className="ficha-section">
-                  <h3>Resumo de Doações</h3>
-                  <div>Total de registros: {(historicoDoacoes || []).length}</div>
-                </section>
-              </main>
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
+      
     </div>
   );
 }

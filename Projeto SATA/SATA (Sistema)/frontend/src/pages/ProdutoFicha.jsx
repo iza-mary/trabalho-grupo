@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button, Spinner } from 'react-bootstrap';
+import logo from '../styles/Logo sem fundo.png';
+import { downloadPdf } from '../utils/pdf';
 import { obterProduto, listarMovimentos } from '../services/produtosService';
 import { removeManualPageBreaks, applySpacingNormalization, removeSpacingNormalization } from '../utils/printSanitizer';
 import './IdosoFicha.css';
@@ -29,6 +31,7 @@ export default function ProdutoFicha() {
   const [produto, setProduto] = useState(null);
   const [movimentos, setMovimentos] = useState([]);
   const containerRef = useRef(null);
+  
 
   useEffect(() => {
     let active = true;
@@ -76,6 +79,20 @@ export default function ProdutoFicha() {
     }, 0);
   };
 
+  const handleDownloadPdf = async () => {
+    const root = containerRef.current;
+    if (!root) return;
+    root.classList.add('no-manual-breaks');
+    removeManualPageBreaks(root);
+    applySpacingNormalization(root);
+    try {
+      await downloadPdf(root, `${pageTitle}.pdf`);
+    } finally {
+      root.classList.remove('no-manual-breaks');
+      removeSpacingNormalization(root);
+    }
+  };
+
   if (loading) {
     return (
       <div className="ficha-root d-flex align-items-center justify-content-center" aria-busy="true">
@@ -112,12 +129,13 @@ export default function ProdutoFicha() {
           </div>
           <div>
             <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+            <Button variant="outline-secondary" className="ms-2" onClick={handleDownloadPdf}>Baixar PDF</Button>
           </div>
         </div>
 
         <header className="ficha-header" role="banner">
           <div className="d-flex align-items-center gap-2">
-            <img className="ficha-logo" src="/vite.svg" alt="Logo da instituição" />
+            <img className="ficha-logo" src={logo} alt="Logo da instituição" />
             <div>
               <div className="ficha-title">SATA — Sistema de Assistência</div>
               <div className="ficha-meta">{pageTitle}</div>
@@ -186,6 +204,7 @@ export default function ProdutoFicha() {
             </table>
           </section>
         </main>
+        
       </div>
     </div>
   );

@@ -1,5 +1,8 @@
 /* Estilos globais — carregado via main.jsx */
 
+/* Garantia: raiz sem margens/espacamentos implícitos */
+#root { margin: 0; padding: 0; line-height: normal; }
+
 /* Remoção centralizada de rodapés de páginas (não afeta modais) */
 footer,
 .ficha-footer {

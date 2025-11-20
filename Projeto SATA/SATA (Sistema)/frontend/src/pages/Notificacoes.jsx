@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Form, InputGroup, Alert, Spinner } from 'react-bootstrap';
 import { BsBell, BsSearch, BsFilter, BsCheck2All, BsEye, BsEyeSlash } from 'react-icons/bs';
 import Navbar from '../components/Navbar';
@@ -29,12 +29,7 @@ const Notificacoes = () => {
     total: 0
   });
 
-  useEffect(() => {
-    carregarNotificacoes();
-    carregarContadores();
-  }, [filtros, paginacao.pagina]);
-
-  const carregarNotificacoes = async () => {
+  const carregarNotificacoes = useCallback(async () => {
     try {
       setLoading(true);
       const params = {
@@ -58,16 +53,21 @@ const Notificacoes = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros, paginacao.pagina, paginacao.limite]);
 
-  const carregarContadores = async () => {
+  const carregarContadores = useCallback(async () => {
     try {
       const response = await obterContadores();
       setContadores(response);
     } catch (err) {
       console.error('Erro ao carregar contadores:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    carregarNotificacoes();
+    carregarContadores();
+  }, [carregarNotificacoes, carregarContadores]);
 
   const handleMarcarComoLida = async (id) => {
     try {

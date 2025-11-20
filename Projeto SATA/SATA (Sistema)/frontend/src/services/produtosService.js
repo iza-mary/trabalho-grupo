@@ -27,8 +27,17 @@ export async function deletarProduto(id) {
 
 export async function movimentarProduto(id, payload) {
   // payload: { tipo: 'entrada'|'saida', quantidade: number, observacao?: string }
-  const { data } = await api.post(`/produtos/${id}/movimentar`, payload);
-  return data;
+  try {
+    const { data } = await api.post(`/produtos/${id}/movimentar`, payload, { timeout: 5000 });
+    return data;
+  } catch (err) {
+    const code = String(err?.code || '');
+    const msg = String(err?.message || '');
+    if (code === 'ECONNABORTED' || /timeout/i.test(msg)) {
+      throw new Error('Tempo excedido ao movimentar estoque (5s). Tente novamente.');
+    }
+    throw err;
+  }
 }
 
 export async function listarMovimentos(id, params = {}) {

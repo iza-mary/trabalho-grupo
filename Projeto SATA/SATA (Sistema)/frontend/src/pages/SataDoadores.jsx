@@ -158,6 +158,14 @@ function SataDoadores() {
     return lista;
   }, [doadores, filtros, termos]);
 
+  const buildDoadoresPrintUrl = () => {
+    const params = new URLSearchParams();
+    if (filtros?.tipo) params.set('tipo', filtros.tipo);
+    if (filtros?.ordemData) params.set('ordemData', filtros.ordemData);
+    if (termos && termos.length > 0) params.set('termos', termos.join(','));
+    return `/doadores/impressao?${params.toString()}`;
+  };
+
 
 
   const prepararDeletar = (d) => setDoadorParaDeletar(d);
@@ -197,6 +205,7 @@ function SataDoadores() {
                 setDoadorEditar={setDoadorEditar}
                 onDelete={handleDeletar}
                 handleDeletar={prepararDeletar}
+                printUrl={buildDoadoresPrintUrl()}
               />
             </>
           ) : (

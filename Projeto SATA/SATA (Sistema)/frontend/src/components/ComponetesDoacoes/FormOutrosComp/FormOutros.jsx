@@ -93,16 +93,13 @@ function FormOutros({ onSave }) {
   const handleChangeDescricao = (e) => {
     const value = e.target.value;
     setDoaOutros(prev => ({ ...prev, obs: value }))
-    if (value && isNaN(value)) {
+    if (value === "") {
       setErrors((prev) => ({ ...prev, obs: null }));
+    } else if (!isNaN(value)) {
+      setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
+      setValidated(false);
     } else {
-      if (value === "") {
-        setErrors((prev) => ({ ...prev, obs: "A descrição deve ser preenchida" }));
-        setValidated(false);
-      } else if (!isNaN(value)) {
-        setErrors((prev) => ({ ...prev, obs: "A descrição deve ser um texto válido" }));
-        setValidated(false);
-      }
+      setErrors((prev) => ({ ...prev, obs: null }));
     }
   }
   
@@ -149,10 +146,8 @@ function FormOutros({ onSave }) {
       newErrors.quantidade = "Quantidade inválida";
       setValidated(false);
     }
-    if (doaOutros.obs === "") {
-      newErrors.obs = "A descrição deve ser preenchida";
-      setValidated(false);
-    } else if (!isNaN(doaOutros.obs)) {
+    // Observação opcional; apenas valida se preenchida e inválida
+    if (doaOutros.obs !== "" && !isNaN(doaOutros.obs)) {
       newErrors.obs = "A descrição deve ser um texto válido";
       setValidated(false);
     }
@@ -320,7 +315,7 @@ function FormOutros({ onSave }) {
                 <Form.Control name="descricao" onChange={handleChangeDescricao} autoComplete="off"
                   value={doaOutros.obs || ""}
                   isInvalid={!!errors.obs}
-                  as="textarea" rows={3} required />
+                  as="textarea" rows={3} />
                 <Form.Control.Feedback type="invalid">
                   {errors.obs}
                 </Form.Control.Feedback>

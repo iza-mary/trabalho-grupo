@@ -4,8 +4,9 @@
   - Inclui proteções contra repetição de submissão, limite de tentativas e validações de formulário.
 */
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, InputGroup, Alert, Modal, Spinner } from 'react-bootstrap';
-import { People, Pencil, Trash, ShieldLock, X, Check, Eye, EyeSlash } from 'react-bootstrap-icons';
+import { People, Pencil, Trash, ShieldLock, Eye, EyeSlash } from 'react-bootstrap-icons';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
 import StandardTable from '../components/ui/StandardTable';
@@ -16,6 +17,7 @@ import authService from '../services/authService';
 
 export default function Perfis() {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [statusFilter, setStatusFilter] = useState('todos');
   const [roleFilter, setRoleFilter] = useState('todas');
@@ -122,14 +124,7 @@ export default function Perfis() {
   };
 
   // Alterna status ativo/inativo para o perfil
-  const alternarStatus = async (row) => {
-    try {
-      const next = row.status === 'ativo' ? 'inativo' : 'ativo';
-      const res = await authService.adminSetStatus(row.id, next);
-      if (res?.success) { setSucesso('Status atualizado'); carregar(); }
-      else { setErro(res?.error || 'Falha ao atualizar status'); }
-    } catch (e) { setErro(e?.response?.data?.error || e.message || 'Erro ao atualizar status'); }
-  };
+  // Removido: alternância de status (ativar/inativar)
 
   const confirmarExcluir = (row) => setUsuarioExcluir(row);
   const cancelarExcluir = () => setUsuarioExcluir(null);
@@ -209,9 +204,14 @@ export default function Perfis() {
             title="Gerenciamento de Perfis"
             icon={<People />}
             actions={(
-              <Button variant="primary" onClick={abrirCriacao}>
-                Novo Perfil
-              </Button>
+              <div className="d-flex gap-2">
+                <Button variant="outline-secondary" onClick={() => navigate('/change-password')} className="d-inline-flex align-items-center">
+                  <ShieldLock className="me-1" /> Mudar minha senha
+                </Button>
+                <Button variant="primary" onClick={abrirCriacao}>
+                  Novo Perfil
+                </Button>
+              </div>
             )}
           />
 
@@ -291,9 +291,7 @@ export default function Perfis() {
                             <ActionIconButton variant="outline-primary" title="Editar" onClick={() => abrirEdicao(r)}>
                               <Pencil />
                             </ActionIconButton>
-                            <ActionIconButton variant="outline-warning" title={r.status === 'ativo' ? 'Inativar' : 'Ativar'} onClick={() => alternarStatus(r)}>
-                              {r.status === 'ativo' ? <X /> : <Check />}
-                            </ActionIconButton>
+                            {/* Botão de ativar/inativar removido conforme solicitação */}
                             <ActionIconButton variant="outline-secondary" title="Reset senha" onClick={() => abrirResetModal(r)}>
                               <ShieldLock />
                             </ActionIconButton>

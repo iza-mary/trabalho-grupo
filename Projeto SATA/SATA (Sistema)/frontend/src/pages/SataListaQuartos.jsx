@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, InputGroup, Alert, Modal, Spinner } from 'react-bootstrap';
-import { PlusCircle, Funnel, Search, Pencil, Trash, DoorClosed } from 'react-bootstrap-icons';
+import { PlusCircle, Funnel, Pencil, Trash, DoorClosed } from 'react-bootstrap-icons';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
 import StandardTable from '../components/ui/StandardTable';
@@ -208,7 +208,7 @@ const abrirDetalhes = (quarto) => {
                       <Form.Label>Buscar</Form.Label>
                       <InputGroup>
                         <Form.Control type="text" placeholder="Número ou descrição..." value={termoBusca} onChange={(e) => setTermoBusca(e.target.value)} />
-                        <InputGroup.Text><Search size={16} /></InputGroup.Text>
+                        {/* ícone de lupa removido */}
                       </InputGroup>
                     </Col>
                   </Row>

@@ -25,7 +25,7 @@ router.post('/', authenticate, authorizeRoles('Admin'), (req, res, next) => {
 }, (req, res) => usersController.create(req, res));
 router.put('/:id', authenticate, authorizeRoles('Admin'), (req, res) => usersController.update(req, res));
 router.delete('/:id', authenticate, authorizeRoles('Admin'), (req, res) => usersController.remove(req, res));
-router.patch('/:id/status', authenticate, authorizeRoles('Admin'), (req, res) => usersController.setStatus(req, res));
+// Removido: alteração de status de usuários
 router.post('/:id/resend-validation', authenticate, authorizeRoles('Admin'), (req, res, next) => {
   const ok = rateLimit(req.ip, rateBuckets.resend, 3, 15 * 60 * 1000);
   if (!ok) return res.status(429).json({ success: false, error: 'Limite de reenvio atingido. Tente novamente mais tarde.' });

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Button, Modal, Spinner } from 'react-bootstrap';
+import { Button, Spinner } from 'react-bootstrap';
+import logo from '../styles/Logo sem fundo.png';
+import { downloadPdf } from '../utils/pdf';
 import idosoService from '../services/idosoService';
 import { removeManualPageBreaks, applySpacingNormalization, removeSpacingNormalization } from '../utils/printSanitizer';
 import './IdosoFicha.css';
@@ -20,7 +22,7 @@ export default function IdosoFicha() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [ficha, setFicha] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
+  
   const [removerQuebrasManuais] = useState(true);
   const [ajustarEspacamento] = useState(true);
   const containerRef = useRef(null);
@@ -74,6 +76,20 @@ export default function IdosoFicha() {
     }, 0);
   };
 
+  const handleDownloadPdf = async () => {
+    const root = containerRef.current;
+    if (!root) return;
+    root.classList.add('no-manual-breaks');
+    removeManualPageBreaks(root);
+    applySpacingNormalization(root);
+    try {
+      await downloadPdf(root, `${pageTitle}.pdf`);
+    } finally {
+      root.classList.remove('no-manual-breaks');
+      removeSpacingNormalization(root);
+    }
+  };
+
   if (loading) {
     return (
       <div className="ficha-root d-flex align-items-center justify-content-center" aria-busy="true">
@@ -112,6 +128,7 @@ export default function IdosoFicha() {
           </div>
           <div>
             <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+            <Button variant="outline-secondary" className="ms-2" onClick={handleDownloadPdf}>Baixar PDF</Button>
           </div>
           {/* Botão de visualização e controles de intervalo removidos conforme solicitado */}
         </div>
@@ -119,7 +136,7 @@ export default function IdosoFicha() {
         {/* Cabeçalho no topo: acima de "Dados Pessoais" */}
         <header className="ficha-header" role="banner">
           <div className="d-flex align-items-center gap-2">
-            <img className="ficha-logo" src="/vite.svg" alt="Logo da instituição" />
+            <img className="ficha-logo" src={logo} alt="Logo da instituição" />
             <div>
               <div className="ficha-title">SATA — Sistema de Assistência</div>
               <div className="ficha-meta">{pageTitle}</div>
@@ -262,53 +279,7 @@ export default function IdosoFicha() {
         {/* Rodapé removido conforme solicitação: excluir rodapés */}
       </div>
 
-      {/* Modal de visualização de impressão */}
-      <Modal show={showPreview} onHide={() => setShowPreview(false)} size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>Visualização de impressão</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="preview-sheet">
-            <div className="ficha-container">
-              {/* Cabeçalho na visualização: acima de Dados Pessoais */}
-              <main className="ficha-content">
-                {/* Conteúdo compacto apenas para visualização */}
-                <header className="ficha-header">
-                  <div className="d-flex align-items-center gap-2">
-                    <img className="ficha-logo" src="/vite.svg" alt="Logo da instituição" />
-                    <div>
-                      <div className="ficha-title">SATA — Sistema de Assistência</div>
-                      <div className="ficha-meta">{pageTitle}</div>
-                    </div>
-                  </div>
-                  <div className="text-end">
-                    <div className="ficha-meta">Página {paginaAtual}</div>
-                  </div>
-                </header>
-                <section className="ficha-section">
-                  <h3>Dados Pessoais</h3>
-                  <div><strong>Nome:</strong> {dadosPessoais?.nome ?? '—'}</div>
-                  <div><strong>Nascimento:</strong> {formatDate(dadosPessoais?.dataNascimento)} — Idade {dadosPessoais?.idade ?? '—'}</div>
-                </section>
-                <section className="ficha-section">
-                  <h3>Acomodação Atual</h3>
-                  <div><strong>Quarto:</strong> {acomodacao?.atual?.quartoNumero ?? '—'}</div>
-                  <div><strong>Entrada:</strong> {formatDate(acomodacao?.atual?.dataEntrada)}</div>
-                </section>
-                <section className="ficha-section">
-                  <h3>Observações</h3>
-                  <div>{observacoes?.texto ? String(observacoes.texto) : '—'}</div>
-                </section>
-              </main>
-              {/* Rodapé removido na visualização para refletir exclusão em impressão */}
-            </div>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPreview(false)}>Fechar</Button>
-          <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
-        </Modal.Footer>
-      </Modal>
+      
     </div>
   );
 }

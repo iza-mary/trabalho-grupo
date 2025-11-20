@@ -155,3 +155,6 @@ th[role="button"] { cursor: pointer; }
 /* Layout com sidebar genérica */
 .with-sidebar { padding-left: calc(var(--sidebar-width)); box-sizing: border-box; width: 100%; }
 @media (max-width: 768px) { .with-sidebar { padding-left: 0; width: 100%; } }
+
+.modal.show { z-index: 1300; }
+.modal-backdrop.show { opacity: 0.6; }

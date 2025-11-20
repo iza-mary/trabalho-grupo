@@ -91,11 +91,9 @@ class ProdutoController {
         novo = atual - qty;
       }
 
-      // Não armazenar registros de movimentação no campo "observacao"
-      const produtoAtualizado = new Produto({ ...found, quantidade: novo });
-      const ok = await ProdutoRepository.update(id, produtoAtualizado);
-      if (!ok) return res.status(500).json({ success: false, error: 'Falha ao registrar movimentação' });
-      const updated = await ProdutoRepository.findById(id);
+      const fast = await ProdutoRepository.updateQuantidadeFast(id, novo);
+      if (!fast.ok) return res.status(500).json({ success: false, error: 'Falha ao registrar movimentação' });
+      const updated = fast.updated;
 
       const abaixoMinimo = Number(updated.quantidade || 0) < Number(updated.estoque_minimo || 0);
       res.json({ success: true, data: updated, abaixoMinimo });
@@ -106,7 +104,7 @@ class ProdutoController {
           produto_id: id,
           tipo,
           quantidade: qty,
-          saldo_anterior: atual,
+          saldo_anterior: fast.prevQuantidade,
           saldo_posterior: novo,
           doacao_id: null,
           responsavel_id: req.user?.id ?? null,
