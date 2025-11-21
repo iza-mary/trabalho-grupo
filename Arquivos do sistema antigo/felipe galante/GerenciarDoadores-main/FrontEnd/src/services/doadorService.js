@@ -74,7 +74,7 @@ const remove = async (id) => {
         const response = await fetch(`${BASE_API_URL}/${id}`, {
             method: "DELETE",
         })
-        const result = handleResponse(response);
+        const result = await handleResponse(response);
         return result.message;
     } catch (error) {
         console.error(`Erro ao remover doador ${id}:`, error)

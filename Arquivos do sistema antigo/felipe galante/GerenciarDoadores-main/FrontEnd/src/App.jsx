@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import Lateral from './components/Lateral';
-import Header from './components/Header';
-import HeaderTabela from './components/HeaderTabela';
-import FormDoador from './components/FormDoador';
-import TabelaDoadores from './components/TabelaDoador';
-import FormEditDoador from './components/FormEditDoador';
-import doadorService from './services/doadorService';
-import "./components/SataDoadores.css";
+import Lateral from './views/Lateral';
+import Header from './views/Header';
+import HeaderTabela from './views/HeaderTabela';
+import FormDoador from './views/FormDoador';
+import TabelaDoadores from './views/TabelaDoador';
+import FormEditDoador from './views/FormEditDoador';
+import { doadorController } from './controls/container';
+import "./views/SataDoadores.css";
 
 function App() {
   const [mostraTabela, setMostraTabela] = useState(false);
@@ -18,18 +18,18 @@ function App() {
   const [doadorToDelete, setDoadorToDelete] = useState(null);
   const [filtros, setFiltros] = useState({ filtros: [] });
 
-  const loadDoadores = async () => {
-    const dados = await doadorService.getAll();
+  const loadDoadores = useCallback(async () => {
+    const dados = await doadorController.getAll();
     setCacheDoadores(dados);
-  };
+  }, []);
 
-  const filtrarDados = async () => {
-    const dados = await doadorService.getByBusca(filtros);
+  const filtrarDados = useCallback(async () => {
+    const dados = await doadorController.getByBusca(filtros);
     setDoadores(dados);
-  };
+  }, [filtros]);
 
   const handleSaveDoador = async (doador) => {
-    const saved = await doadorService.add(doador);
+    const saved = await doadorController.add(doador);
     setDoadores([...doadores, saved]);
     loadDoadores();
   };
@@ -39,7 +39,7 @@ function App() {
   };
 
   const handleEditar = async (doador) => {
-    const edited = await doadorService.update(doador);
+    const edited = await doadorController.update(doador);
     setDoadores(prev => prev.map(d => d.id === edited.id ? edited : d));
   };
 
@@ -48,7 +48,7 @@ function App() {
   };
 
   const handleDeletarDoador = async () => {
-    await doadorService.remove(doadorToDelete);
+    await doadorController.remove(doadorToDelete);
     await filtrarDados();
   };
 
@@ -58,11 +58,11 @@ function App() {
 
   useEffect(() => {
     filtrarDados();
-  }, [filtros]);
+  }, [filtrarDados]);
 
   useEffect(() => {
     loadDoadores();
-  }, []);
+  }, [loadDoadores]);
 
   return (
     <BrowserRouter>
