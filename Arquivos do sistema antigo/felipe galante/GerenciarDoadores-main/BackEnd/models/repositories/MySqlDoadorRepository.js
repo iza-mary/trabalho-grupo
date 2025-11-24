@@ -1,14 +1,17 @@
+// Repositório MySQL: consultas SQL para criar, listar, atualizar, excluir e filtrar doadores
 const db = require('../../config/database')
 const Doador = require('../doador')
 const IDoadorRepository = require('./IDoadorRepository')
 
 class MySqlDoadorRepository extends IDoadorRepository {
     async findAll() {
+        // Lista ordenada por nome
         const [rows] = await db.execute('SELECT * FROM doadores ORDER BY nome')
         return rows.map(r => new Doador(r))
     }
 
     async findById(id) {
+        // Busca por id
         const [rows] = await db.execute('SELECT * FROM doadores WHERE id = ?', [id])
         if (rows.length === 0) return null
         return new Doador(rows[0])
@@ -16,6 +19,7 @@ class MySqlDoadorRepository extends IDoadorRepository {
 
     async create(doadorData) {
         const { nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento } = doadorData
+        // Insere registro e retorna o criado
         const [result] = await db.execute(
             'INSERT INTO doadores (nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento]
@@ -25,6 +29,7 @@ class MySqlDoadorRepository extends IDoadorRepository {
 
     async update(id, doadorData) {
         const { nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento } = doadorData
+        // Atualiza registro existente
         await db.execute(
             'UPDATE doadores SET nome = ?, cpf = ?, telefone = ?, rg = ?, email = ?, cidade = ?, rua = ?, numero = ?, cep = ?, complemento = ? WHERE id = ?',
             [nome, cpf, telefone, rg, email, cidade, rua, numero, cep, complemento, id]
@@ -33,11 +38,13 @@ class MySqlDoadorRepository extends IDoadorRepository {
     }
 
     async delete(id) {
+        // Exclui e retorna se houve mudança
         const [result] = await db.execute('DELETE FROM doadores WHERE id = ?', [id])
         return result.affectedRows > 0
     }
 
     async getByBusca(filtros) {
+        // Monta busca por termos em várias colunas, com relevância
         const colunas = ['nome', 'cpf', 'telefone', 'rg', 'email', 'cidade', 'rua', 'numero', 'cep', 'complemento']
         const whereConditions = []
         const whereValues = []

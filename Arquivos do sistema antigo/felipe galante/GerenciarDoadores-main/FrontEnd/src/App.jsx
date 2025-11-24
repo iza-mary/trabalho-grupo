@@ -1,3 +1,4 @@
+// Aplicação principal: gerencia estados e integra views com o coordenador
 import { useEffect, useState, useCallback } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import Lateral from './views/Lateral';
@@ -10,6 +11,7 @@ import { doadorController } from './controls/container';
 import "./views/SataDoadores.css";
 
 function App() {
+  // Estados de exibição, lista e filtros
   const [mostraTabela, setMostraTabela] = useState(false);
   const [doadores, setDoadores] = useState([]);
   const [cacheDoadores, setCacheDoadores] = useState([]);
@@ -19,16 +21,19 @@ function App() {
   const [filtros, setFiltros] = useState({ filtros: [] });
 
   const loadDoadores = useCallback(async () => {
+    // Carrega lista completa para auxiliar validadores de duplicidade
     const dados = await doadorController.getAll();
     setCacheDoadores(dados);
   }, []);
 
   const filtrarDados = useCallback(async () => {
+    // Aplica filtros e atualiza tabela
     const dados = await doadorController.getByBusca(filtros);
     setDoadores(dados);
   }, [filtros]);
 
   const handleSaveDoador = async (doador) => {
+    // Salva novo doador e atualiza listas
     const saved = await doadorController.add(doador);
     setDoadores([...doadores, saved]);
     loadDoadores();
@@ -39,6 +44,7 @@ function App() {
   };
 
   const handleEditar = async (doador) => {
+    // Atualiza doador editado na lista
     const edited = await doadorController.update(doador);
     setDoadores(prev => prev.map(d => d.id === edited.id ? edited : d));
   };
@@ -48,6 +54,7 @@ function App() {
   };
 
   const handleDeletarDoador = async () => {
+    // Remove e refaz a busca atual
     await doadorController.remove(doadorToDelete);
     await filtrarDados();
   };

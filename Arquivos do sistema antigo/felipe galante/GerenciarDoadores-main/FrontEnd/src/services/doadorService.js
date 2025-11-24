@@ -1,5 +1,7 @@
+// Endereço base da API do backend para operações de doadores
 const BASE_API_URL = "http://localhost:3000/api/doadores"
 
+// Padroniza a leitura e checagem das respostas da API
 const handleResponse = async (response) => {
     if (!response.ok) {
         throw new Error("HTTP error! status:", response.status)
@@ -11,6 +13,7 @@ const handleResponse = async (response) => {
     return data
 }
 
+// Lista todos os doadores
 const getAll = async () => {
     try {
         const response = await fetch(BASE_API_URL);
@@ -22,6 +25,7 @@ const getAll = async () => {
     }
 }
 
+// Busca um doador específico pelo id
 const getById = async (id) => {
     try {
         const response = await fetch(`${BASE_API_URL}/${id}`)
@@ -32,6 +36,7 @@ const getById = async (id) => {
     }
 }
 
+// Cria um novo doador
 const add = async (doador) => {
     try {
         const doadorData = {
@@ -52,6 +57,7 @@ const add = async (doador) => {
     }
 }
 
+// Atualiza um doador existente
 const update = async (doador) => {
     try {
         const doadorData = { ...doador }
@@ -69,6 +75,7 @@ const update = async (doador) => {
     }
 }
 
+// Remove um doador pelo id
 const remove = async (id) => {
     try {
         const response = await fetch(`${BASE_API_URL}/${id}`, {
@@ -82,6 +89,7 @@ const remove = async (id) => {
     }
 }
 
+// Filtra doadores usando termos variados
 const getByBusca = async (filtros) => {
     try {
         const response = await fetch(`${BASE_API_URL}/filtrar`, {

@@ -1,3 +1,4 @@
+// Montador (container): conecta repositório, serviço e controller
 const MySqlDoadorRepository = require('../models/repositories/MySqlDoadorRepository')
 const { DoadorService } = require('../models/services/DoadorService')
 const DoadorController = require('../controls/doadorController')

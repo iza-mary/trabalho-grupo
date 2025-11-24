@@ -1,3 +1,4 @@
+// Modelo de dados do Doador: guarda campos e valida entradas obrigatórias
 class Doador {
     constructor(data) {
             this.id = data.id || null,
@@ -13,6 +14,7 @@ class Doador {
             this.complemento = data.complemento || ""
     }
 
+    // Verifica campos obrigatórios e retorna mensagens de erro
     validate() {
         const errors = []
 
@@ -29,6 +31,7 @@ class Doador {
     }
 
 
+    // Organiza os dados para serem enviados na resposta
     toJSON() {
         return {
             id: this.id,

@@ -1,10 +1,13 @@
+// Controller: recebe pedidos HTTP e usa o serviço para responder
 class DoadorController {
     constructor(service) {
+        // Serviço de regras de negócio injetado
         this.service = service;
     }
 
     async getAll(req, res) {
         try {
+            // Busca todos os doadores e formata saída
             const doadores = await this.service.getAll();
             res.json({
                 success: true,
@@ -22,6 +25,7 @@ class DoadorController {
     async getByBusca(req, res) {
         try {
             const { filtros } = req.body;
+            // Filtra por termos em várias colunas com ordenação por relevância
             const doadores = await this.service.getByBusca(filtros || []);
             res.json({
                 success: true,
@@ -38,6 +42,7 @@ class DoadorController {
 
     async create(req, res) {
         try {
+            // Cria um novo doador após validar os dados
             const newDoador = await this.service.create(req.body);
             res.status(201).json({
                 success: true,
@@ -62,6 +67,7 @@ class DoadorController {
     async getById(req, res) {
         try {
             const { id } = req.params;
+            // Busca por id e trata caso não encontrado
             const doador = await this.service.getById(id);
             if (!doador) {
                 return res.status(404).json({
@@ -84,6 +90,7 @@ class DoadorController {
     async update(req, res) {
         try {
             const { id } = req.params;
+            // Atualiza dados de um doador existente após validação
             const doadorAtualizado = await this.service.update(id, req.body);
             return res.json({
                 success: true,
@@ -114,6 +121,7 @@ class DoadorController {
     async delete(req, res) {
         try {
             const { id } = req.params;
+            // Exclui doador e informa sucesso ou não encontrado
             const deleted = await this.service.delete(id);
             if (deleted) {
                 return res.json({

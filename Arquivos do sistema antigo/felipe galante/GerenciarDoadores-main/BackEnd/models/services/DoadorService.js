@@ -1,3 +1,4 @@
+// Serviço de regras do Doador: aplica validações e conversa com o repositório
 const Doador = require('../doador')
 
 class ValidationError extends Error {
@@ -17,6 +18,7 @@ class NotFoundError extends Error {
 
 class DoadorService {
     constructor(repository) {
+        // Repositório de dados injetado
         this.repository = repository
     }
 
@@ -33,6 +35,7 @@ class DoadorService {
     }
 
     async create(data) {
+        // Valida dados antes de salvar
         const doador = new Doador(data)
         const errors = doador.validate()
         if (errors.length > 0) throw new ValidationError(errors)
@@ -41,6 +44,7 @@ class DoadorService {
     }
 
     async update(id, data) {
+        // Confere existência, valida e então atualiza
         const existente = await this.repository.findById(id)
         if (!existente) throw new NotFoundError()
         const doador = new Doador({ ...data, id })
@@ -51,6 +55,7 @@ class DoadorService {
     }
 
     async delete(id) {
+        // Exclui somente se existir
         const existente = await this.repository.findById(id)
         if (!existente) throw new NotFoundError()
         return await this.repository.delete(id)

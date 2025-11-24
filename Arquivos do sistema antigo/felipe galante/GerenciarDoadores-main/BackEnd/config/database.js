@@ -1,3 +1,4 @@
+// Configuração da conexão com o banco MySQL usando pool de conexões
 const mysql = require('mysql2/promise');
 
 const dbConfig = {
@@ -12,6 +13,7 @@ const dbConfig = {
 
 const pool = mysql.createPool(dbConfig);
 
+// Testa a conexão ao iniciar para facilitar diagnóstico
 const testConnection = async ()=> {
     try {
         const connection = await pool.getConnection();
