@@ -2,6 +2,7 @@ import { Button } from "react-bootstrap";
 import { BiPlusCircle } from "react-icons/bi";
 import { GiftFill } from "react-bootstrap-icons";
 import PageHeader from '../../ui/PageHeader';
+import HelpButton from '../../ui/HelpButton';
 import { useAuth } from '../../../hooks/useAuth';
 
 function HeaderTabela ( {selectTableDoa, selectTipo} ) {
@@ -15,20 +16,21 @@ function HeaderTabela ( {selectTableDoa, selectTipo} ) {
 
     return (
         <PageHeader
-            title="Lista de Doações Recebidas"
-            icon={<GiftFill />}
-            actions={
-                <Button 
-                    onClick={() => { if (isAdmin) handleTipoDoacao(false); }} 
-                    variant="primary"
-                    className={!isAdmin ? 'disabled-action' : ''}
-                    disabled={!isAdmin}
-                    title={!isAdmin ? 'Apenas Administradores podem cadastrar doações' : 'Nova Doação'}
-                >
-                    <BiPlusCircle className="me-1" size={20} />
-                    Nova Doação
-                </Button>
-            }
+          title="Lista de Doações Recebidas"
+          icon={<GiftFill />}
+            suffix={<HelpButton inline iconOnly />}
+          actions={
+            <Button 
+              onClick={() => { if (isAdmin) handleTipoDoacao(false); }} 
+              variant="primary"
+              className={!isAdmin ? 'disabled-action' : ''}
+              disabled={!isAdmin}
+              title={!isAdmin ? 'Apenas Administradores podem cadastrar doações' : 'Nova Doação'}
+            >
+              <BiPlusCircle className="me-1" size={20} />
+              Nova Doação
+            </Button>
+          }
         />
     );
 }

@@ -1,5 +1,6 @@
 const doacaoRepository = require("../repository/doacaoRepository");
 const Doacao = require("../models/doacao");
+const { criarNotificacao } = require("./notificacaoController");
 
 class DoacaoController {
     async getAll(req, res) {
@@ -41,6 +42,7 @@ class DoacaoController {
 
     async create(req, res) {
         try {
+            const t0 = process.hrtime.bigint();
             const payload = { ...req.body };
             if (req.user) {
                 payload.actor = { id: req.user.id, nome: req.user.nome };
@@ -48,13 +50,42 @@ class DoacaoController {
             const doacao = new Doacao(payload);
             const errors = doacao.validate();
             if (errors.length > 0) {
+                const t1 = process.hrtime.bigint();
+                const durMs = Number(t1 - t0) / 1e6;
+                try { console.log(JSON.stringify({ scope: 'donations', stage: 'validation_failed', duration_ms: Number(durMs.toFixed(2)) })); } catch (_) {}
                 return res.status(400).json({
                     success: false,
                     message: "Dados inválidos",
                     errors
                 })
             }
+            const tRepoStart = process.hrtime.bigint();
             const newDoacao = await doacaoRepository.create(doacao)
+            try {
+                const tipoText = String(newDoacao.tipo || '').trim();
+                const valorText = newDoacao.valor != null ? ` no valor de R$ ${newDoacao.valor}` : '';
+                await criarNotificacao({
+                    tipo: 'cadastro',
+                    titulo: 'Nova Doação Cadastrada',
+                    descricao: `Doação de ${tipoText}${valorText} registrada`,
+                    referencia_id: newDoacao.id,
+                    referencia_tipo: 'doacao',
+                    usuario_id: req.user ? req.user.id : null
+                });
+            } catch (notificacaoError) {
+                console.error('Falha ao criar notificação para nova doação:', notificacaoError);
+            }
+            const tRepoEnd = process.hrtime.bigint();
+            const totalMs = Number(tRepoEnd - t0) / 1e6;
+            const repoMs = Number(tRepoEnd - tRepoStart) / 1e6;
+            try {
+                console.log(JSON.stringify({
+                    scope: 'donations',
+                    stage: 'create_success',
+                    duration_ms: Number(totalMs.toFixed(2)),
+                    repo_ms: Number(repoMs.toFixed(2))
+                }));
+            } catch (_) {}
             res.status(201).json({
                 success: true,
                 data: newDoacao.toJSON(),
@@ -146,6 +177,29 @@ class DoacaoController {
             }
             const doacaoAtualizado = await doacaoRepository.update(id, doacao);
 
+            try {
+                const tipoUp = String(doacaoAtualizado.tipo || '').toUpperCase();
+                const tipoText = (tipoUp === 'D' || tipoUp === 'DINHEIRO')
+                  ? 'Dinheiro'
+                  : (tipoUp === 'A' || tipoUp === 'ALIMENTO')
+                    ? 'Alimento'
+                    : 'Outros';
+                const valorNum = (tipoUp === 'D' || tipoUp === 'DINHEIRO')
+                  ? Number(doacaoAtualizado?.doacao?.valor ?? 0)
+                  : null;
+                const valorText = valorNum != null && Number.isFinite(valorNum) ? ` no valor de R$ ${valorNum}` : '';
+                await criarNotificacao({
+                    tipo: 'cadastro',
+                    titulo: 'Doação Atualizada',
+                    descricao: `Doação de ${tipoText}${valorText} foi atualizada.`,
+                    referencia_id: doacaoAtualizado.id,
+                    referencia_tipo: 'doacao',
+                    usuario_id: req.user ? req.user.id : null
+                });
+            } catch (notificacaoError) {
+                console.error('Falha ao criar notificação para atualização de doação:', notificacaoError);
+            }
+
             return res.json({
                 success: true,
                 data: doacaoAtualizado.toJSON(),
@@ -167,6 +221,16 @@ class DoacaoController {
             const deleted = await doacaoRepository.delete(id);
 
             if (deleted) {
+                try {
+                    await criarNotificacao({
+                        mensagem: `Doação com ID ${id} foi deletada.`,
+                        tipo: 'doacao',
+                        referencia_id: id,
+                        id_usuario: req.user ? req.user.id : null
+                    });
+                } catch (notificacaoError) {
+                    console.error('Falha ao criar notificação para exclusão de doação:', notificacaoError);
+                }
                 return res.json({
                     success: true,
                     message: "Doação deletada com sucesso!"

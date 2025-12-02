@@ -8,12 +8,13 @@ export const categoriasProdutos = [
 ];
 
 export const unidadesMedidaProdutos = [
-  'Unidade',
+  'Unidade(s)',
   'Kg',
   'L',
-  'Pacote',
-  'Caixa',
-  'Outro'
+  'Pacotes',
+  'Caixas',
+  'Outro',
+  'm'
 ];
 
 const isWholeNumber = (v) => /^\d+$/.test(String(v ?? '').trim());

@@ -1,5 +1,6 @@
 const DoacaoDinheiro = require("./doacaoDinheiro");
-const DoacaoProduto = require("./doacaoProduto");
+const DoacaoAlimentos = require("./doacaoAlimentos");
+const DoacaoItens = require("./doacaoItens");
 const Doador = require("./doador");
 
 class Doacao {
@@ -21,7 +22,21 @@ class Doacao {
         // Suporte a relacionamento com eventos: id e título
         this.eventoId = data.evento_id || data.eventoId || null;
         this.eventoTitulo = data.eventoTitulo || data.evento || null;
-        this.doacao = this.tipo === "D" ? new DoacaoDinheiro(data) : new DoacaoProduto(data);
+        const tipoNorm = (t) => {
+            const v = String(t || '').toUpperCase();
+            if (v === 'D' || v === 'DINHEIRO') return 'DINHEIRO';
+            if (v === 'A' || v === 'ALIMENTO') return 'ALIMENTO';
+            if (v === 'O' || v === 'OUTROS' || v === 'OUTRO') return 'OUTROS';
+            return v;
+        };
+        const tn = tipoNorm(this.tipo);
+        if (tn === 'DINHEIRO') {
+            this.doacao = new DoacaoDinheiro(data);
+        } else if (tn === 'ALIMENTO') {
+            this.doacao = new DoacaoAlimentos(data);
+        } else {
+            this.doacao = new DoacaoItens(data);
+        }
     }
 
     //Validações
@@ -38,10 +53,40 @@ class Doacao {
             errors.push("Doador é obrigatório e deve ser um número válido!")
         }
 
-        const validTipo = ["D", "A", "O"];
+        const validTipo = ["D", "A", "O", "Dinheiro", "Alimento", "Outros"];
 
         if (!validTipo.includes(this.tipo)) {
             errors.push("Tipo de doação inválida!");
+        }
+
+        // Validações específicas do subtipo
+        try {
+            const subErrors = (this.doacao?.validate && typeof this.doacao.validate === 'function') ? this.doacao.validate() : [];
+            if (Array.isArray(subErrors) && subErrors.length) {
+                errors.push(...subErrors);
+            }
+        } catch (_) {}
+
+        // Regras cruzadas
+        const tipoUpper = String(this.tipo || '').toUpperCase();
+        const isDinheiro = (tipoUpper === 'D' || tipoUpper === 'DINHEIRO');
+        const isAlimento = (tipoUpper === 'A' || tipoUpper === 'ALIMENTO');
+        const isOutros = (tipoUpper === 'O' || tipoUpper === 'OUTROS');
+        if (isDinheiro) {
+            const v = Number(this.doacao?.valor ?? 0);
+            if (!v || v <= 0) errors.push('Valor de doação em dinheiro deve ser positivo');
+        }
+        if (isAlimento) {
+            const q = Number(this.doacao?.quantidade ?? this.doacao?.qntd ?? 0);
+            const t = String(this.doacao?.tipo_alimento || '').trim();
+            if (!t) errors.push('Tipo de alimento é obrigatório');
+            if (!q || q <= 0) errors.push('Quantidade de alimento deve ser positiva');
+        }
+        if (isOutros) {
+            const q = Number(this.doacao?.quantidade ?? this.doacao?.qntd ?? 0);
+            const d = String(this.doacao?.descricao_item || '').trim();
+            if (!d) errors.push('Descrição do item é obrigatória');
+            if (!q || q <= 0) errors.push('Quantidade de item deve ser positiva');
         }
 
         return errors;

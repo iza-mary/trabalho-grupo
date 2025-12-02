@@ -77,7 +77,7 @@ function FiltroBuscaDoadores({ onBuscar, onPesquisar }) {
               <InputGroup className="w-100">
                 <Form.Control
                   type="text"
-                  placeholder="Buscar doadores..."
+                  placeholder="Buscar..."
                   value={termo}
                   onChange={onChangeTermo}
                 />

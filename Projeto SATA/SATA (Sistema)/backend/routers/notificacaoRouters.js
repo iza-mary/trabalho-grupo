@@ -9,6 +9,7 @@ router.get('/contadores', (req, res) => notificacaoController.getContadores(req,
 router.get('/:id', (req, res) => notificacaoController.getById(req, res));
 router.post('/', (req, res) => notificacaoController.create(req, res));
 router.put('/:id', (req, res) => notificacaoController.update(req, res));
+router.delete('/bulk', (req, res) => notificacaoController.deletarVarias(req, res));
 router.delete('/:id', (req, res) => notificacaoController.delete(req, res));
 
 // Rotas específicas para marcar como lida

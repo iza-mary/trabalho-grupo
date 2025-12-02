@@ -1,9 +1,12 @@
 import axios from 'axios';
 
+const envBase = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : null;
 const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
-const base = origin.startsWith('https://')
-  ? origin.replace(/:\d+$/, '') + '/api'
-  : 'http://localhost:3000/api';
+const isLocalhost = /^http:\/\/localhost(?::\d+)?$/i.test(origin) || /^http:\/\/127\.0\.0\.1(?::\d+)?$/i.test(origin);
+const fallbackBase = isLocalhost ? 'http://localhost:3000/api' : origin.replace(/\/?$/, '') + '/api';
+const base = envBase || fallbackBase;
 
 const api = axios.create({
   baseURL: base,

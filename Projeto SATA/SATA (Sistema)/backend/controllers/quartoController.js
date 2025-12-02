@@ -144,9 +144,10 @@ class QuartoController {
                 message: 'Quarto atualizado com sucesso'
             });
         } catch (error) {
-            res.status(500).json({
+            const status = (error && (error.status === 400 || error.code === 'CAPACITY_BELOW_OCCUPIED')) ? 400 : 500;
+            res.status(status).json({
                 success: false,
-                message: 'Erro ao atualizar quarto',
+                message: status === 400 ? error.message : 'Erro ao atualizar quarto',
                 error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }

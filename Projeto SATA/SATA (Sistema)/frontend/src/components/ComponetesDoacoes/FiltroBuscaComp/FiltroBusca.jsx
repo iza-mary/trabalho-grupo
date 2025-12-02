@@ -57,7 +57,7 @@ function FiltroBusca({ onTipo, onPeriodo, onDestinatario, onBusca, onOrdenacao }
                         <Col xs={12} md={4} lg={4} xl={4} className="mb-3">
                             <Form.Label>Buscar</Form.Label>
                             <InputGroup>
-                                <Form.Control type="text" placeholder="Doador ou item..." onChange={(e) => { onBusca(e.target.value); }} />
+                                <Form.Control type="text" placeholder="Buscar..." onChange={(e) => { onBusca(e.target.value); }} />
                             </InputGroup>
                         </Col>
                     </Row>

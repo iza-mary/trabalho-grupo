@@ -99,7 +99,7 @@ export default function SearchSelect({
       );
     }
     setResults(filtered.slice(0, 50));
-  }, [items, searchTerm, displayField, filterFn, endpoint, minChars]);
+  }, [items, searchTerm, displayField, filterFn, endpoint, minChars, queryParams]);
 
   // Fecha dropdown ao clicar fora
   useEffect(() => {
@@ -175,9 +175,7 @@ export default function SearchSelect({
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
-          placeholder={
-            placeholder || `Buscar ${(label || '').toLowerCase()}...`
-          }
+          placeholder={placeholder || 'Buscar...'}
           disabled={disabled}
           required={required}
         />

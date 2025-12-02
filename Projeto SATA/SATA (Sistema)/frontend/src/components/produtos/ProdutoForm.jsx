@@ -7,7 +7,7 @@ export default function ProdutoForm({ initialValues, onSubmit, onCancel, submitL
   const defaults = {
     nome: '',
     categoria: '',
-    unidade_medida: 'Unidade',
+    unidade_medida: 'Unidade(s)',
     estoque_atual: '0',
     estoque_minimo: '0',
     preco: '',
@@ -121,21 +121,7 @@ export default function ProdutoForm({ initialValues, onSubmit, onCancel, submitL
         {errors.preco && <div className="invalid-feedback d-block">{errors.preco}</div>}
       </div>
 
-      <div className="col-sm-3">
-        <label className="form-label" htmlFor="quantidade">Quantidade</label>
-        <input
-          id="quantidade"
-          type="number"
-          inputMode="numeric"
-          min="0"
-          step="1"
-          pattern="\\d*"
-          className={`form-control text-end${errors.quantidade ? ' is-invalid' : ''}`}
-          value={form.quantidade}
-          onChange={e => updateForm('quantidade', e.target.value)}
-        />
-        {errors.quantidade && <div className="invalid-feedback d-block">{errors.quantidade}</div>}
-      </div>
+      
 
       <div className="col-sm-12">
         <label className="form-label" htmlFor="descricao">Descrição</label>

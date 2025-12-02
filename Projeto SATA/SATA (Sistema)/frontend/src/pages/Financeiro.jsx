@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
+import HelpButton from '../components/ui/HelpButton';
 import StandardTable from '../components/ui/StandardTable';
 import financeiroService from '../services/financeiroService';
 import { CashStack, Funnel, Pencil, Trash, PlusCircle, CalendarEvent, Eye } from 'react-bootstrap-icons';
@@ -410,6 +411,7 @@ const Financeiro = () => {
         <PageHeader
           title="Financeiro"
           icon={<CashStack />}
+          suffix={<HelpButton inline iconOnly />}
           actions={
             <Button variant="primary" onClick={isAdmin ? handleOpenModal : undefined} disabled={!isAdmin || loading} className={`d-inline-flex align-items-center ${!isAdmin ? 'disabled-action' : ''}`}>
               <PlusCircle className="me-1" />
@@ -625,7 +627,7 @@ const Financeiro = () => {
               <Col md={4}>
                 <Form.Group controlId="filterSearch">
                   <Form.Label>Buscar</Form.Label>
-                  <Form.Control type="text" placeholder="Descrição ou observação" value={filter.search ?? ''} onChange={(e) => setFilter({ ...filter, search: e.target.value })} />
+                  <Form.Control type="text" placeholder="Buscar..." value={filter.search ?? ''} onChange={(e) => setFilter({ ...filter, search: e.target.value })} />
                 </Form.Group>
               </Col>
               {tableFilter.period === 'custom' && (

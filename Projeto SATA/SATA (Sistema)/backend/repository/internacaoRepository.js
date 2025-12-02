@@ -43,13 +43,13 @@ class InternacaoRepository {
 
     async create(internacaoData) {
         try {
-            const { idoso_id, quarto_id, cama, motivo_entrada, observacoes, data_entrada } = internacaoData;
+            const { idoso_id, quarto_id, cama, motivo_entrada, data_entrada } = internacaoData;
 
             const [result] = await db.execute(
                 `INSERT INTO internacoes 
-                (idoso_id, quarto_id, cama, motivo_entrada, observacoes, data_entrada) 
-                VALUES (?, ?, ?, ?, ?, ?)`,
-                [idoso_id, quarto_id, cama, motivo_entrada, observacoes, data_entrada]
+                (idoso_id, quarto_id, cama, motivo_entrada, data_entrada) 
+                VALUES (?, ?, ?, ?, ?)`,
+                [idoso_id, quarto_id, cama, motivo_entrada, data_entrada]
             );
 
             // Atualiza o status do idoso para internado

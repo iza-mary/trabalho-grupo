@@ -16,6 +16,7 @@ const normalizeRole = (role) => {
 };
 
 function authenticate(req, res, next) {
+  if (req.method === 'OPTIONS') return next();
   // Prioriza cookie httpOnly; aceita Bearer como fallback
   const authHeader = req.headers['authorization'] || '';
   const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;

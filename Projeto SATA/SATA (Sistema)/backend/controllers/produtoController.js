@@ -1,6 +1,7 @@
 const Produto = require('../models/produto');
 const ProdutoRepository = require('../repository/produtoRepository');
 const MovimentoEstoqueRepository = require('../repository/movimentoEstoqueRepository');
+const { criarNotificacao } = require("./notificacaoController");
 
 class ProdutoController {
   async getAll(req, res) {
@@ -96,6 +97,17 @@ class ProdutoController {
       const updated = fast.updated;
 
       const abaixoMinimo = Number(updated.quantidade || 0) < Number(updated.estoque_minimo || 0);
+      if (abaixoMinimo) {
+        try {
+          await criarNotificacao({
+            mensagem: `O produto "${updated.nome}" está com estoque baixo.`,
+            tipo: 'estoque_baixo',
+            referencia_id: id,
+          });
+        } catch (notificacaoError) {
+          console.error('Falha ao criar notificação de estoque baixo:', notificacaoError);
+        }
+      }
       res.json({ success: true, data: updated, abaixoMinimo });
 
       // Registrar movimento de estoque

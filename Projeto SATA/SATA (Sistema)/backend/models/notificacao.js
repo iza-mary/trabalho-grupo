@@ -66,8 +66,8 @@ class Notificacao {
   static criarNotificacaoCadastro(tipo_cadastro, nome_item, usuario_id = null) {
     return new Notificacao({
       tipo: 'cadastro',
-      titulo: `Novo ${tipo_cadastro} cadastrado`,
-      descricao: `${nome_item} foi cadastrado com sucesso no sistema`,
+      titulo: `Novo ${tipo_cadastro} criado`,
+      descricao: `${nome_item}`,
       prioridade: 'normal',
       usuario_id: usuario_id,
       referencia_tipo: tipo_cadastro.toLowerCase()

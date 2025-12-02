@@ -17,20 +17,37 @@ function formatDateBR(v) {
   } catch { return '—' }
 }
 
-function renderDetalhe(d) {
+
+function renderQuantidade(d) {
   const tipo = String(d?.tipo || '').toUpperCase()
-  if (tipo === 'D') {
+  if (tipo === 'D' || tipo === 'DINHEIRO') return '—'
+  const q = d?.doacao?.quantidade ?? d?.doacao?.qntd ?? d?.quantidade ?? d?.qntd
+  const un = d?.doacao?.unidade_medida ?? d?.unidade_medida ?? ''
+  return q != null ? `${q} ${un}`.trim() : '—'
+}
+
+function renderItemOuValor(d) {
+  const tipo = String(d?.tipo || '').toUpperCase()
+  if (tipo === 'D' || tipo === 'DINHEIRO') {
     const valor = d?.doacao?.valor ?? d?.valor
     if (valor == null) return '—'
     const n = Number(valor)
-    if (isNaN(n)) return String(valor)
-    return `R$ ${n.toFixed(2)}`
+    return isNaN(n) ? String(valor) : `R$ ${n.toFixed(2)}`
   }
-  const q = d?.doacao?.qntd ?? d?.quantidade
-  const un = d?.doacao?.unidade_medida ?? d?.unidade_medida
-  const item = d?.doacao?.item ?? d?.item
-  if (q != null) return `${q} ${un || ''} ${item || ''}`.trim()
-  return item || '—'
+  return renderItemName(d)
+}
+
+function renderItemName(d) {
+  const tipo = String(d?.tipo || '').toUpperCase()
+  if (tipo === 'D' || tipo === 'DINHEIRO') return 'Doação em dinheiro'
+  const itemCandidate = d?.doacao?.descricao_item
+    ?? d?.descricao_item
+    ?? d?.doacao?.tipo_alimento
+    ?? d?.tipo_alimento
+    ?? d?.doacao?.item
+    ?? d?.item
+    ?? null
+  return itemCandidate || '—'
 }
 
 export default function DoacaoFicha() {
@@ -99,15 +116,15 @@ export default function DoacaoFicha() {
   return (
     <div className="ficha-root" aria-label="Página de Ficha Completa da Doação">
       <div className="ficha-container" ref={containerRef}>
-        <div className="no-print controls-row mb-3 d-flex justify-content-between align-items-center">
-          <div>
-            <Link to="/doacoes" className="btn btn-outline-secondary">Voltar</Link>
-          </div>
-          <div>
-            <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
-            <Button variant="outline-secondary" className="ms-2" onClick={handleDownloadPdf}>Baixar PDF</Button>
-          </div>
-        </div>
+            <div className="no-print controls-row mb-3 d-flex justify-content-between align-items-center">
+              <div>
+            <Link to="/doacoes" state={{ showTable: true }} className="btn btn-outline-secondary">Voltar</Link>
+              </div>
+              <div>
+                <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+                <Button variant="outline-secondary" className="ms-2" onClick={handleDownloadPdf}>Baixar PDF</Button>
+              </div>
+            </div>
 
         <header className="ficha-header" role="banner">
           <div className="d-flex align-items-center gap-2">
@@ -133,8 +150,10 @@ export default function DoacaoFicha() {
                 <table className="ficha-table">
                   <tbody>
                     <tr><th>Data</th><td>{formatDateBR(doacao?.data)}</td></tr>
-                    <tr><th>Tipo</th><td>{doacao?.tipo ?? '—'}</td></tr>
-                    <tr><th>Detalhe</th><td>{renderDetalhe(doacao)}</td></tr>
+                    <tr><th>Categoria</th><td>{String(doacao?.tipo || '').toUpperCase() === 'D' || String(doacao?.tipo || '').toUpperCase() === 'DINHEIRO' ? 'Dinheiro' : (String(doacao?.tipo || '').toUpperCase() === 'A' || String(doacao?.tipo || '').toUpperCase() === 'ALIMENTO') ? 'Alimentos' : 'Outros Itens'}</td></tr>
+                    <tr><th>Item/Valor</th><td>{renderItemOuValor(doacao)}</td></tr>
+                    <tr><th>Quantidade</th><td>{renderQuantidade(doacao)}</td></tr>
+                    <tr><th>Estado de Conservação</th><td>{doacao?.doacao?.estado_conservacao ?? '—'}</td></tr>
                     <tr><th>Doador</th><td>{doacao?.doador?.nome ?? doacao?.doador_nome ?? '—'}</td></tr>
                     <tr><th>Destinatário</th><td>{doacao?.idoso ?? '—'}</td></tr>
                     <tr><th>Evento</th><td>{doacao?.evento ?? doacao?.evento_titulo ?? '—'}</td></tr>

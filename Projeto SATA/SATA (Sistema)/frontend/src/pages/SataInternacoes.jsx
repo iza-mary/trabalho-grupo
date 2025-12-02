@@ -26,14 +26,15 @@ import {
   ArrowLeft
 } from 'react-bootstrap-icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import './SataInternacoes.css';
 import './SataInternacoes.modal.css';
 import internacaoService from '../services/internacaoService.js';
 import idosoService from '../services/idosoService.js';
 import { quartoService } from '../services/quartoService.js';
 import Navbar from '../components/Navbar';
+import HelpButton from '../components/ui/HelpButton';
 import SearchSelect from '../components/SearchSelect';
-import { useAuth } from '../hooks/useAuth';
 
 const SataInternacoes = () => {
   const navigate = useNavigate();
@@ -62,8 +63,7 @@ const SataInternacoes = () => {
     idosoId: '',
     quartoId: '',
     cama: '',
-    dataEntrada: new Date().toISOString().split('T')[0],
-    observacoes: ''
+    dataEntrada: new Date().toISOString().split('T')[0]
   });
 
   // Parâmetros estáveis para busca remota de quartos (não utilizado com items locais)
@@ -151,8 +151,7 @@ const SataInternacoes = () => {
         quarto_id: novaInternacao.quartoId,
         cama: novaInternacao.cama,
         data_entrada: novaInternacao.dataEntrada,
-        motivo_entrada: 'Internação regular',
-        observacoes: novaInternacao.observacoes
+        motivo_entrada: 'Internação regular'
       };
       
       await internacaoService.criar(internacaoData);
@@ -162,8 +161,7 @@ const SataInternacoes = () => {
         idosoId: '',
         quartoId: '',
         cama: '',
-        dataEntrada: new Date().toISOString().split('T')[0],
-        observacoes: ''
+        dataEntrada: new Date().toISOString().split('T')[0]
       });
       setCamasDisponiveis([]);
     } catch (error) {
@@ -290,8 +288,7 @@ const SataInternacoes = () => {
 
   return (
     <Navbar disableSidebar={mostrarModalNova}>
-      <div className="content-area full-main">
-        <Container fluid>
+      <div className="py-4 container-fluid">
         {/* Header */}
         <div className="page-header">
           <div className="linha-cabecalho d-flex justify-content-between align-items-center">
@@ -299,6 +296,7 @@ const SataInternacoes = () => {
               <h2 className="page-title">
                 <Building className="me-2" />
                 Internações
+                <span className="ms-2 d-inline-flex align-items-center"><HelpButton inline iconOnly /></span>
               </h2>
               <p className="page-subtitle">
                 Gerencie as internações dos idosos da instituição
@@ -354,7 +352,7 @@ const SataInternacoes = () => {
                         </InputGroup.Text>
                         <Form.Control
                           type="text"
-                          placeholder="Buscar por nome do idoso, quarto ou cama..."
+                          placeholder="Buscar..."
                           value={termoBusca}
                           onChange={(e) => setTermoBusca(e.target.value)}
                         />
@@ -426,7 +424,6 @@ const SataInternacoes = () => {
                       <th>Entrada</th>
                       <th>Status</th>
                       <th>Dias</th>
-                      <th>Observações</th>
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -438,7 +435,7 @@ const SataInternacoes = () => {
                           {obterNomeIdoso(internacao.idoso_id)}
                         </td>
                         <td>{obterNumeroQuarto(internacao.quarto_id)}</td>
-                        <td>{internacao.cama}</td>
+                        <td>{internacao.cama_nome || internacao.cama}</td>
                         <td>{new Date(internacao.data_entrada).toLocaleDateString('pt-BR')}</td>
                         <td>
                           <Badge bg={internacao.status === 'ativa' ? 'success' : 'secondary'} className="status-badge">
@@ -446,7 +443,6 @@ const SataInternacoes = () => {
                           </Badge>
                         </td>
                         <td>{internacao.status === 'ativa' ? calcularDiasInternacao(internacao.data_entrada) : '-'}</td>
-                        <td><small className="text-muted">{internacao.observacoes ? String(internacao.observacoes).slice(0, 60) : '-'}</small></td>
                         <td>
                           {internacao.status === 'ativa' ? (
                             <Button 
@@ -534,112 +530,58 @@ const SataInternacoes = () => {
                         <SearchSelect
                           label="Cama"
                           required
-                          disabled={!novaInternacao.quartoId}
-                          items={camasDisponiveis
-                            .filter(c => c !== novaInternacao.cama)
-                            .map(c => ({ value: c, label: `Cama ${c}` }))}
-                          initialValue={novaInternacao.cama ? { value: novaInternacao.cama, label: `Cama ${novaInternacao.cama}` } : null}
+                          items={camasDisponiveis.map(c => ({ value: c.id, label: c.nome }))}
+                          initialValue={novaInternacao.cama ? { value: novaInternacao.cama, label: (camasDisponiveis.find(c => String(c.id) === String(novaInternacao.cama))?.nome || `Cama ${novaInternacao.cama}`) } : null}
                           onSelect={(item) => {
                             const camaSel = item ? item.value : '';
                             setNovaInternacao(prev => ({ ...prev, cama: camaSel }));
                           }}
-                          preserveSelectionOnItemsChange={true}
-                        />
-                        {novaInternacao.quartoId && camasDisponiveis.length === 0 && (
-                          <Form.Text className="text-warning">
-                            Nenhuma cama disponível neste quarto
-                          </Form.Text>
-                        )}
-                      </Col>
-                      <Col md={6} className="mb-3">
-                        <Form.Label>Data de Internação *</Form.Label>
-                        <Form.Control
-                          type="date"
-                          value={novaInternacao.dataEntrada}
-                          onChange={(e) => setNovaInternacao({ ...novaInternacao, dataEntrada: e.target.value })}
-                          required
+                          disabled={!novaInternacao.quartoId}
+                          placeholder={!novaInternacao.quartoId ? 'Selecione um quarto primeiro' : 'Buscar cama...'}
                         />
                       </Col>
                       <Col md={12} className="mb-3">
-                        <Form.Label>Observações</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={3}
-                          value={novaInternacao.observacoes}
-                          onChange={(e) => setNovaInternacao({...novaInternacao, observacoes: e.target.value})}
-                          placeholder="Observações sobre a internação (opcional)"
-                        />
+                        <Form.Group controlId="dataEntrada">
+                          <Form.Label>Data de Entrada *</Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={novaInternacao.dataEntrada}
+                            onChange={(e) => setNovaInternacao({...novaInternacao, dataEntrada: e.target.value})}
+                            required
+                          />
+                        </Form.Group>
                       </Col>
+                      
                 </Row>
               </Modal.Body>
               <Modal.Footer>
-                <Button variant="secondary" onClick={() => setMostrarModalNova(false)}>
+                <Button variant="secondary" onClick={() => setMostrarModalNova(false)} disabled={salvando}>
                   Cancelar
                 </Button>
-                <Button 
-                  type="submit" 
-                  variant="primary" 
-                  disabled={salvando || !novaInternacao.idosoId || !novaInternacao.quartoId || !novaInternacao.cama}
-                >
-                  {salvando ? (
-                    <>
-                      <Spinner animation="border" size="sm" className="me-2" />
-                      Salvando...
-                    </>
-                  ) : (
-                    'Criar Internação'
-                  )}
+                <Button variant="primary" type="submit" disabled={salvando}>
+                  {salvando ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : 'Salvar'}
                 </Button>
               </Modal.Footer>
             </Form>
           </Modal>
 
-          {/* Modal Dar Baixa */}
-          <Modal show={mostrarModalBaixa} onHide={() => setMostrarModalBaixa(false)}>
+          {/* Modal de confirmação de baixa */}
+          <Modal show={mostrarModalBaixa} onHide={() => setMostrarModalBaixa(false)} centered>
             <Modal.Header closeButton>
-              <Modal.Title>
-                <BoxArrowRight className="me-2" />
-                Confirmar Baixa
-              </Modal.Title>
+              <Modal.Title>Confirmar Baixa</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              <p>
-                Tem certeza que deseja dar baixa na internação do idoso 
-                <strong> {internacaoSelecionada ? obterNomeIdoso(internacaoSelecionada.idoso_id) : ''}</strong>?
-              </p>
-              <p>Esta ação irá alterar o status para "Não Internado".</p>
-              {internacaoSelecionada && (
-                <div className="mt-3">
-                  <p><strong>Idoso:</strong> {obterNomeIdoso(internacaoSelecionada.idoso_id)}</p>
-                  <p><strong>Quarto:</strong> {obterNumeroQuarto(internacaoSelecionada.quarto_id)} - <strong>Cama:</strong> {internacaoSelecionada.cama}</p>
-                  <p><strong>Data de Entrada:</strong> {new Date(internacaoSelecionada.data_entrada).toLocaleDateString('pt-BR')}</p>
-                  <p><strong>Dias internado:</strong> {calcularDiasInternacao(internacaoSelecionada.data_entrada)}</p>
-                </div>
-              )}
+              Tem certeza que deseja dar baixa na internação de <strong>{internacaoSelecionada?.idoso_id && obterNomeIdoso(internacaoSelecionada.idoso_id)}</strong>?
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setMostrarModalBaixa(false)}>
+              <Button variant="secondary" onClick={() => setMostrarModalBaixa(false)} disabled={salvando}>
                 Cancelar
               </Button>
-              <Button 
-                variant="warning" 
-                onClick={isAdmin ? handleDarBaixa : undefined}
-                disabled={!isAdmin || salvando}
-                className={!isAdmin ? 'disabled-action' : ''}
-                title={!isAdmin ? 'Apenas Administradores podem confirmar baixa' : 'Confirmar Baixa'}
-              >
-                {salvando ? (
-                  <>
-                    <Spinner animation="border" size="sm" className="me-2" />
-                    Confirmando...
-                  </>
-                ) : (
-                  'Confirmar Baixa'
-                )}
+              <Button variant="warning" onClick={handleDarBaixa} disabled={salvando}>
+                {salvando ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : 'Confirmar Baixa'}
               </Button>
             </Modal.Footer>
           </Modal>
-        </Container>
       </div>
     </Navbar>
     );

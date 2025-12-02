@@ -25,7 +25,8 @@ function FormAlimentos({ onSave }) {
     doacao: {
       item: "",
       qntd: 0,
-      unidade_medida: "Unidade"
+      unidade_medida: "Unidade",
+      validade: ""
     }
   });
 
@@ -36,7 +37,7 @@ function FormAlimentos({ onSave }) {
     doadorId: 0,
     nome: ""
   });
-  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade");
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade(s)");
   const [unidadeOutro, setUnidadeOutro] = useState("");
   const [showSimilarDialog, setShowSimilarDialog] = useState(false);
   const [similarOptions, setSimilarOptions] = useState([]);
@@ -119,6 +120,23 @@ function FormAlimentos({ onSave }) {
       setValidated(false);
     } else {
       setErrors(prev => ({ ...prev, unidade_medida: null }));
+    }
+  }
+
+  const handleChangeValidade = (e) => {
+    const value = e.target.value;
+    setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, validade: value } }));
+    if (!value) {
+      setErrors(prev => ({ ...prev, validade: null }));
+    } else {
+      const hoje = new Date();
+      const dataVal = new Date(value);
+      if (dataVal < hoje.setHours(0,0,0,0)) {
+        setErrors(prev => ({ ...prev, validade: 'A validade não pode ser no passado' }));
+        setValidated(false);
+      } else {
+        setErrors(prev => ({ ...prev, validade: null }));
+      }
     }
   }
 
@@ -211,10 +229,12 @@ function FormAlimentos({ onSave }) {
     }
   }
 
-  const handleConfirmSimilar = (produtoId) => {
+  const handleConfirmSimilar = (produtoId, newName) => {
     const submission = { ...(pendingSubmission || doaAlimentos) };
     if (produtoId) {
       submission.doacao = { ...(submission.doacao || {}), produto_id: produtoId };
+    } else if (newName) {
+      submission.doacao = { ...(submission.doacao || {}), item: newName };
     }
     onSave(submission);
     setShowSimilarDialog(false);
@@ -270,11 +290,12 @@ function FormAlimentos({ onSave }) {
               <Form.Group className="mb-3">
                 <Form.Label>Unidade de medida (Obrigatório)</Form.Label>
                 <Form.Select value={unidadeSelecionada} onChange={handleChangeUnidade} required isInvalid={!!errors.unidade_medida}>
-                  <option value="Unidade">Unidade</option>
+                  <option value="Unidade(s)">Unidade(s)</option>
                   <option value="Kg">Kg</option>
                   <option value="L">L</option>
-                  <option value="Pacote">Pacote</option>
-                  <option value="Caixa">Caixa</option>
+                  <option value="Pacotes">Pacotes</option>
+                  <option value="Caixas">Caixas</option>
+                  <option value="m">m</option>
                   <option value="Outro">Outro</option>
                 </Form.Select>
                 {unidadeSelecionada === 'Outro' && (
@@ -282,6 +303,13 @@ function FormAlimentos({ onSave }) {
                 )}
                 <Form.Control.Feedback type="invalid">
                   {errors.unidade_medida}
+                </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Validade (Opcional)</Form.Label>
+                <Form.Control type="date" name="validade" value={doaAlimentos?.doacao?.validade || ''} onChange={handleChangeValidade} isInvalid={!!errors.validade} />
+                <Form.Control.Feedback type="invalid">
+                  {errors.validade}
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">

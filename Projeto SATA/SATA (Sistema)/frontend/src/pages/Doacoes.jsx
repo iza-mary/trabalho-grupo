@@ -9,20 +9,17 @@ import Header from '../components/ComponetesDoacoes/HeaderComp/Header'
 import HeaderTabela from '../components/ComponetesDoacoes/HeaderTabelaComp/HeaderTabela'
 import FiltroBusca from '../components/ComponetesDoacoes/FiltroBuscaComp/FiltroBusca'
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { formatDate } from '../utils/dateUtils';
 import { useLocation } from 'react-router-dom';
 import TabelaDoacoes from '../components/ComponetesDoacoes/TabelaDoacoesComp/TabelaDoacoes'
 import doacoesService from '../services/doacaoService'
-import FormEditarDin from '../components/ComponetesDoacoes/FormEditarDinComp/FormEditarDin'
-import FormEditarAlim from '../components/ComponetesDoacoes/FormEditarAlimComp/FormEditarAlim'
-import FormEditarOutros from '../components/ComponetesDoacoes/FormEditarOutrosComp/FormEditarOutros'
+// Formulários de edição via rota dedicada
 
 function Doacoes() {
   const location = useLocation();
   const [tipoDoacao, setTipoDoacao] = useState('money');
   const [mostraTabela, setMostraTabela] = useState(false);
-  const [doacaoToEdit, setDoacaoToEdit] = useState(null);
-  const [modoEdicao, setModoEdicao] = useState(false);
-  const [mostrarModal, setMostrarModal] = useState(false);
+  // Overlay removido: edição navega para /doacoes/editar/:id
   const [filtros, setFiltros] = useState({
     tipo: 'todos',
     data: 'todos',
@@ -31,6 +28,7 @@ function Doacoes() {
   });
   const [ordenacao, setOrdenacao] = useState('data_desc');
   const [doacoes, setDoacoes] = useState([]);
+  const [buscaLocal, setBuscaLocal] = useState('');
 
   useEffect(() => {
     console.log(doacoes);
@@ -47,11 +45,11 @@ function Doacoes() {
   const mapTipoFiltro = (tipo) => {
     switch (tipo) {
       case 'dinheiro':
-        return 'D';
+        return 'Dinheiro';
       case 'alimento':
-        return 'A';
+        return 'Alimento';
       case 'outros':
-        return 'O';
+        return 'Outros';
       default:
         return 'todos';
     }
@@ -85,9 +83,9 @@ function Doacoes() {
   const buildPrintUrl = () => {
     const mapTipo = (t) => {
       switch (t) {
-        case 'dinheiro': return 'D';
-        case 'alimento': return 'A';
-        case 'outros': return 'O';
+        case 'dinheiro': return 'Dinheiro';
+        case 'alimento': return 'Alimento';
+        case 'outros': return 'Outros';
         default: return 'todos';
       }
     };
@@ -101,13 +99,12 @@ function Doacoes() {
     return `/doacoes/impressao?${params.toString()}`;
   };
 
-  // Atualização automática: polling leve respeitando filtros e pausa durante edição/modal
+  // Atualização automática: polling leve respeitando filtros e pausa durante edição
   useEffect(() => {
     const REFRESH_MS = 10000; // 10s
     let timerId = null;
 
     const tick = async () => {
-      if (mostrarModal || modoEdicao) return; // evita sobrescrever enquanto edita
       await reloadDoacoes();
     };
 
@@ -115,24 +112,49 @@ function Doacoes() {
     return () => {
       if (timerId) clearInterval(timerId);
     };
-  }, [filtros, mostrarModal, modoEdicao, reloadDoacoes]);
+  }, [filtros, reloadDoacoes]);
 
-  const handleChangeEditando = (editando) => {
-    if (editando === false) {
-      setModoEdicao(true);
-      setMostrarModal(true);
-    } else {
-      setModoEdicao(false);
-      setMostrarModal(false);
-    }
-  };
+  // Abrir edição: navegação via tabela
 
   const handleSaveDoacao = async (doacao) => {
+    const tipoUp = String(doacao?.tipo || '').toUpperCase();
+    const tipoEnum = (tipoUp === 'D' || tipoUp === 'DINHEIRO')
+      ? 'Dinheiro'
+      : (tipoUp === 'A' || tipoUp === 'ALIMENTO')
+        ? 'Alimento'
+        : 'Outros';
+    const doadorIdNormPre = doacao?.doador?.doadorId ?? doacao?.doador?.id ?? doacao?.doador;
+    const doadorIdNumPre = Number(doadorIdNormPre);
+    if (!['D','A','O','DINHEIRO','ALIMENTO','OUTROS'].includes(tipoUp)) {
+      alert('Selecione um tipo de doação válido.');
+      return;
+    }
+    if (!Number.isFinite(doadorIdNumPre) || doadorIdNumPre <= 0) {
+      alert('Selecione um doador válido antes de salvar.');
+      return;
+    }
+    if (tipoUp === 'D' || tipoUp === 'DINHEIRO') {
+      const valorNum = Number(doacao?.doacao?.valor ?? doacao?.valor ?? 0);
+      if (!valorNum || valorNum <= 0 || Number.isNaN(valorNum)) {
+        alert('Informe um valor válido para a doação em dinheiro.');
+        return;
+      }
+    } else if (tipoUp === 'A' || tipoUp === 'ALIMENTO') {
+      const itemTxt = (doacao?.doacao?.item ?? doacao?.item ?? '').toString().trim();
+      const qtdNum = Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0);
+      if (!itemTxt) { alert('Informe o Item Doado (tipo de alimento).'); return; }
+      if (!qtdNum || qtdNum <= 0 || Number.isNaN(qtdNum)) { alert('Informe uma quantidade válida.'); return; }
+    } else {
+      const itemTxt = (doacao?.doacao?.item ?? doacao?.item ?? '').toString().trim();
+      const qtdNum = Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0);
+      if (!itemTxt) { alert('Informe o Item Doado (descrição do item).'); return; }
+      if (!qtdNum || qtdNum <= 0 || Number.isNaN(qtdNum)) { alert('Informe uma quantidade válida.'); return; }
+    }
     // Normaliza payload para criação evitando 400 no backend
     const doadorIdNorm = doacao?.doador?.doadorId ?? doacao?.doador?.id ?? doacao?.doador;
     const payload = {
       data: typeof doacao.data === 'string' ? doacao.data : (doacao.data?.split?.('T')[0] ?? ''),
-      tipo: doacao.tipo,
+      tipo: tipoEnum,
       idoso: doacao?.idoso?.nome ?? doacao?.idoso ?? '',
       idosoId: doacao?.idoso?.id ?? doacao?.idosoId ?? null,
       evento: doacao.evento ?? '',
@@ -144,13 +166,26 @@ function Doacoes() {
       },
       doacao:
         doacao.tipo === 'D'
-          ? { valor: Number(doacao?.doacao?.valor ?? doacao?.valor ?? 0) }
-          : {
-              item: doacao?.doacao?.item ?? doacao?.item ?? '',
-              qntd: Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0),
-              unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade',
-              produto_id: doacao?.doacao?.produto_id ?? null
+          ? {
+              valor: Number(doacao?.doacao?.valor ?? doacao?.valor ?? 0),
+              forma_pagamento: doacao?.doacao?.forma_pagamento ?? doacao?.forma_pagamento ?? 'Dinheiro',
+              comprovante: doacao?.doacao?.comprovante ?? doacao?.comprovante ?? null
             }
+          : (() => {
+              const item = doacao?.doacao?.item ?? doacao?.item ?? '';
+              const qtd = Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0);
+              const base = {
+                item,
+                qntd: qtd,
+                quantidade: qtd,
+                unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade(s)',
+                produto_id: doacao?.doacao?.produto_id ?? null
+              };
+              if (String(doacao.tipo).toUpperCase() === 'A') {
+                return { ...base, tipo_alimento: item, validade: doacao?.doacao?.validade ?? null };
+              }
+              return { ...base, descricao_item: item, estado_conservacao: doacao?.doacao?.estado_conservacao ?? 'Bom' };
+            })()
     };
 
     // Atualização otimista: insere entrada temporária antes da resposta do servidor
@@ -169,8 +204,24 @@ function Doacoes() {
       obs: payload.obs,
       doacao:
         payload.tipo === 'D'
-          ? { valor: payload.doacao.valor }
-          : { qntd: payload.doacao.qntd, item: payload.doacao.item, unidade_medida: payload.doacao.unidade_medida }
+          ? {
+              valor: payload.doacao.valor,
+              forma_pagamento: payload.doacao.forma_pagamento,
+              comprovante: payload.doacao.comprovante
+            }
+          : (String(payload.tipo).toUpperCase() === 'A' || String(payload.tipo).toUpperCase() === 'ALIMENTO')
+            ? {
+                tipo_alimento: payload.doacao.item,
+                quantidade: payload.doacao.qntd,
+                unidade_medida: payload.doacao.unidade_medida,
+                validade: payload.doacao.validade
+              }
+            : {
+                descricao_item: payload.doacao.item,
+                quantidade: payload.doacao.qntd,
+                unidade_medida: payload.doacao.unidade_medida,
+                estado_conservacao: payload.doacao.estado_conservacao ?? 'Bom'
+              }
     };
 
     setDoacoes((prev) => Array.isArray(prev) ? [tempDoacao, ...prev] : [tempDoacao]);
@@ -190,104 +241,8 @@ function Doacoes() {
     }
   };
 
-  const handleEditDoacao = (doacao) => {
-    const base = {
-      id: doacao.id,
-      data: doacao.data,
-      tipo: doacao.tipo,
-      idoso: doacao.idoso || '',
-      evento: doacao.evento || '',
-      eventoId: doacao.eventoId ?? null,
-      obs: doacao.obs || '',
-      doador: {
-        // Garante compatibilidade com diferentes formas de retorno do backend
-        doadorId: doacao?.doador?.doadorId ?? doacao?.doador?.id ?? doacao?.doador ?? null,
-        nome: doacao?.doador?.nome ?? ''
-      }
-    };
-    const byTipo =
-      doacao.tipo === 'D'
-        ? { valor: parseFloat(doacao.doacao?.valor ?? 0) }
-        : { item: doacao.doacao?.item ?? '', qntd: doacao.doacao?.qntd ?? 0, unidade_medida: doacao.doacao?.unidade_medida ?? 'Unidade' };
-    setDoacaoToEdit({ ...base, doacao: byTipo });
-    setMostrarModal(true);
-  };
 
-  const editDoacao = async (doacao) => {
-    // Normaliza payload para o backend evitar 400 (Bad Request)
-    const doadorIdNorm = doacao?.doador?.doadorId ?? doacao?.doador?.id ?? doacao?.doador;
-    const doadorIdNum = Number(doadorIdNorm);
-    // Garantir que doadorId é válido antes de enviar
-    if (!Number.isFinite(doadorIdNum) || doadorIdNum <= 0) {
-      const nome = doacao?.doador?.nome || '';
-      console.error('Doador inválido para atualização:', { doadorIdNorm, nome, doacao });
-      alert('Selecione um doador válido antes de salvar.');
-      return;
-    }
-    // Normaliza destinatário (idoso) aceitando tanto objeto quanto string ou campo "destinatario"
-    const idosoNomeNorm = (
-      doacao?.idoso?.nome ??
-      doacao?.idoso ??
-      doacao?.destinatario ??
-      ''
-    );
-    const idosoIdNorm = doacao?.idoso?.id ?? doacao?.idosoId ?? null;
-    const payload = {
-      id: doacao.id,
-      // Sempre enviar a data no formato YYYY-MM-DD
-      data: (doacao?.data ?? '').toString().slice(0, 10),
-      // Backend espera tipo em maiúsculo: "D", "A", "O"
-      tipo: String(doacao?.tipo || '').toUpperCase(),
-      // Backend aceita nome do idoso em "idoso" e opcionalmente o id em "idosoId"
-      idoso: idosoNomeNorm,
-      idosoId: idosoIdNorm,
-      evento: doacao.evento ?? '',
-      eventoId: doacao?.eventoId ?? null,
-      obs: doacao.obs ?? '',
-      doador: {
-        doadorId: doadorIdNum,
-        nome: doacao?.doador?.nome ?? ''
-      },
-      doacao:
-        String(doacao?.tipo || '').toUpperCase() === 'D'
-          ? { valor: Number(doacao?.doacao?.valor ?? doacao?.valor ?? 0) }
-          : {
-              item: doacao?.doacao?.item ?? doacao?.item ?? '',
-              qntd: Number(doacao?.doacao?.qntd ?? doacao?.qntd ?? 0),
-              unidade_medida: doacao?.doacao?.unidade_medida ?? doacao?.unidade_medida ?? 'Unidade',
-              produto_id: doacao?.doacao?.produto_id ?? null
-            }
-    };
-
-    await doacoesService.update(payload);
-
-    // Atualiza lista local com normalização dos campos
-    setDoacoes(
-      doacoes.map((d) =>
-        d.id === payload.id
-          ? {
-              id: payload.id,
-              data: (payload.data || '') + 'T03:00:00.000Z',
-              tipo: payload.tipo,
-              idoso: payload.idoso || '',
-              doador: {
-                doadorId: payload.doador.doadorId,
-                nome: payload.doador.nome
-              },
-              evento: payload.evento,
-              eventoId: payload.eventoId ?? null,
-              obs: payload.obs,
-              doacao: {
-                qntd: payload.doacao.qntd,
-                item: payload.doacao.item,
-                valor: payload.doacao.valor,
-                unidade_medida: payload.doacao.unidade_medida
-              }
-            }
-          : d
-      )
-    );
-  };
+  // Função de edição antiga removida
 
   const handleDeleteDoacao = async (doacao) => {
     try {
@@ -319,15 +274,22 @@ function Doacoes() {
   };
 
   const handleFiltrarBusca = (busca) => {
-    setFiltros((prev) => ({ ...prev, busca: busca?.toLowerCase() ?? prev.busca }));
+    setBuscaLocal(busca || '');
   };
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setFiltros((prev) => ({ ...prev, busca: (buscaLocal || '').toLowerCase() }));
+    }, 300);
+    return () => { if (t) clearTimeout(t); };
+  }, [buscaLocal]);
 
   // Ordenação cliente de doações
   const doacoesOrdenadas = useMemo(() => {
     const copia = [...doacoes];
     const tipoValor = (d) => String(d?.tipo || '').toUpperCase();
     const getValorOuQuantidade = (d) => {
-      if (tipoValor(d) === 'D') return Number(d?.doacao?.valor ?? d?.valor ?? 0);
+      if (tipoValor(d) === 'DINHEIRO' || tipoValor(d) === 'D') return Number(d?.doacao?.valor ?? d?.valor ?? 0);
       return Number(d?.doacao?.qntd ?? d?.quantidade ?? 0);
     };
     const parseData = (d) => {
@@ -353,13 +315,59 @@ function Doacoes() {
     }
   }, [doacoes, ordenacao]);
 
+  const normalize = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const doacoesFiltradasLocal = useMemo(() => {
+    const term = normalize(buscaLocal).trim();
+    if (!term) return doacoesOrdenadas;
+    return doacoesOrdenadas.filter((d) => {
+      const dn = normalize(d?.doador?.nome ?? d?.doador_nome ?? '');
+      const tipoUpper = String(d?.tipo || '').toUpperCase();
+      const tipoText = tipoUpper === 'D' ? 'dinheiro' : tipoUpper === 'A' ? 'alimento' : (tipoUpper === 'O' ? 'outros' : String(d?.tipo || ''));
+      const tipo = normalize(tipoText);
+      const rawDate = String(d?.data ?? '');
+      const dateStr = rawDate.length >= 10 ? rawDate.slice(0, 10) : rawDate;
+      const dateNorm = normalize(dateStr);
+      const dateBR = normalize(formatDate(d?.data));
+      const valor = d?.doacao?.valor ?? d?.valor;
+      const valorStr = normalize(valor != null ? String(valor) : '');
+      const obs = normalize(d?.obs ?? '');
+      const item = normalize(d?.doacao?.item ?? d?.item ?? d?.tipo_alimento ?? d?.descricao_item ?? '');
+      const forma = normalize(d?.doacao?.forma_pagamento ?? '');
+      const comp = normalize(d?.doacao?.comprovante ?? '');
+      const validadeRaw = d?.doacao?.validade ?? '';
+      const validadeNorm = normalize(String(validadeRaw).slice(0, 10));
+      const validadeBR = normalize(formatDate(validadeRaw));
+      const estado = normalize(d?.doacao?.estado_conservacao ?? '');
+      const unidade = normalize(d?.doacao?.unidade_medida ?? d?.unidade_medida ?? '');
+      const idoso = normalize(d?.idoso ?? '');
+      const evento = normalize(d?.evento ?? d?.evento_titulo ?? d?.eventoTitulo ?? '');
+      return (
+        dn.includes(term) ||
+        tipo.includes(term) ||
+        dateNorm.includes(term) ||
+        dateBR.includes(term) ||
+        valorStr.includes(term) ||
+        obs.includes(term) ||
+        item.includes(term) ||
+        forma.includes(term) ||
+        comp.includes(term) ||
+        validadeNorm.includes(term) ||
+        validadeBR.includes(term) ||
+        estado.includes(term) ||
+        unidade.includes(term) ||
+        idoso.includes(term) ||
+        evento.includes(term)
+      );
+    });
+  }, [doacoesOrdenadas, buscaLocal]);
+
   // Removido filtro por evento: interface passa a filtrar apenas por tipo, período, destinatário e busca
 
   return (
     <Navbar>
       <div className="content-area main-content">
         {/* Página de Cadastro de Doações */}
-        {['money', 'food', 'others'].includes(tipoDoacao) && !mostraTabela && modoEdicao === false && (
+        {['money', 'food', 'others'].includes(tipoDoacao) && !mostraTabela && (
           <>
             <Header ativarTabela={setMostraTabela} />
             <TipoDoacao selectTipoDoacao={setTipoDoacao} />
@@ -381,24 +389,14 @@ function Doacoes() {
             />
             <TabelaDoacoes
               onDelete={handleDeleteDoacao}
-              onEdit={handleEditDoacao}
-              doacao={doacaoToEdit}
-              editando={handleChangeEditando}
               setDoacoesApp={setDoacoes}
-              doacoes={doacoesOrdenadas}
+              doacoes={doacoesFiltradasLocal}
               printUrl={buildPrintUrl()}
+              hiddenColumns={['idoso','obs','validade']}
             />
           </>
         )}
-        {mostrarModal && doacaoToEdit?.tipo === 'D' && (
-          <FormEditarDin onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit} />
-        )}
-        {mostrarModal && doacaoToEdit?.tipo === 'A' && (
-          <FormEditarAlim onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit} />
-        )}
-        {mostrarModal && doacaoToEdit?.tipo === 'O' && (
-          <FormEditarOutros onEdit={editDoacao} show={handleChangeEditando} doacaoEdit={doacaoToEdit} />
-        )}
+        {/* Edição: navegação para /doacoes/editar/:id pela tabela */}
       </div>
     </Navbar>
   );

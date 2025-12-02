@@ -1,11 +1,54 @@
 import api from './api';
 
+const normTipo = (t) => {
+  const up = String(t || '').toUpperCase();
+  if (up === 'D' || up === 'DINHEIRO') return 'Dinheiro';
+  if (up === 'A' || up === 'ALIMENTO') return 'Alimento';
+  if (up === 'O' || up === 'OUTROS' || up === 'OUTRO') return 'Outros';
+  return t || '';
+};
+
+const normalizeDoacao = (d) => {
+  const tipo = normTipo(d?.tipo);
+  const doadorObj = d?.doador && typeof d.doador === 'object' ? d.doador : {};
+  const doadorId = doadorObj?.doadorId ?? doadorObj?.id ?? d?.doadorId ?? d?.doador_id ?? null;
+  const doadorNome = doadorObj?.nome ?? d?.doador_nome ?? d?.nome_doador ?? '';
+  const sub = d?.doacao && typeof d.doacao === 'object' ? d.doacao : {};
+  const quantidade = sub?.quantidade ?? sub?.qntd ?? d?.quantidade ?? d?.qntd;
+  const unidade = sub?.unidade_medida ?? d?.unidade_medida;
+  const valor = sub?.valor ?? d?.valor;
+  const forma = sub?.forma_pagamento ?? d?.forma_pagamento;
+  const comp = sub?.comprovante ?? d?.comprovante;
+  const tipoAlim = sub?.tipo_alimento ?? d?.tipo_alimento;
+  const descItem = sub?.descricao_item ?? d?.descricao_item;
+  const itemBase = sub?.item ?? d?.item;
+  const item = descItem ?? tipoAlim ?? itemBase ?? null;
+  return {
+    ...d,
+    tipo,
+    doador: { doadorId: doadorId, nome: doadorNome },
+    evento: d?.evento ?? d?.evento_titulo ?? d?.eventoTitulo ?? '',
+    doacao: {
+      ...sub,
+      valor: valor,
+      forma_pagamento: forma,
+      comprovante: comp,
+      quantidade: quantidade,
+      qntd: quantidade,
+      unidade_medida: unidade,
+      tipo_alimento: tipoAlim,
+      descricao_item: descItem,
+      item: item,
+    },
+  };
+};
+
 const getAll = async () => {
   try {
     const response = await api.get('/doacoes');
     const result = response.data;
     if (!result.success) throw new Error(result.message || 'Erro na requisição');
-    return (result.data || []).map((doacao) => ({ ...doacao }));
+    return (result.data || []).map((doacao) => normalizeDoacao(doacao));
   } catch (error) {
     console.error(`Erro ao buscar doações ${error}`);
     throw error;
@@ -17,7 +60,7 @@ const getByFiltred = async (filtro) => {
     const response = await api.post('/doacoes/filtrar', filtro);
     const result = response.data;
     if (!result.success) throw new Error(result.message || 'Erro na requisição');
-    return result.data || [];
+    return (result.data || []).map((d) => normalizeDoacao(d));
   } catch (error) {
     console.error(`Erro ao buscar doações ${error}`);
     // Fallback: tenta carregar sem filtros
@@ -42,7 +85,7 @@ const getByEvento = async (eventoId, filtro = {}) => {
     const response = await api.get(`/eventos/${eventoId}/doacoes`, { params });
     const result = response.data;
     if (!result.success) throw new Error(result.message || 'Erro na requisição');
-    return result.data || [];
+    return (result.data || []).map((d) => normalizeDoacao(d));
   } catch (error) {
     console.error(`Erro ao buscar doações do evento ${eventoId}:`, error);
     // Fallback: tenta filtrar sem o eventoId
@@ -61,7 +104,7 @@ const getById = async (id) => {
     const response = await api.get(`/doacoes/${id}`);
     const result = response.data;
     if (!result.success) throw new Error(result.message || 'Erro na requisição');
-    return { ...result.data };
+    return normalizeDoacao(result.data || {});
   } catch (error) {
     console.error(`Erro ao buscar doacao ${id}: `, error);
     throw error;
@@ -71,10 +114,10 @@ const getById = async (id) => {
 const add = async (doacao) => {
   try {
     const doacaoData = { ...doacao };
-    const response = await api.post('/doacoes', doacaoData, { timeout: 7000 });
+    const response = await api.post('/doacoes', doacaoData, { timeout: 15000 });
     const result = response.data;
     if (!result.success) throw new Error(result.message || 'Erro na requisição');
-    return { ...result.data };
+    return normalizeDoacao(result.data || {});
   } catch (error) {
     console.error('Erro ao cadastrar doação', error);
     throw error;
@@ -86,7 +129,7 @@ const update = async (doacao) => {
     const response = await api.put(`/doacoes/${doacao.id}`, doacao);
     const result = response.data;
     if (!result.success) throw new Error(result.message || 'Erro na requisição');
-    return { ...result.data };
+    return normalizeDoacao(result.data || {});
   } catch (error) {
     console.error(`Erro ao atualizar doação ${doacao.id}: `, error);
     throw error;

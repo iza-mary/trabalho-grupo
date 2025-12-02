@@ -1,11 +1,15 @@
 class DoacaoDinheiro {
     constructor(data) {
         this.valor = (data?.valor ?? data?.doacao?.valor ?? null);
+        this.forma_pagamento = (data?.forma_pagamento ?? data?.doacao?.forma_pagamento ?? 'Dinheiro');
+        this.comprovante = (data?.comprovante ?? data?.doacao?.comprovante ?? null);
     }
 
     toJSON() {
         return {
-            valor: this.valor
+            valor: this.valor,
+            forma_pagamento: this.forma_pagamento,
+            comprovante: this.comprovante
         }
     }
 }

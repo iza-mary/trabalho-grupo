@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
+import HelpButton from '../components/ui/HelpButton';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import { BoxSeam, PlusCircle, Funnel, Pencil, Trash, ArrowLeftRight, ClockHistory, ArrowUpCircleFill, ArrowDownCircleFill, Eye } from 'react-bootstrap-icons';
 import { listarProdutos, deletarProduto, listarMovimentos } from '../services/produtosService';
@@ -384,6 +385,7 @@ export default function Produtos() {
         <PageHeader
           title="Estoque"
           icon={<BoxSeam />}
+          suffix={<HelpButton inline iconOnly />}
           actions={
             <>
               <Link
@@ -430,7 +432,7 @@ export default function Produtos() {
                   className="form-control" 
                   value={search} 
                   onChange={e => setSearch(e.target.value)} 
-                  placeholder="Digite o nome do produto..." 
+                  placeholder="Buscar..." 
                 />
               </div>
               <div className="col-md-3">
@@ -620,6 +622,12 @@ export default function Produtos() {
           <Modal.Title id="excluir-title">Confirmar Exclusão</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <Alert variant="warning">
+            <strong>Atenção:</strong> Ao excluir este item, todo o seu histórico de movimentações será permanentemente removido.
+          </Alert>
+          <p>
+            Se desejar manter um registro das informações, recomendamos que você baixe o histórico em formato PDF antes de prosseguir com a exclusão.
+          </p>
           <p id="excluir-desc">Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
           {deleteItem && (
             <p className="fw-bold">{deleteItem.nome}</p>
@@ -674,7 +682,7 @@ export default function Produtos() {
               </div>
               <div className="col-md-3">
                 <label className="form-label" htmlFor="histSearch">Buscar</label>
-                <input id="histSearch" className="form-control" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Observações ou responsável" />
+                <input id="histSearch" className="form-control" value={histSearch} onChange={e => setHistSearch(e.target.value)} placeholder="Buscar..." />
               </div>
             </div>
             {/* Indicadores removidos conforme solicitado */}

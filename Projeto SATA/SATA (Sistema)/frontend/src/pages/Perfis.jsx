@@ -9,6 +9,7 @@ import { Container, Row, Col, Card, Button, Form, InputGroup, Alert, Modal, Spin
 import { People, Pencil, Trash, ShieldLock, Eye, EyeSlash } from 'react-bootstrap-icons';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
+import HelpButton from '../components/ui/HelpButton';
 import StandardTable from '../components/ui/StandardTable';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -203,6 +204,7 @@ export default function Perfis() {
           <PageHeader
             title="Gerenciamento de Perfis"
             icon={<People />}
+            suffix={<HelpButton inline iconOnly />}
             actions={(
               <div className="d-flex gap-2">
                 <Button variant="outline-secondary" onClick={() => navigate('/change-password')} className="d-inline-flex align-items-center">
@@ -251,7 +253,7 @@ export default function Perfis() {
                       type="text"
                       value={termoBusca}
                       onChange={(e) => { setTermoBusca(e.target.value); }}
-                      placeholder="Nome de usuário ou email..."
+                      placeholder="Buscar..."
                       aria-label="Buscar usuários"
                     />
                   </InputGroup>

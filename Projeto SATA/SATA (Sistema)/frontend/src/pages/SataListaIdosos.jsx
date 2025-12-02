@@ -22,10 +22,13 @@ import {
   ExclamationTriangleFill
 } from 'react-bootstrap-icons';
 import PageHeader from '../components/ui/PageHeader';
+import HelpButton from '../components/ui/HelpButton';
 import StandardTable from '../components/ui/StandardTable';
 import StatusBadge from '../components/ui/StatusBadge';
 import ActionIconButton from '../components/ui/ActionIconButton';
 import { useNavigate } from 'react-router-dom';
+import BotaoRegistrarObservacao from '../components/idosos/BotaoRegistrarObservacao';
+import ObservacaoModal from '../components/idosos/ObservacaoModal';
 import './SataListaIdosos.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import idosoService from '../services/idosoService';
@@ -39,6 +42,7 @@ const SataListaIdosos = () => {
   const [mostrarModalAlertaInternado, setMostrarModalAlertaInternado] = useState(false);
   const [mostrarModalAlertaRelacionamentos, setMostrarModalAlertaRelacionamentos] = useState(false);
   const [mensagemAlertaRelacionamentos, setMensagemAlertaRelacionamentos] = useState('');
+  const [mostrarModalObservacao, setMostrarModalObservacao] = useState(false);
   const [idosoSelecionado, setIdosoSelecionado] = useState(null);
   const [filtroStatus, setFiltroStatus] = useState('');
   const [filtroOrdenacao, setFiltroOrdenacao] = useState('nome_asc');
@@ -72,6 +76,16 @@ const SataListaIdosos = () => {
       return;
     }
     setMostrarModalExclusao(true);
+  };
+
+  const handleSaveObservacao = async (observacaoData) => {
+    try {
+      await idosoService.addObservacao(idosoSelecionado.id, observacaoData);
+      setMostrarModalObservacao(false);
+    } catch (error) {
+      console.error('Erro ao salvar observação:', error);
+      throw error;
+    }
   };
 
   const confirmarExclusao = async () => {
@@ -191,6 +205,7 @@ const SataListaIdosos = () => {
           <PageHeader
             title="Lista de Idosos Cadastrados"
             icon={<Clipboard />}
+            suffix={<HelpButton inline iconOnly />}
             actions={
               <>
                 <Button 
@@ -267,7 +282,7 @@ const SataListaIdosos = () => {
                       <InputGroup>
                         <Form.Control 
                           type="text" 
-                          placeholder="Nome, CPF ou cidade..."
+                          placeholder="Buscar..."
                           value={termoBusca}
                           onChange={(e) => setTermoBusca(e.target.value)}
                           aria-label="Campo de busca"
@@ -319,6 +334,7 @@ const SataListaIdosos = () => {
                                 <StatusBadge status={idoso.status} />
                               </td>
                               <td className="botoes-acao">
+                                <BotaoRegistrarObservacao to={`/detalhes/${idoso.id}/observacoes`} compact />
                                 <ActionIconButton
                                   variant="outline-primary" 
                                   size="sm"
@@ -461,6 +477,14 @@ const SataListaIdosos = () => {
               <Button variant="danger" onClick={() => setMostrarModalAlertaRelacionamentos(false)}>OK</Button>
             </Modal.Footer>
           </Modal>
+
+          <ObservacaoModal
+            show={mostrarModalObservacao}
+            onHide={() => setMostrarModalObservacao(false)}
+            onSave={handleSaveObservacao}
+            idosoId={idosoSelecionado?.id}
+            usuarioId={user?.id}
+          />
         </Container>
       </div>
     </Navbar>

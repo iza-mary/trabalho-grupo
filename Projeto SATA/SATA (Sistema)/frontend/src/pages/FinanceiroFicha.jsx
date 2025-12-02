@@ -136,8 +136,8 @@ export default function FinanceiroFicha() {
                 <h3 id="sec-rec">Recorrência</h3>
                 <div>
                   <div><strong>Recorrente:</strong> {item?.recorrente ? 'Sim' : 'Não'}</div>
-                  <div><strong>Frequência:</strong> {item?.frequencia_recorrencia ?? '—'}</div>
-                  <div><strong>Ocorrências:</strong> {item?.ocorrencias_recorrencia != null ? String(item.ocorrencias_recorrencia) : '—'}</div>
+                  <div><strong>Frequência:</strong> {item?.recorrente ? (item?.frequencia_recorrencia ?? '—') : '—'}</div>
+                  <div><strong>Ocorrências:</strong> {item?.recorrente && item?.ocorrencias_recorrencia != null ? String(item.ocorrencias_recorrencia) : '—'}</div>
                 </div>
               </section>
 

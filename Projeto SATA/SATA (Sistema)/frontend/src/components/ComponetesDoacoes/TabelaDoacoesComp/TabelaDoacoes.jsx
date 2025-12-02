@@ -1,15 +1,25 @@
 import React, { useRef, useState } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Pencil, Trash, Eye } from 'react-bootstrap-icons';
 import ActionIconButton from '../../ui/ActionIconButton';
 import StandardTable from '../../ui/StandardTable';
 import { useAuth } from '../../../hooks/useAuth';
 import { formatDate } from '../../../utils/dateUtils';
 
-function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, editando, loaderRef: externalLoaderRef, showDelete: externalShowDelete, setShowDelete: externalSetShowDelete, printUrl }) {
-  const { isAdmin } = useAuth();
+function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, loaderRef: externalLoaderRef, showDelete: externalShowDelete, setShowDelete: externalSetShowDelete, printUrl, hiddenColumns = [] }) {
+  const auth = useAuth();
+  const isAdmin = Boolean(auth && auth.isAdmin);
+  const normalizeRole = (role) => {
+    if (!role) return role;
+    const r = String(role).toLowerCase();
+    if (r.includes('admin')) return 'Admin';
+    if (r.includes('funcionario') || r.includes('funcionário')) return 'Funcionário';
+    return role;
+  };
+  const canEdit = ['Admin','Funcionário'].includes(normalizeRole(auth?.user?.role));
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Compatibilidade com props antigas da página Doacoes.jsx
   const items = Array.isArray(doacoes) ? doacoes : (Array.isArray(doacoesApp) ? doacoesApp : []);
@@ -18,6 +28,7 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
   const internalLoaderRef = useRef(null);
   const loaderRef = externalLoaderRef ?? internalLoaderRef;
   const doDelete = onDelete || handleDelete;
+  const isHidden = (key) => Array.isArray(hiddenColumns) && hiddenColumns.includes(key);
 
   const abrirModalExclusao = (d) => {
     setDoacaoParaExcluir(d);
@@ -41,6 +52,62 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
     }
   };
 
+  const renderItemName = (d) => {
+    const tipo = String(d?.tipo || '').toUpperCase();
+    if (tipo === 'D' || tipo === 'DINHEIRO') return 'Doação em dinheiro';
+    const itemCandidate = d?.doacao?.descricao_item
+      ?? d?.descricao_item
+      ?? d?.doacao?.tipo_alimento
+      ?? d?.tipo_alimento
+      ?? d?.doacao?.item
+      ?? d?.item
+      ?? null;
+    return itemCandidate ? itemCandidate : '—';
+  }
+
+  const isAlimento = (d) => {
+    const t = String(d?.tipo || '').toUpperCase();
+    return t === 'A' || t === 'ALIMENTO';
+  };
+  // Categoria e Estado (para exibição)
+  const renderCategoria = (d) => {
+    const t = String(d?.tipo || '').toUpperCase();
+    if (t === 'D' || t === 'DINHEIRO') {
+      const v = d?.doacao?.valor ?? d?.valor;
+      const n = Number(v);
+      return Number.isFinite(n) ? `Dinheiro - R$ ${n.toFixed(2)}` : 'Dinheiro';
+    }
+    // Deriva pela presença dos campos quando tipo não está padronizado
+    if (t === 'A' || t === 'ALIMENTO' || d?.doacao?.tipo_alimento || d?.tipo_alimento) return 'Alimento';
+    if (t === 'O' || t === 'OUTROS' || d?.doacao?.descricao_item || d?.descricao_item || d?.doacao?.item || d?.item) return 'Outros';
+    // Fallback: usa 'Outros' para manter compatível com enum
+    return 'Outros';
+  };
+
+  const renderEstado = (d) => {
+    // Exibe estado de conservação sempre que disponível
+    return d?.doacao?.estado_conservacao ?? '—';
+  };
+
+  // Coluna Tipo removida da tabela; Categoria já reflete o tipo
+
+  // Ordenação e filtros (removidos)
+  const filteredItems = items;
+
+  const renderValorQuant = (d) => {
+    const tipo = String(d?.tipo || '').toUpperCase();
+    if (tipo === 'D' || tipo === 'DINHEIRO') {
+      const v = d?.doacao?.valor ?? d?.valor ?? 0;
+      const n = Number(v);
+      return isNaN(n) ? 'R$ 0.00' : `R$ ${n.toFixed(2)}`;
+    }
+    const q = d?.doacao?.quantidade ?? d?.doacao?.qntd ?? d?.quantidade ?? d?.qntd ?? 0;
+    const un = d?.doacao?.unidade_medida ?? d?.unidade_medida ?? 'Unidade(s)';
+    return `${q} ${un}`.trim();
+  }
+
+  
+
   return (
     <Card>
       <Card.Header className="d-flex align-items-center justify-content-between">
@@ -60,33 +127,33 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>Item</th>
-                  <th>Tipo</th>
+                  <th>Nome</th>
+                  <th>Categoria</th>
+                  <th>Estado</th>
                   <th>Valor/Quant</th>
-                  <th>Idoso</th>
+                  {!isHidden('validade') && <th>Validade</th>}
+                  {!isHidden('idoso') && <th>Idoso</th>}
                   <th>Doador</th>
                   <th>Evento</th>
-                  <th>Desc/Obs</th>
+                  {!isHidden('obs') && <th>Desc/Obs</th>}
                   <th>Ações</th>
                 </tr>
+                
+                
               </thead>
               <tbody>
-                {items.map((d) => (
-                  <tr key={d.id}>
+                {filteredItems.map((d) => (
+                  <tr key={d.id} title={(renderItemName(d) || renderCategoria(d))} aria-label={`Doação — ${(renderItemName(d) || renderCategoria(d))}`}>
                     <td>{formatDate(d.data)}</td>
-                    <td>{d?.doacao?.item ?? d?.item ?? '-'}</td>
-                    <td>{d?.tipo ?? '-'}</td>
-                    <td>{
-                      String(d?.tipo || '').toUpperCase() === 'D'
-                        ? (d?.doacao?.valor ?? d?.valor ?? '-')
-                        : ((d?.doacao?.qntd ?? d?.quantidade) != null
-                            ? `${d?.doacao?.qntd ?? d?.quantidade} ${d?.doacao?.unidade_medida ?? d?.unidade_medida ?? ''}`
-                            : '-')
-                    }</td>
-                    <td>{d?.idoso ?? '-'}</td>
+                    <td>{renderItemName(d)}</td>
+                    <td>{renderCategoria(d)}</td>
+                    <td>{renderEstado(d)}</td>
+                    <td>{renderValorQuant(d)}</td>
+                    {!isHidden('validade') && <td>{isAlimento(d) ? (d?.doacao?.validade ? formatDate(d?.doacao?.validade) : '—') : '—'}</td>}
+                    {!isHidden('idoso') && <td>{d?.idoso ?? '-'}</td>}
                     <td>{d?.doador?.nome ?? d?.doador_nome ?? '-'}</td>
                     <td>{d?.evento ?? d?.evento_titulo ?? '-'}</td>
-                    <td>{d?.obs ?? '-'}</td>
+                    {!isHidden('obs') && <td>{d?.obs ?? '-'}</td>}
                     <td>
                       <div className='botoes-acao'>
                         <ActionIconButton
@@ -99,13 +166,13 @@ function TabelaDoacoes({ doacoes, doacoesApp, onEdit, onDelete, handleDelete, ed
                           <Eye />
                         </ActionIconButton>
                         <ActionIconButton
-                          className={!isAdmin ? 'disabled-action' : undefined}
-                          title={!isAdmin ? 'Apenas Administradores podem editar' : 'Editar'}
+                          className={!canEdit ? 'disabled-action' : undefined}
+                          title={!canEdit ? 'Sem permissão para editar' : 'Editar'}
                           size='sm'
-                          onClick={!isAdmin ? undefined : () => { onEdit?.(d); editando?.(false); }}
+                          onClick={!canEdit ? undefined : () => { if (typeof onEdit === 'function') { onEdit(d); } else { navigate(`/doacoes/editar/${d.id}`, { state: { background: location } }); } }}
                           variant='outline-primary'
-                          disabled={!isAdmin}
-                          ariaLabel={!isAdmin ? 'Apenas Administradores podem editar' : 'Editar doação'}
+                          disabled={!canEdit}
+                          ariaLabel={!canEdit ? 'Sem permissão para editar' : 'Editar doação'}
                         >
                           <Pencil />
                         </ActionIconButton>

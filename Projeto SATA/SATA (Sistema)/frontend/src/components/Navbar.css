@@ -1,4 +1,6 @@
 :root {
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 84px;
   --navbar-height: 64px;
   --nav-bg-1: #0f172a; /* slate-900 */
   --nav-bg-2: #1e293b; /* slate-800 */
@@ -121,11 +123,16 @@
 
 /* Conteúdo principal abaixo da navbar */
 .page-content {
-  min-height: auto;
-  height: auto;
-  padding: 0;
-  box-sizing: border-box;
-  overflow: auto;
+  padding-top: var(--navbar-height);
+  transition: padding-left 0.3s ease-in-out;
+}
+
+.menu-open .page-content {
+  padding-left: var(--sidebar-width);
+}
+
+.menu-collapsed .page-content {
+  padding-left: var(--sidebar-width-collapsed);
 }
 
 /* Remover qualquer padding quando nav-themed estiver ativo */
@@ -147,7 +154,7 @@
   top: 0;
   left: 0;
   height: 100vh;
-  width: var(--sidebar-width, 240px);
+  width: var(--sidebar-width-collapsed);
   background: linear-gradient(135deg, var(--nav-bg-1), var(--nav-bg-2));
   color: var(--nav-text);
   border-right: 1px solid rgba(124, 58, 237, 0.25);
@@ -159,6 +166,11 @@
   overflow-y: auto; /* barra aparece somente quando necessário */
   scroll-behavior: smooth; /* rolagem suave para âncoras/teclado */
   -webkit-overflow-scrolling: touch; /* suaviza no iOS */
+  transition: width 0.3s ease-in-out;
+}
+
+.sidebar.open {
+  width: var(--sidebar-width);
 }
 
 .sidebar-header { display: flex; align-items: center; justify-content: space-between; }
@@ -303,3 +315,13 @@
 .sidebar.inactive .nav-item, .sidebar.inactive .sidebar-toggle, .sidebar.inactive button { opacity: 0.6; cursor: not-allowed; }
 
 /* Transparência do conteúdo quando houver modal ativo com menu lateral */
+
+.help-fab {
+  position: fixed;
+  right: 24px;
+  top: 88px;
+  z-index: 900;
+}
+@media (max-width: 767.98px) {
+  .help-fab { right: 12px; top: 64px; }
+}

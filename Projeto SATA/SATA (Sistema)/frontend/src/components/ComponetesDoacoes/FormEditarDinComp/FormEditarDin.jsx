@@ -46,8 +46,8 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
             evento: doacaoEdit?.evento || "",
             eventoId: doacaoEdit?.eventoId ?? null,
             obs: doacaoEdit?.obs || "",
-            doacao: (doacaoEdit?.tipo || "").toUpperCase() === "D" ? {
-                valor: parseFloat(doacaoEdit?.doacao?.valor) || 0,
+            doacao: ((doacaoEdit?.tipo || "").toUpperCase() === "D" || (doacaoEdit?.tipo || "").toUpperCase() === "DINHEIRO") ? {
+                valor: parseFloat(doacaoEdit?.doacao?.valor ?? doacaoEdit?.valor) || 0,
             } : {
                 qntd: parseInt(doacaoEdit?.doacao?.qntd) || 0,
                 item: doacaoEdit?.doacao?.item || "-",
@@ -72,21 +72,7 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
         }
     }
 
-    const handleChangeValor = (e) => {
-        const value = e.target.value.replace(/[a-zA-Z]/g, '');
-        setDoaDinheiro(prev => ({ ...prev, doacao: { valor: parseFloat(value) } }))
-        if (value && !isNaN(value) && parseFloat(value) >= 0) {
-            setErrors((prev) => ({ ...prev, valor: null }));
-        } else {
-            if (value === "") {
-                setErrors((prev) => ({ ...prev, valor: "O valor deve ser preenchido" }));
-                setValidated(false);
-            } else {
-                setErrors((prev) => ({ ...prev, valor: "Valor inválido" }));
-                setValidated(false);
-            }
-        }
-    }
+
 
     const handleChangeObservacoes = (e) => {
         const value = e.target.value;
@@ -185,9 +171,10 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
                                     </Form.Group>
                                     <Form.Group className="mb-3" controlId="valor">
                                         <Form.Label>Valor da Doação (Obrigatório)</Form.Label>
-                                        <Form.Control type="number" step={0.01} placeholder="R$ 0,00" name="valor" required
-                                            onChange={handleChangeValor}
-                                            value={doaDinheiro.doacao.valor || ""}
+                                        <Form.Control type="text" placeholder="R$ 0,00" name="valor" required
+                                            readOnly
+                                            disabled
+                                            value={`R$ ${parseFloat(doaDinheiro?.doacao?.valor ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                             isInvalid={!!errors.valor}
                                         />
                                         <Form.Control.Feedback type="invalid">

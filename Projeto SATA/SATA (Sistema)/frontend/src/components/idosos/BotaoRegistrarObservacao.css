@@ -1,0 +1,47 @@
+
+.btn-outline-pink {
+  color: #d63384 !important;
+  border-color: #d63384 !important;
+  background-color: transparent !important;
+}
+
+.btn-outline-pink:visited {
+  color: #d63384 !important;
+}
+
+.btn-outline-pink:hover,
+.btn-outline-pink:focus,
+.btn-outline-pink:active,
+.btn-outline-pink.active {
+  color: #ffffff !important;
+  background-color: #d63384 !important;
+  border-color: #bd2d74 !important;
+}
+
+/* Versão sólida rosa */
+.btn-pink {
+  color: #ffffff !important;
+  background-color: #d63384 !important;
+  border-color: #bd2d74 !important;
+}
+.btn-pink:hover,
+.btn-pink:focus,
+.btn-pink:active,
+.btn-pink.active {
+  color: #ffffff !important;
+  background-color: #bd2d74 !important;
+  border-color: #a72766 !important;
+}
+
+.botoes-acao .btn-outline-pink {
+  color: #d63384 !important;
+  border-color: #d63384 !important;
+  background-color: transparent !important;
+}
+.botoes-acao .btn-outline-pink:hover,
+.botoes-acao .btn-outline-pink:focus,
+.botoes-acao .btn-outline-pink:active {
+  color: #ffffff !important;
+  background-color: #d63384 !important;
+  border-color: #bd2d74 !important;
+}

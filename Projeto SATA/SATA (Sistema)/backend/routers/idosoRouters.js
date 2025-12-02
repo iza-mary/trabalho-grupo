@@ -1,7 +1,11 @@
 const express = require('express');
 const idosoController = require('../controllers/idosoController');
+const observacaoRouters = require('./observacaoRouters');
 
 const router = express.Router();
+
+// Rotas de observações aninhadas
+router.use('/:idosoId/observacoes', observacaoRouters);
 
 //Rotas CRUD
 router.get('/', idosoController.getAll)

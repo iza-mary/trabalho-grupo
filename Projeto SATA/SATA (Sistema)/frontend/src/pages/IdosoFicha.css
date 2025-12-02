@@ -43,6 +43,8 @@
 .ficha-table { width: 100%; border-collapse: collapse; font-size: 12pt; }
 .ficha-table th, .ficha-table td { border: 1px solid #ddd; padding: 6px 8px; }
 .ficha-table th { background: #f7f7f7; }
+.ficha-table .obs-text { white-space: pre-wrap; line-height: 1.5; }
+.ficha-table .obs-row td { vertical-align: top; }
 .ficha-list { margin: 0; padding-left: 18px; }
 .ficha-list li { margin: 2px 0; }
 

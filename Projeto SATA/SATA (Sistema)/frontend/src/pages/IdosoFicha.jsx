@@ -1,10 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button, Spinner } from 'react-bootstrap';
 import logo from '../styles/Logo sem fundo.png';
 import { downloadPdf } from '../utils/pdf';
 import idosoService from '../services/idosoService';
 import { removeManualPageBreaks, applySpacingNormalization, removeSpacingNormalization } from '../utils/printSanitizer';
+import { useAuth } from '../hooks/useAuth';
+import BotaoRegistrarObservacao from '../components/idosos/BotaoRegistrarObservacao';
+import ObservacaoModal from '../components/idosos/ObservacaoModal';
 import './IdosoFicha.css';
 import '../styles/ficha.css';
 
@@ -22,29 +25,53 @@ export default function IdosoFicha() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [ficha, setFicha] = useState(null);
+  const { user } = useAuth();
+  const [obsLista, setObsLista] = useState([]);
+  const [showObservacaoModal, setShowObservacaoModal] = useState(false);
   
   const [removerQuebrasManuais] = useState(true);
   const [ajustarEspacamento] = useState(true);
   const containerRef = useRef(null);
 
+  const fetchFicha = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await idosoService.getFicha(id);
+      setFicha(data);
+      setError('');
+    } catch (e) {
+      console.error('Erro ao carregar ficha:', e);
+      setError(e?.response?.data?.message || e?.message || 'Falha ao carregar ficha');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
-    let active = true;
+    fetchFicha();
     (async () => {
       try {
-        setLoading(true);
-        const data = await idosoService.getFicha(id);
-        if (!active) return;
-        setFicha(data);
-        setError('');
+        const lista = await idosoService.getObservacoes(id);
+        setObsLista(lista);
       } catch (e) {
-        console.error('Erro ao carregar ficha:', e);
-        setError(e?.response?.data?.message || e?.message || 'Falha ao carregar ficha');
-      } finally {
-        setLoading(false);
+        console.error('Erro ao carregar observações:', e);
       }
     })();
-    return () => { active = false; };
-  }, [id]);
+  }, [fetchFicha, id]);
+
+  const handleSaveObservacao = async (observacaoData) => {
+    try {
+      await idosoService.addObservacao(id, observacaoData);
+      const lista = await idosoService.getObservacoes(id);
+      setObsLista(lista);
+      setShowObservacaoModal(false);
+    } catch (error) {
+      console.error('Erro ao salvar observação:', error);
+      throw error;
+    }
+  };
+
+  
 
   const pageTitle = useMemo(() => `Ficha do Idoso #${id}`, [id]);
 
@@ -115,7 +142,7 @@ export default function IdosoFicha() {
     );
   }
 
-  const { dadosPessoais, acomodacao, medica, medicamentos, observacoes } = ficha;
+  const { dadosPessoais, acomodacao, medica } = ficha;
   // Indicador simples de página atual (UI); constante para evitar hook condicional.
   const paginaAtual = 1;
 
@@ -127,7 +154,8 @@ export default function IdosoFicha() {
             <Link to="/idosos" className="btn btn-outline-secondary">Voltar</Link>
           </div>
           <div>
-            <Button variant="primary" onClick={handlePrint}>Imprimir</Button>
+            {user && <BotaoRegistrarObservacao solid label="Registrar Observação" onClick={() => setShowObservacaoModal(true)} />}
+            <Button variant="primary" className="ms-2" onClick={handlePrint}>Imprimir</Button>
             <Button variant="outline-secondary" className="ms-2" onClick={handleDownloadPdf}>Baixar PDF</Button>
           </div>
           {/* Botão de visualização e controles de intervalo removidos conforme solicitado */}
@@ -223,63 +251,43 @@ export default function IdosoFicha() {
             </table>
           </section>
 
-          {/* Seção Médica (sem histórico, focada em diagnóstico/alergias) */}
-          <section className="ficha-section" aria-labelledby="sec-med">
-            <h3 id="sec-med">Seção Médica</h3>
-            <div className="row">
-              <div className="col-md-6">
-                <strong>Diagnósticos principais</strong>
-                <ul className="ficha-list mt-1">
-                  {(medica?.diagnosticos || []).length === 0 ? <li>—</li> : (medica?.diagnosticos || []).map((d, i) => <li key={i}>{String(d)}</li>)}
-                </ul>
-              </div>
-              <div className="col-md-6">
-                <strong>Alergias conhecidas</strong>
-                <ul className="ficha-list mt-1">
-                  {(medica?.alergias || []).length === 0 ? <li>—</li> : (medica?.alergias || []).map((a, i) => <li key={i}>{String(a)}</li>)}
-                </ul>
-              </div>
-            </div>
-          </section>
 
-          {/* Seção de Medicamentos */}
-          <section className="ficha-section page-break" aria-labelledby="sec-meds">
-            <h3 id="sec-meds">Seção de Medicamentos</h3>
-            <div className="row">
-              <div className="col-md-6">
-                <strong>Medicamentos em uso</strong>
-                <ul className="ficha-list mt-1">
-                  {(medicamentos?.emUso || []).length === 0 ? <li>—</li> : (medicamentos?.emUso || []).map((m, i) => (
-                    <li key={i}>{m?.nome ?? '—'}{m?.dosagem ? ` — ${m.dosagem}` : ''}{m?.frequencia ? ` (${m.frequencia})` : ''}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="col-md-6">
-                <strong>Prescrições ativas</strong>
-                <ul className="ficha-list mt-1">
-                  {(medicamentos?.prescricoesAtivas || []).length === 0 ? <li>—</li> : (medicamentos?.prescricoesAtivas || []).map((p, i) => (
-                    <li key={i}>{p?.descricao ?? String(p)}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </section>
 
-          {/* Observações */}
-          <section className="ficha-section" aria-labelledby="sec-obs">
-            <h3 id="sec-obs">Observações</h3>
-            <div className="mt-1">
-              <div><strong>Status:</strong> {observacoes?.status ?? '—'}</div>
-              <div className="mt-1"><strong>Anotações:</strong></div>
-              <div>{observacoes?.texto ? String(observacoes.texto) : '—'}</div>
-            </div>
+          <section className="ficha-section" aria-labelledby="sec-obs-hist">
+            <h3 id="sec-obs-hist">Histórico de Observações</h3>
+            {Array.isArray(obsLista) && obsLista.length ? (
+              <table className="ficha-table mt-1">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Observação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {obsLista.map((o) => (
+                    <tr key={o.id} className="obs-row">
+                      <td>{new Date(o.data_registro).toLocaleString('pt-BR')}</td>
+                      <td className="obs-text">{o.observacao}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>Nenhuma observação registrada.</p>
+            )}
           </section>
         </main>
 
         {/* Rodapé removido conforme solicitação: excluir rodapés */}
       </div>
 
-      
+      <ObservacaoModal
+        show={showObservacaoModal}
+        onHide={() => setShowObservacaoModal(false)}
+        onSave={handleSaveObservacao}
+        idosoId={id}
+        usuarioId={user?.id}
+      />
     </div>
   );
 }

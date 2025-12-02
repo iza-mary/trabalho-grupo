@@ -79,7 +79,7 @@ const Navbar = ({ children, disableSidebar = false, sidebarInactive = false, sid
   
 
   return (
-    <div className={open ? "menu-open" : ""}>
+    <div className={open ? "menu-open" : "menu-collapsed"}>
 
       {/* Navbar superior quando sidebar estiver desativada */}
       {disableSidebar && !minimal && (

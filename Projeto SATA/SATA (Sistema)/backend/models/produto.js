@@ -3,7 +3,7 @@ class Produto {
     this.id = data.id || null;
     this.nome = (data.nome || '').trim();
     this.categoria = data.categoria || null;
-    this.unidade_medida = data.unidade_medida || 'Unidade';
+    this.unidade_medida = data.unidade_medida || 'Unidade(s)';
     this.estoque_atual = data.estoque_atual != null ? parseInt(data.estoque_atual, 10) : 0;
     this.estoque_minimo = data.estoque_minimo != null ? parseInt(data.estoque_minimo, 10) : 0;
     this.observacao = data.observacao || null;
@@ -19,7 +19,7 @@ class Produto {
   validate() {
     const errors = [];
     const categoriasValidas = ['Alimentos','Higiene','Medicamentos','Roupas','Limpeza','Outros'];
-    const unidadesValidas = ['Unidade','Kg','L','Pacote','Caixa','Outro'];
+    const unidadesValidas = ['Unidade(s)','Kg','L','Pacotes','Caixas','Outro','m'];
 
     if (!this.nome) errors.push('nome é obrigatório');
     if (!this.categoria || !categoriasValidas.includes(this.categoria)) errors.push('categoria inválida');

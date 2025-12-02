@@ -1,12 +1,30 @@
 import { useMemo, useState } from 'react';
-import { Modal, Button, ListGroup, Form } from 'react-bootstrap';
+import { Modal, Button, ListGroup, Form, Alert } from 'react-bootstrap';
 
 function SimilarProductsDialog({ show, onClose, options = [], itemName = '', onConfirm }) {
   const [selectedId, setSelectedId] = useState(null);
+  const [newName, setNewName] = useState(itemName || '');
+  const [error, setError] = useState('');
   const normalized = useMemo(() => Array.isArray(options) ? options : [], [options]);
 
   const handleConfirm = () => {
-    onConfirm?.(selectedId || null);
+    setError('');
+    if (selectedId === '__no_link__') {
+      const original = String(itemName || '').trim();
+      const candidate = String(newName || '').trim();
+      if (!candidate) {
+        setError('Informe um novo nome para não vincular.');
+        return;
+      }
+      if (candidate.toLowerCase() === original.toLowerCase()) {
+        setError('O novo nome deve ser diferente do atual.');
+        return;
+      }
+      onConfirm?.(null, candidate);
+      setSelectedId(null);
+      return;
+    }
+    onConfirm?.(selectedId || null, null);
     setSelectedId(null);
   };
 
@@ -24,6 +42,9 @@ function SimilarProductsDialog({ show, onClose, options = [], itemName = '', onC
         <p>
           Encontramos itens semelhantes a "{itemName}". Você deseja vincular a um produto existente?
         </p>
+        {error && (
+          <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>
+        )}
         {normalized.length === 0 ? (
           <div>Nenhum similar encontrado.</div>
         ) : (
@@ -44,6 +65,26 @@ function SimilarProductsDialog({ show, onClose, options = [], itemName = '', onC
                 />
               </ListGroup.Item>
             ))}
+            <ListGroup.Item>
+              <div className="mb-2">
+                <Form.Check
+                  type="radio"
+                  name="produtoSimilar"
+                  id="no_link_option"
+                  checked={selectedId === '__no_link__'}
+                  onChange={() => setSelectedId('__no_link__')}
+                  label="Não vincular (vou alterar o nome)"
+                />
+              </div>
+              <Form.Control
+                type="text"
+                placeholder="Novo nome do item"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                disabled={selectedId !== '__no_link__'}
+              />
+              <small className="text-muted">Para não vincular, escolha esta opção e informe um nome diferente.</small>
+            </ListGroup.Item>
           </ListGroup>
         )}
       </Modal.Body>

@@ -75,7 +75,11 @@ export default function ProdutoEditar() {
               onSubmit={async (payload) => {
                 setError('');
                 setSuccess('');
-                const res = await atualizarProduto(id, payload);
+                // Não permitir alteração de quantidade/estoque por edição; apenas via Movimentar
+                const sanitized = { ...payload };
+                delete sanitized.quantidade;
+                delete sanitized.estoque_atual;
+                const res = await atualizarProduto(id, sanitized);
                 if (res?.success) {
                   setSuccess('Produto atualizado com sucesso');
                   navigate('/produtos', { replace: true, state: { success: 'Produto atualizado com sucesso' } });

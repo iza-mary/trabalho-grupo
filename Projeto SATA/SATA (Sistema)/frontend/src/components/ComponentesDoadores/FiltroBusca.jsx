@@ -19,7 +19,7 @@ function FiltroBusca({ setTermos }) {
         <InputGroup style={{ maxWidth: 360 }}>
           <Form.Control
             type="text"
-            placeholder="Buscar doadores..."
+            placeholder="Buscar..."
             value={termoBusca}
             onChange={handleFiltrar}
           />

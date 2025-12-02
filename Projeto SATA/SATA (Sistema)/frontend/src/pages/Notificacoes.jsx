@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Form, InputGroup, Alert, Spinner } from 'react-bootstrap';
-import { BsBell, BsSearch, BsFilter, BsCheck2All, BsEye, BsEyeSlash } from 'react-icons/bs';
+import { BsBell, BsSearch, BsFilter, BsCheck2All, BsEye, BsEyeSlash, BsTrash } from 'react-icons/bs';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
+import HelpButton from '../components/ui/HelpButton';
 import { 
   listarNotificacoes, 
   marcarComoLida, 
   marcarVariasComoLidas, 
-  obterContadores 
+  obterContadores, 
+  deletarVariasNotificacoes 
 } from '../services/notificacoesService';
 import './Notificacoes.css';
 
@@ -69,6 +71,15 @@ const Notificacoes = () => {
     carregarContadores();
   }, [carregarNotificacoes, carregarContadores]);
 
+  useEffect(() => {
+    const es = new EventSource('/api/notificacoes/stream', { withCredentials: true });
+    es.addEventListener('new', () => {
+      carregarNotificacoes();
+      carregarContadores();
+    });
+    return () => { if (es && es.close) es.close(); };
+  }, [carregarNotificacoes, carregarContadores]);
+
   const handleMarcarComoLida = async (id) => {
     try {
       await marcarComoLida(id);
@@ -89,6 +100,18 @@ const Notificacoes = () => {
       await carregarContadores();
     } catch (err) {
       setError('Erro ao marcar notificações como lidas: ' + err.message);
+    }
+  };
+
+  const handleApagarSelecionadas = async () => {
+    if (selecionadas.length === 0) return;
+    try {
+      await deletarVariasNotificacoes(selecionadas);
+      setSelecionadas([]);
+      await carregarNotificacoes();
+      await carregarContadores();
+    } catch (err) {
+      setError('Erro ao apagar notificações: ' + err.message);
     }
   };
 
@@ -152,12 +175,12 @@ const Notificacoes = () => {
   };
 
   return (
-    <>
-      <Navbar />
-      <Container fluid className="py-4">
+    <Navbar>
+      <Container fluid className="p-3">
         <PageHeader 
           title="Notificações" 
           icon={<BsBell />}
+          suffix={<HelpButton inline iconOnly />}
           actions={
             <div className="d-flex gap-2">
               <Badge bg="primary" className="fs-6">
@@ -187,7 +210,7 @@ const Notificacoes = () => {
                     <InputGroup.Text><BsSearch /></InputGroup.Text>
                     <Form.Control
                       type="text"
-                      placeholder="Buscar notificações..."
+                      placeholder="Buscar..."
                       value={filtros.busca}
                       onChange={(e) => handleFiltroChange('busca', e.target.value)}
                     />
@@ -238,14 +261,23 @@ const Notificacoes = () => {
               </Col>
               <Col md={3} className="d-flex align-items-end">
                 {selecionadas.length > 0 && (
-                  <Button 
-                    variant="outline-primary" 
-                    onClick={handleMarcarSelecionadasComoLidas}
-                    className="me-2"
-                  >
-                    <BsCheck2All className="me-1" />
-                    Marcar como lidas ({selecionadas.length})
-                  </Button>
+                  <>
+                    <Button 
+                      variant="outline-primary" 
+                      onClick={handleMarcarSelecionadasComoLidas}
+                      className="me-2"
+                    >
+                      <BsCheck2All className="me-1" />
+                      Marcar como lidas ({selecionadas.length})
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      onClick={handleApagarSelecionadas}
+                    >
+                      <BsTrash className="me-1" />
+                      Apagar selecionadas ({selecionadas.length})
+                    </Button>
+                  </>
                 )}
               </Col>
             </Row>
@@ -277,9 +309,7 @@ const Notificacoes = () => {
                 checked={selecionadas.length === notificacoes.length && notificacoes.length > 0}
                 onChange={handleSelecionarTodas}
               />
-              <small className="text-muted">
-                {notificacoes.length} de {paginacao.total} notificações
-              </small>
+              {/* contador removido conforme solicitação */}
             </div>
 
             {/* Cards de Notificações */}
@@ -370,7 +400,7 @@ const Notificacoes = () => {
           </>
         )}
       </Container>
-    </>
+    </Navbar>
   );
 };
 

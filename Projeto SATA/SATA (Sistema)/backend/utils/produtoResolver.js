@@ -101,7 +101,7 @@ async function resolveProduto(conn, { produtoId, nome, categoria, unidade, actor
 
   // Criar novo produto
   const [ins] = await conn.execute(
-    `INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, COALESCE(?, 'Outros'), COALESCE(?, 'Unidade'), 0, 0, NULL)`,
+    `INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao) VALUES (?, COALESCE(?, 'Outros'), COALESCE(?, 'Unidade(s)'), 0, 0, NULL)`,
     [nome, categoria || null, unidade || null]
   );
   const newId = ins.insertId;
@@ -109,7 +109,7 @@ async function resolveProduto(conn, { produtoId, nome, categoria, unidade, actor
     id: newId,
     nome,
     categoria: categoria || 'Outros',
-    unidade: unidade || 'Unidade',
+    unidade: unidade || 'Unidade(s)',
     actor: actor || null,
   });
   return { id: newId, action: 'create', updated: { nome, categoria, unidade } };
@@ -130,7 +130,7 @@ async function upsertProdutoFast(conn, { nome, categoria, unidade }) {
   // Confia no índice único em nome_norm (coluna gerada) para colisão
   const [res] = await conn.execute(
     `INSERT INTO produtos (nome, categoria, unidade_medida, estoque_atual, estoque_minimo, observacao)
-     VALUES (?, COALESCE(?, 'Outros'), COALESCE(?, 'Unidade'), 0, 0, NULL)
+     VALUES (?, COALESCE(?, 'Outros'), COALESCE(?, 'Unidade(s)'), 0, 0, NULL)
      ON DUPLICATE KEY UPDATE
        nome = VALUES(nome),
        categoria = COALESCE(VALUES(categoria), categoria),

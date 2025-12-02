@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button, Form, InputGroup, Alert, Modal, Spin
 import { PlusCircle, Funnel, Pencil, Trash, DoorClosed } from 'react-bootstrap-icons';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
+import HelpButton from '../components/ui/HelpButton';
 import StandardTable from '../components/ui/StandardTable';
 import StatusBadge from '../components/ui/StatusBadge';
 import ActionIconButton from '../components/ui/ActionIconButton';
@@ -150,6 +151,7 @@ const abrirDetalhes = (quarto) => {
           <PageHeader
             title="Lista de Quartos"
             icon={<DoorClosed />}
+            suffix={<HelpButton inline iconOnly />}
             actions={
               <Button
                 variant="primary"
@@ -207,7 +209,7 @@ const abrirDetalhes = (quarto) => {
                     <Col md={6} className="mb-3">
                       <Form.Label>Buscar</Form.Label>
                       <InputGroup>
-                        <Form.Control type="text" placeholder="Número ou descrição..." value={termoBusca} onChange={(e) => setTermoBusca(e.target.value)} />
+                        <Form.Control type="text" placeholder="Buscar..." value={termoBusca} onChange={(e) => setTermoBusca(e.target.value)} />
                         {/* ícone de lupa removido */}
                       </InputGroup>
                     </Col>

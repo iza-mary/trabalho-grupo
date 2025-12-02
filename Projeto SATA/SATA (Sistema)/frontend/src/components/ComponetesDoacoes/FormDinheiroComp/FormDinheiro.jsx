@@ -20,7 +20,9 @@ function FormDinheiro({ onSave }) {
         idoso: { id: 0, nome: "" },
         evento: "",
         eventoId: null,
-        valor: 0
+        valor: 0,
+        forma_pagamento: "Dinheiro",
+        comprovante: ""
     });
     const [validated, setValidated] = useState(false);
     const [errors, setErrors] = useState({});
@@ -67,6 +69,22 @@ function FormDinheiro({ onSave }) {
                 setValidated(false);
             }
         }
+    }
+
+    const handleChangeFormaPagamento = (e) => {
+        const value = e.target.value;
+        setDoaDinheiro(prev => ({ ...prev, forma_pagamento: value }))
+        if (value && String(value).trim() !== '') {
+            setErrors(prev => ({ ...prev, forma_pagamento: null }));
+        } else {
+            setErrors(prev => ({ ...prev, forma_pagamento: "Selecione a forma de pagamento" }));
+            setValidated(false);
+        }
+    }
+
+    const handleChangeComprovante = (e) => {
+        const value = e.target.value;
+        setDoaDinheiro(prev => ({ ...prev, comprovante: value }))
     }
 
     const handleChangeObservacoes = (e) => {
@@ -131,6 +149,10 @@ function FormDinheiro({ onSave }) {
             newErrors.valor = "Valor inválido";
             setValidated(false);
         }
+        if (!doaDinheiro.forma_pagamento || String(doaDinheiro.forma_pagamento).trim() === '') {
+            newErrors.forma_pagamento = "Selecione a forma de pagamento";
+            setValidated(false);
+        }
         // Doador é obrigatório: exigir um doador selecionado com id válido
         const did = Number(doaDinheiro?.doador?.doadorId);
         if (!did || did <= 0) {
@@ -186,6 +208,21 @@ function FormDinheiro({ onSave }) {
                                     {errors.valor}
                                 </Form.Control.Feedback>
                             </Form.Group>
+                            <Form.Group className="mb-3" controlId="forma_pagamento">
+                                <Form.Label>Forma de Pagamento</Form.Label>
+                                <Form.Select name="forma_pagamento" value={doaDinheiro.forma_pagamento || ''} onChange={handleChangeFormaPagamento} required isInvalid={!!errors.forma_pagamento}>
+                                    <option value="">Selecione</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="PIX">PIX</option>
+                                    <option value="Transferência Bancária">Transferência Bancária</option>
+                                    <option value="Cartão de Débito">Cartão de Débito</option>
+                                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                    <option value="Cheque">Cheque</option>
+                                </Form.Select>
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.forma_pagamento}
+                                </Form.Control.Feedback>
+                            </Form.Group>
                             <Form.Group className="mb-3" controlId="doador">
                                 <SelectDoador setDoador={setSelectedDoador} setErrors={setErrors} setValidated={setValidated} errors={errors}/>
                             </Form.Group>
@@ -217,6 +254,13 @@ function FormDinheiro({ onSave }) {
                                 <Form.Control.Feedback type="invalid">
                                     {errors.obs}
                                 </Form.Control.Feedback>
+                            </Form.Group>
+                            <Form.Group className="mb-3" controlId="comprovante">
+                                <Form.Label>Comprovante (Opcional)</Form.Label>
+                                <Form.Control type="text" name="comprovante" autoComplete="off"
+                                    onChange={handleChangeComprovante}
+                                    value={doaDinheiro.comprovante || ""}
+                                />
                             </Form.Group>
                         </Card.Body>
                     </Card>

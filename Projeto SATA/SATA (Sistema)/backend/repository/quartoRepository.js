@@ -17,12 +17,14 @@ function formatQuartoRecord(rowOrModel) {
 
 function logQuartoOperation(operation, payload) {
   const ts = new Date().toISOString();
-  console.log(JSON.stringify({
-    scope: 'quartos',
-    operation,
-    timestamp: ts,
-    ...payload
-  }));
+  if (process.env.LOG_STRUCTURED === '1') {
+    console.log(JSON.stringify({
+      scope: 'quartos',
+      operation,
+      timestamp: ts,
+      ...payload
+    }));
+  }
 }
 
 class QuartoRepository {
@@ -165,6 +167,17 @@ class QuartoRepository {
     }
 
     try {
+      const [[{ ocupadas }]] = await db.execute(
+        'SELECT COUNT(*) AS ocupadas FROM internacoes WHERE quarto_id = ? AND status = "ativa"',
+        [id]
+      );
+      const ocupadasNum = Number(ocupadas || 0);
+      if (quartoAtualizado.capacidade < ocupadasNum) {
+        const err = new Error('Capacidade não pode ser menor que internações ativas');
+        err.code = 'CAPACITY_BELOW_OCCUPIED';
+        err.status = 400;
+        throw err;
+      }
       await db.execute(
         'UPDATE quartos SET numero = ?, capacidade = ?, descricao = ?, status = ? WHERE id = ?',
         [
@@ -175,6 +188,10 @@ class QuartoRepository {
           id
         ]
       );
+      try {
+        const InternacaoRepository = require('./internacaoRepository');
+        await InternacaoRepository._atualizarStatusQuartoPorOcupacao(id);
+      } catch (_) {}
 
       const updated = await this.findById(id);
       const statusChanged = existing.status !== updated.status;

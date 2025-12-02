@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Form, Button, Card, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Card, Alert, Spinner, Modal } from 'react-bootstrap';
 import { FileEarmarkText, HouseDoor } from 'react-bootstrap-icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -23,6 +23,9 @@ const SataCadastroQuartos = () => {
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erroCarregamento, setErroCarregamento] = useState(null);
+  const [mostrarErroModal, setMostrarErroModal] = useState(false);
+  const [erroModalMensagem, setErroModalMensagem] = useState('');
+  const [erroModalExplicacao, setErroModalExplicacao] = useState('');
 
   useEffect(() => {
     const carregar = async () => {
@@ -90,7 +93,15 @@ const SataCadastroQuartos = () => {
       navigate('/quartos');
     } catch (e) {
       console.error('Erro ao salvar quarto:', e);
-      alert(e?.message || 'Erro ao salvar quarto');
+      const msg = e?.response?.data?.message || e?.message || 'Erro ao salvar quarto';
+      const lower = String(msg || '').toLowerCase();
+      let explicacao = '';
+      if (lower.includes('capacidade') && (lower.includes('internações') || lower.includes('internacoes'))) {
+        explicacao = 'A capacidade do quarto não pode ser menor que as internações ativas. Aumente a capacidade ou finalize internações antes de reduzir.';
+      }
+      setErroModalMensagem(msg);
+      setErroModalExplicacao(explicacao);
+      setMostrarErroModal(true);
     } finally {
       setSalvando(false);
     }
@@ -121,6 +132,21 @@ const SataCadastroQuartos = () => {
           {erroCarregamento && (
             <Alert variant="danger">{erroCarregamento}</Alert>
           )}
+
+          <Modal show={mostrarErroModal} onHide={() => setMostrarErroModal(false)} centered>
+            <Modal.Header closeButton>
+              <Modal.Title>Erro ao salvar quarto</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p className="mb-2">{erroModalMensagem}</p>
+              {erroModalExplicacao && (
+                <Alert variant="warning">{erroModalExplicacao}</Alert>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setMostrarErroModal(false)}>Fechar</Button>
+            </Modal.Footer>
+          </Modal>
 
           <Card>
             <Card.Header>

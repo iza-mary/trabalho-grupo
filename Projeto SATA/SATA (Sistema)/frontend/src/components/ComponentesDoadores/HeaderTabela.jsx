@@ -2,6 +2,7 @@ import { Button } from "react-bootstrap";
 import { PlusCircle, HeartFill } from "react-bootstrap-icons";
 import "./SataDoadores.css";
 import PageHeader from '../ui/PageHeader';
+import HelpButton from '../ui/HelpButton';
 import { useAuth } from '../../hooks/useAuth';
 
 function HeaderTabela({ desativaTabela }) {
@@ -10,6 +11,7 @@ function HeaderTabela({ desativaTabela }) {
     <PageHeader
       title="Lista de Doadores"
       icon={<HeartFill />}
+      suffix={<HelpButton inline iconOnly />}
       actions={
         <Button
           variant="primary"

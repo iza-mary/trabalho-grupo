@@ -2,6 +2,9 @@ const express = require("express");
 const DoacaoController = require("../controllers/doacaoController");
 const router = express.Router();
 
+// Versionamento simples por header para compatibilidade
+router.use((req, res, next) => { res.setHeader('X-API-Version', '2'); next(); });
+
 router.get("/", DoacaoController.getAll);
 router.post("/filtrar", DoacaoController.getByFiltred)
 router.get("/:id", DoacaoController.getById);

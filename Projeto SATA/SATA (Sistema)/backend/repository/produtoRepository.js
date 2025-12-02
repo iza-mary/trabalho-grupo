@@ -170,6 +170,34 @@ const ProdutoRepository = {
 
     return { data: rows, total, page: Number(page), pageSize: limit };
   }
+  ,
+  computeCurrentStock(prod) {
+    const qtd = prod.quantidade != null ? Number(prod.quantidade) : null;
+    const atual = prod.estoque_atual != null ? Number(prod.estoque_atual) : null;
+    // Prioriza 'quantidade' (campo ativo no sistema). Usa 'estoque_atual' apenas se 'quantidade' estiver ausente.
+    return (qtd != null ? qtd : (atual != null ? atual : 0));
+  }
+  ,
+  async checkAndNotifyLowStock() {
+    const [rows] = await db.execute(`SELECT id, nome, estoque_minimo, estoque_atual, quantidade FROM produtos`);
+    for (const p of rows || []) {
+      const current = this.computeCurrentStock(p);
+      const minimo = Number(p.estoque_minimo || 0);
+      if (minimo > 0 && current <= minimo) {
+        const [recent] = await db.execute(
+          `SELECT id FROM notificacoes WHERE referencia_tipo='produto' AND referencia_id=? AND tipo='estoque_baixo' AND data_criacao >= DATE_SUB(NOW(), INTERVAL 1 HOUR) ORDER BY id DESC LIMIT 1`,
+          [p.id]
+        );
+        const hasRecent = Array.isArray(recent) && recent.length > 0;
+        if (!hasRecent) {
+          const Notificacao = require('../models/notificacao');
+          const NotificacaoRepository = require('./notificacaoRepository');
+          const notif = Notificacao.criarNotificacaoEstoqueBaixo({ id: p.id, nome: p.nome, estoque_atual: current, estoque_minimo: minimo }, null);
+          try { await NotificacaoRepository.create(notif); } catch (_) {}
+        }
+      }
+    }
+  }
 };
 
 module.exports = ProdutoRepository;

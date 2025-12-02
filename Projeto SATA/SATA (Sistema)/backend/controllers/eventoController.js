@@ -1,4 +1,5 @@
 const eventoRepository = require('../repository/eventoRepository');
+const { criarNotificacao } = require("./notificacaoController");
 
 class EventoController {
   async getAll(req, res) {
@@ -37,6 +38,19 @@ class EventoController {
     try {
       const payload = req.body || {};
       const created = await eventoRepository.create(payload);
+      const dataText = created?.dataInicio || payload?.dataInicio || payload?.data_inicio || null;
+      const dataFmt = dataText ? new Date(dataText).toLocaleDateString('pt-BR') : '';
+      const msg = dataFmt ? `Novo evento \"${payload.titulo}\" criado para a data ${dataFmt}.` : `Novo evento \"${payload.titulo}\" criado.`;
+      try {
+        await criarNotificacao({
+            mensagem: msg,
+            tipo: 'evento_proximo',
+            referencia_id: created.id,
+            id_usuario: req.user ? req.user.id : null
+        });
+      } catch (notificacaoError) {
+          console.error('Falha ao criar notificação para novo evento:', notificacaoError);
+      }
       return res.status(201).json({ success: true, data: created, message: 'Evento criado com sucesso' });
     } catch (error) {
       const msg = error?.message || 'Erro ao criar evento';
@@ -53,6 +67,16 @@ class EventoController {
       if (!updated) {
         return res.status(404).json({ success: false, message: 'Evento não encontrado' });
       }
+      try {
+        await criarNotificacao({
+            mensagem: `O evento \"${payload.titulo}\" foi atualizado.`,
+            tipo: 'evento_proximo',
+            referencia_id: updated.id,
+            id_usuario: req.user ? req.user.id : null
+        });
+      } catch (notificacaoError) {
+          console.error('Falha ao criar notificação para atualização de evento:', notificacaoError);
+      }
       return res.json({ success: true, data: updated, message: 'Evento atualizado com sucesso' });
     } catch (error) {
       const msg = error?.message || 'Erro ao atualizar evento';
@@ -67,6 +91,16 @@ class EventoController {
       const ok = await eventoRepository.remove(id);
       if (!ok) {
         return res.status(404).json({ success: false, message: 'Evento não encontrado' });
+      }
+      try {
+        await criarNotificacao({
+            mensagem: `O evento com ID ${id} foi removido.`,
+            tipo: 'evento_proximo',
+            referencia_id: id,
+            id_usuario: req.user ? req.user.id : null
+        });
+      } catch (notificacaoError) {
+          console.error('Falha ao criar notificação para remoção de evento:', notificacaoError);
       }
       return res.json({ success: true, message: 'Evento removido com sucesso' });
     } catch (error) {
@@ -92,13 +126,13 @@ class EventoController {
       const report = await eventoRepository.getReportByEventoId(id, { tipo, data, destinatario, busca });
 
       if (String(format).toLowerCase() === 'csv') {
-        const header = ['id','data','tipo','doador','eventoId','evento','idosoId','idoso','item','qntd','valor','obs'];
+        const header = ['id','data','categoria','doador','eventoId','evento','idosoId','idoso','item','qntd','valor','obs'];
         const escape = (val) => {
           const s = String(val ?? '');
           // Escapa aspas duplas e envolve em aspas caso contenha vírgula/linha nova
-          const needsQuote = /[",\n\r;]/.test(s);
-          const safe = s.replace(/"/g, '""');
-          return needsQuote ? `"${safe}"` : safe;
+          const needsQuote = /[\",\\n\\r;]/.test(s);
+          const safe = s.replace(/\"/g, '""');
+          return needsQuote ? `\"${safe}\"` : safe;
         };
         const lines = [header.join(',')];
         for (const d of report.doacoes) {
@@ -127,6 +161,21 @@ class EventoController {
       return res.json({ success: true, data: report });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async verificarEventosProximos() {
+    try {
+      const eventos = await eventoRepository.findUpcomingEvents(60); // Notifica eventos na próxima hora
+      for (const evento of eventos) {
+        await criarNotificacao({
+          mensagem: `O evento \"${evento.titulo}\" está programado para começar em breve.`,
+          tipo: 'evento_proximo',
+          referencia_id: evento.id,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao verificar eventos próximos:', error);
     }
   }
 }

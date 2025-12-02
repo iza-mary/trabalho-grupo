@@ -65,7 +65,6 @@ const SataCadastroIdosos = () => {
     dataEntrada: '',
     quarto: '',
     cama: '',
-    observacoes: '',
     status: 'nao_internado'
   });
   
@@ -190,8 +189,8 @@ const SataCadastroIdosos = () => {
       } else {
         await idosoService.add({ ...formData, rg: normalizarRG(formData.rg) });
         alert('Cadastro criado com sucesso!');
+        navigate('/idosos');
       }
-      navigate('/');
     } catch (error) {
       console.error("Erro ao salvar:", error);
       alert(`Erro: ${error.message}`);
@@ -214,7 +213,7 @@ const SataCadastroIdosos = () => {
           status: 'internado'
         });
         alert('Dados de internação atualizados com sucesso!');
-        navigate('/');
+        navigate('/idosos');
       } catch (error) {
         console.error('Erro ao salvar internação:', error);
         alert('Erro ao salvar os dados de internação. Por favor, tente novamente.');
@@ -563,18 +562,7 @@ const SataCadastroIdosos = () => {
                       </Form.Control.Feedback>
                     </Col>
                   </Row>
-                  <Row>
-                    <Col className="mb-3">
-                      <Form.Label>Observações</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="observacoes"
-                        value={formData.observacoes}
-                        onChange={handleChange}
-                      />
-                    </Col>
-                  </Row>
+                  
                 </Card.Body>
               </Card>
             )}

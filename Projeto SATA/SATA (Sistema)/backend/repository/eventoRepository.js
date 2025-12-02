@@ -113,6 +113,19 @@ class EventoRepository {
     }
   }
 
+  async findUpcomingEvents(minutos) {
+    try {
+      const [rows] = await db.execute(
+        `SELECT * FROM eventos WHERE notificar = 1 AND dat-inicio BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ? MINUTE)`,
+        [minutos]
+      );
+      return (rows || []).map((r) => new Evento(r));
+    } catch (err) {
+      console.error('Erro ao buscar eventos próximos (findUpcomingEvents):', err.message);
+      return [];
+    }
+  }
+
   async getDonationsByEventoId(eventoId, { tipo = 'todos', data = 'todos', destinatario = 'todos', busca = '' } = {}) {
     const list = await doacaoRepository.findByEventoId(eventoId, { tipo, data, destinatario, busca });
     return list.map((d) => d.toJSON());

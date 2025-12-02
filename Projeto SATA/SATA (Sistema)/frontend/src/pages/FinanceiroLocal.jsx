@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
+import HelpButton from '../components/ui/HelpButton';
 import StandardTable from '../components/ui/StandardTable';
 import { CashStack, Funnel, PlusCircle } from 'react-bootstrap-icons';
 import { Button, Col, Form, Row, Spinner, Alert, Card, Badge, Modal } from 'react-bootstrap';
@@ -240,6 +241,7 @@ const FinanceiroLocal = () => {
         <PageHeader
           title="Financeiro"
           icon={<CashStack />}
+          suffix={<HelpButton inline iconOnly />}
           actions={
             <Button variant="primary" onClick={handleOpenModal} disabled={loading}>
               <PlusCircle className="me-1" size={16} />
@@ -451,10 +453,10 @@ const FinanceiroLocal = () => {
                   </Form.Group>
                 </Col>
                 <Col md={4}>
-                  <Form.Group controlId="filterSearch">
-                    <Form.Label>Buscar</Form.Label>
-                    <Form.Control type="text" placeholder="Descrição" value={filter.search} onChange={(e) => setFilter({ ...filter, search: e.target.value })} />
-                  </Form.Group>
+                <Form.Group controlId="filterSearch">
+                  <Form.Label>Buscar</Form.Label>
+                  <Form.Control type="text" placeholder="Buscar..." value={filter.search} onChange={(e) => setFilter({ ...filter, search: e.target.value })} />
+                </Form.Group>
                 </Col>
                 {filter.period === 'custom' && (
                   <>

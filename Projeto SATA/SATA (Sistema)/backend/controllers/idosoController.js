@@ -1,7 +1,10 @@
 const db = require('../config/database.js');
 const Idoso = require('../models/idoso');
 const IdosoRepository = require('../repository/idosoRepository.js');
+const notificacaoController = require('./notificacaoController'); // Importar o controlador de notificações
 const normalizeRG = (v) => String(v || '').replace(/\D/g, '');
+
+const { getCamaNome } = require('../utils/formatters');
 
 class IdosoController {
     // Obtém todos os idosos
@@ -27,6 +30,8 @@ class IdosoController {
             });
         }
     }
+
+
 
     // Cria um novo idoso
     async create(req, res) {
@@ -62,6 +67,22 @@ class IdosoController {
 
             // Cria o idoso no banco de dados
             const newIdoso = await IdosoRepository.create(idoso);
+
+            // Criar notificação
+            try {
+              const notificacaoData = {
+                tipo: 'cadastro',
+                titulo: 'Novo Idoso Cadastrado',
+                descricao: `O idoso ${newIdoso.nome} foi cadastrado no sistema.`,
+                referencia_id: newIdoso.id,
+                referencia_tipo: 'idoso',
+                usuario_id: req.user ? req.user.id : null
+              };
+              await notificacaoController.criarNotificacao(notificacaoData);
+            } catch (notificacaoError) {
+              console.error('Erro ao criar notificação de cadastro de idoso:', notificacaoError.message);
+              // Não bloquear a resposta principal por falha na notificação
+            }
             
             // Retorna resposta de sucesso
             res.status(201).json({
@@ -158,6 +179,21 @@ class IdosoController {
 
             // Atualiza o idoso no banco de dados
             const updated = await IdosoRepository.update(req.params.id, idoso);
+
+            // Criar notificação
+            try {
+              const notificacaoData = {
+                tipo: 'cadastro', // Usando 'cadastro' para abranger atualizações
+                titulo: 'Idoso Atualizado',
+                descricao: `Os dados do idoso ${updated.nome} foram atualizados.`,
+                referencia_id: updated.id,
+                referencia_tipo: 'idoso',
+                usuario_id: req.user ? req.user.id : null
+              };
+              await notificacaoController.criarNotificacao(notificacaoData);
+            } catch (notificacaoError) {
+              console.error('Erro ao criar notificação de atualização de idoso:', notificacaoError.message);
+            }
             
             // Se não encontrar o idoso para atualizar, retorna 404
             if (!updated) {
@@ -215,12 +251,28 @@ class IdosoController {
 
             const historicoQuartos = (internacoes || []).map((i) => ({
                 quartoNumero: i.quarto_numero || i.quarto_id || null,
-                cama: i.cama || null,
+                cama: getCamaNome(i.cama) || null,
                 dataEntrada: i.data_entrada || null,
                 dataSaida: i.data_saida || null,
                 status: i.status || null,
             }));
             const atual = (internacoes || []).find(i => String(i.status).toLowerCase() === 'ativa') || null;
+
+            // Histórico de observações
+            let observacoes = [];
+            try {
+                const [obsRows] = await db.execute(
+                    `SELECT o.*, u.username as usuario_nome 
+                     FROM observacoes_idosos o 
+                     LEFT JOIN users u ON o.usuario_id = u.id 
+                     WHERE o.idoso_id = ? 
+                     ORDER BY o.data_registro DESC`,
+                    [id]
+                );
+                observacoes = obsRows;
+            } catch (e) {
+                console.warn('Falha ao buscar observações do idoso na ficha completa:', e.message);
+            }
 
             // Utilitário para idade
             const calcIdade = (dob) => {
@@ -260,7 +312,7 @@ class IdosoController {
                 acomodacao: {
                     atual: atual ? {
                         quartoNumero: atual.quarto_numero || atual.quarto_id || null,
-                        cama: atual.cama || null,
+                        cama: getCamaNome(atual.cama) || null,
                         dataEntrada: atual.data_entrada || null,
                     } : null,
                     historico: historicoQuartos,
@@ -275,7 +327,7 @@ class IdosoController {
                     prescricoesAtivas: [], // Sem repositório de prescrições identificado
                 },
                 observacoes: {
-                    texto: idoso.observacoes || null,
+                    historico: observacoes,
                     status: idoso.status || null,
                 },
             };
@@ -396,6 +448,22 @@ async updateStatus(req, res) {
             const [delRes] = await conn.execute('DELETE FROM idosos WHERE id = ?', [id]);
             const ok = delRes && delRes.affectedRows > 0;
 
+            // Criar notificação de exclusão
+            if (ok) {
+              try {
+                const notificacaoData = {
+                  tipo: 'cadastro', // Usando 'cadastro' para abranger exclusões
+                  titulo: 'Idoso Excluído',
+                  descricao: `O idoso ${idoso.nome} (ID: ${id}) foi excluído do sistema.`,
+                  referencia_tipo: 'idoso',
+                  usuario_id: req.user ? req.user.id : null
+                };
+                await notificacaoController.criarNotificacao(notificacaoData);
+              } catch (notificacaoError) {
+                console.error('Erro ao criar notificação de exclusão de idoso:', notificacaoError.message);
+              }
+            }
+
             await conn.commit();
             conn.release();
 
@@ -420,6 +488,84 @@ async updateStatus(req, res) {
             return res.status(500).json({ success: false, message: error.message });
         }
     }
+
+  async addObservacao(req, res) {
+    const conn = await db.getConnection();
+    try {
+      const { id } = req.params;
+      const { observacao, usuario_id } = req.body;
+
+            if (!observacao || observacao.trim() === '') {
+                return res.status(400).json({ success: false, message: 'A observação não pode estar vazia.' });
+            }
+
+            const [result] = await conn.execute(
+                'INSERT INTO observacoes_idosos (idoso_id, usuario_id, observacao) VALUES (?, ?, ?)',
+                [id, usuario_id, observacao]
+            );
+
+            const [rows] = await conn.execute('SELECT * FROM observacoes_idosos WHERE id = ?', [result.insertId]);
+
+            conn.release();
+
+      res.status(201).json({ success: true, data: rows[0] });
+    } catch (error) {
+      try { conn.release(); } catch {}
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async listObservacoes(req, res) {
+    try {
+      const { id } = req.params;
+      const [rows] = await db.execute('SELECT id, idoso_id, usuario_id, observacao, data_registro FROM observacoes_idosos WHERE idoso_id = ? ORDER BY data_registro DESC, id DESC', [id]);
+      res.json({ success: true, data: rows });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async updateObservacao(req, res) {
+    const conn = await db.getConnection();
+    try {
+      const { id, obsId } = req.params;
+      const { observacao } = req.body;
+      if (!observacao || observacao.trim() === '') {
+        conn.release();
+        return res.status(400).json({ success: false, message: 'A observação não pode estar vazia.' });
+      }
+      const [rows] = await conn.execute('SELECT id FROM observacoes_idosos WHERE id = ? AND idoso_id = ?', [obsId, id]);
+      if (!Array.isArray(rows) || rows.length === 0) {
+        conn.release();
+        return res.status(404).json({ success: false, message: 'Observação não encontrada.' });
+      }
+      await conn.execute('UPDATE observacoes_idosos SET observacao = ? WHERE id = ?', [observacao, obsId]);
+      const [updated] = await conn.execute('SELECT id, idoso_id, usuario_id, observacao, data_registro FROM observacoes_idosos WHERE id = ?', [obsId]);
+      conn.release();
+      res.json({ success: true, data: updated[0] });
+    } catch (error) {
+      try { conn.release(); } catch {}
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async deleteObservacao(req, res) {
+    const conn = await db.getConnection();
+    try {
+      const { id, obsId } = req.params;
+      const [rows] = await conn.execute('SELECT id FROM observacoes_idosos WHERE id = ? AND idoso_id = ?', [obsId, id]);
+      if (!Array.isArray(rows) || rows.length === 0) {
+        conn.release();
+        return res.status(404).json({ success: false, message: 'Observação não encontrada.' });
+      }
+      await conn.execute('DELETE FROM observacoes_idosos WHERE id = ?', [obsId]);
+      conn.release();
+      res.json({ success: true });
+    } catch (error) {
+      try { conn.release(); } catch {}
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
 }
 
 module.exports = new IdosoController();

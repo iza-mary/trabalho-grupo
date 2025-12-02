@@ -60,7 +60,7 @@ function SelectEvento({ setEvento, setEventoId, setErrors, setValidated, errors,
         isInvalid={!!errors?.[errorKey]}
         onChange={handleChangeBusca}
         name="evento"
-        placeholder="Pesquise um Evento (opcional)"
+        placeholder="Buscar..."
       />
       <div id="eventoSelect" className="dropdown-menu position-absolute w-100 mt-1" style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}>
         {listaEventos.map((evento) => (

@@ -33,9 +33,40 @@ const MovimentoEstoqueRepository = require('./repository/movimentoEstoqueReposit
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
-// Configuração de middlewares base (CORS, parsing JSON e cookies)
+const DONATION_SLA_MS = 2000;
+const donationMetrics = {
+  count: 0,
+  totalMs: 0,
+  maxMs: 0,
+  breaches: 0,
+  last10: []
+};
+function donationTimingMiddleware(req, res, next) {
+  const start = process.hrtime.bigint();
+  res.on('finish', () => {
+    const end = process.hrtime.bigint();
+    const durationMs = Number(end - start) / 1e6;
+    donationMetrics.count += 1;
+    donationMetrics.totalMs += durationMs;
+    if (durationMs > donationMetrics.maxMs) donationMetrics.maxMs = durationMs;
+    donationMetrics.last10.push(durationMs);
+    if (donationMetrics.last10.length > 10) donationMetrics.last10.shift();
+    const avgMs = donationMetrics.totalMs / donationMetrics.count;
+    const breach = durationMs > DONATION_SLA_MS;
+    if (breach) donationMetrics.breaches += 1;
+  });
+  next();
+}
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const allowList = ['http://localhost:5173', 'http://localhost:5174'];
+        if (process.env.CORS_ORIGIN) allowList.push(process.env.CORS_ORIGIN);
+        const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+        if (allowList.includes(origin) || isLocalhost) return callback(null, true);
+        return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
@@ -61,20 +92,33 @@ function csrfGuard(req, res, next) {
 }
 app.use(csrfGuard);
 
-// Rotas públicas: autenticação e sessão
 app.use('/api/auth', authRouters);
 
-// Endpoint utilitário: validação de email (antes da proteção global)
 app.get('/api/users/validate-email', (req, res) => usersController.validateEmail(req, res));
 
-// Proteção global: requer JWT válido e aplica controle de acesso por papel
 app.use('/api', authenticate, roleAccessControl);
 
-// Módulos de domínio
+const sseClients = new Set();
+function sseBroadcast(event, data) {
+  const payload = JSON.stringify(data);
+  for (const res of sseClients) {
+    try { res.write(`event: ${event}\n` + `data: ${payload}\n\n`); } catch (_) {}
+  }
+}
+app.get('/api/notificacoes/stream', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  if (res.flushHeaders) res.flushHeaders();
+  sseClients.add(res);
+  req.on('close', () => { sseClients.delete(res); });
+  try { res.write(`event: ping\n` + `data: "ready"\n\n`); } catch (_) {}
+});
+
 app.use('/api/idosos', idosoRouters);
 app.use('/api/quartos', quartoRouters);
 app.use('/api/internacoes', internacaoRouters);
-app.use('/api/doacoes', doacaoRouters);
+app.use('/api/doacoes', donationTimingMiddleware, doacaoRouters);
 app.use('/api/doadores', doadorRouters);
 app.use('/api/eventos', eventoRouters);
 app.use('/api/financeiro', financeiroRouters);
@@ -84,17 +128,58 @@ app.use('/api/estoque/doacoes', estoqueDonationRouters);
 app.use('/api/nomes', nomeUpdateRouters);
 app.use('/api/users', usersRouters);
 
-// Saúde da API: útil para monitoramento e testes rápidos
 app.get('/', (req, res) => {
     res.json({ message: 'API de Sistema de Asilo funcionando!' });
+});
+
+app.get('/api/_metrics/donations', (req, res) => {
+  const avgMs = donationMetrics.count ? (donationMetrics.totalMs / donationMetrics.count) : 0;
+  res.json({
+    success: true,
+    data: {
+      count: donationMetrics.count,
+      avg_ms: Number(avgMs.toFixed(2)),
+      max_ms: Number(donationMetrics.maxMs.toFixed(2)),
+      sla_ms: DONATION_SLA_MS,
+      breaches: donationMetrics.breaches,
+      last10_ms: donationMetrics.last10.map(v => Number(v.toFixed(2)))
+    }
+  });
 });
 
 // Documentação interativa (Swagger)
 mountSwagger(app);
 
-// Inicialização do servidor
-app.listen(port, '0.0.0.0', () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
-    db.testConnection().catch(err => console.error('Falha na verificação do banco:', err.message));
-    try { MovimentoEstoqueRepository.ensureTable(); } catch (e) { console.error('Falha ao garantir tabela de movimentos:', e.message); }
-});
+// Inicialização do servidor com verificação de banco antes de subir
+(async () => {
+    try {
+        await db.testConnection();
+        await MovimentoEstoqueRepository.ensureTable();
+    } catch (e) {
+        console.error('Falha na inicialização do banco:', e.message);
+        process.exitCode = 1;
+        return;
+    }
+
+    let lastNotifId = 0;
+    try {
+      const [r] = await db.query('SELECT MAX(id) AS maxId FROM notificacoes');
+      lastNotifId = Number(r?.[0]?.maxId || 0);
+    } catch (_) {}
+    setInterval(async () => {
+      try {
+        const [rows] = await db.query('SELECT * FROM notificacoes WHERE id > ? ORDER BY id ASC', [lastNotifId]);
+        if (Array.isArray(rows) && rows.length) {
+          lastNotifId = rows[rows.length - 1].id;
+          sseBroadcast('new', rows);
+        }
+      } catch (_) {}
+    }, 1000);
+    setInterval(() => { sseBroadcast('ping', Date.now()); }, 30000);
+
+    require('./scheduler');
+
+    app.listen(port, '0.0.0.0', () => {
+        console.log(`Servidor rodando em http://localhost:${port}`);
+    });
+})();

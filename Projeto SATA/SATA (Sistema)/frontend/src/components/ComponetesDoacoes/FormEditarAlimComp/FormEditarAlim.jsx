@@ -15,11 +15,11 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
         doacao: {
           item: "",
           qntd: "",
-          unidade_medida: "Unidade"
+          unidade_medida: "Unidade",
+          validade: ""
         },
         destinatario: "",
         doador: { doadorId: 0, nome: "" },
-        telefone: "",
         evento: "",
         eventoId: null,
         obs: ""
@@ -29,7 +29,7 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
   const [errors, setErrors] = useState({});
   const [showAlert, setShowAlert] = useState(false);
   const [showModal, setShowModal] = useState(true);
-  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade");
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade(s)");
   const [unidadeOutro, setUnidadeOutro] = useState("");
 
     useEffect(() => {
@@ -39,13 +39,19 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
             data: (doacaoEdit.data || "").substring(0, 10),
             tipo: doacaoEdit.tipo,
             doacao: {
-              item: doacaoEdit.doacao?.item ?? "",
-              qntd: doacaoEdit.doacao?.qntd ?? "",
-              unidade_medida: doacaoEdit.doacao?.unidade_medida ?? "Unidade"
+              item: (
+                doacaoEdit.doacao?.tipo_alimento ??
+                doacaoEdit.tipo_alimento ??
+                doacaoEdit.doacao?.item ??
+                doacaoEdit.item ??
+                ""
+              ),
+              qntd: doacaoEdit.doacao?.qntd ?? doacaoEdit.doacao?.quantidade ?? doacaoEdit.quantidade ?? "",
+              unidade_medida: doacaoEdit.doacao?.unidade_medida ?? "Unidade(s)",
+              validade: (doacaoEdit.doacao?.validade || doacaoEdit.validade || "").substring(0,10)
             },
             destinatario: doacaoEdit.idoso || "",
             doador: { doadorId: doacaoEdit.doador?.doadorId ?? doacaoEdit.doador?.id ?? 0, nome: doacaoEdit.doador?.nome ?? "" },
-            telefone: doacaoEdit.telefone || "",
             evento: doacaoEdit.evento || "",
             eventoId: doacaoEdit.eventoId ?? null,
             obs: doacaoEdit.obs || ""
@@ -149,38 +155,7 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
 
   // Removido: doador é selecionado via componente SelectDoador com id e nome
 
-  const handleChangeTelefone = (e) => {
-    const value = e.target.value;
-    const numeros = value.replace(/\D/g, '');
-
-    let formatado = value; // valor padrão: sem reformatar
-
-    if (e.nativeEvent.inputType !== 'deleteContentBackward') {
-      if (numeros.length <= 10) {
-        // (XX) XXXX-XXXX
-        formatado = numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-      } else {
-        // (XX) 9XXXX-XXXX
-        formatado = numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-      }
-    }
-
-    if (!formatado) {
-      setErrors(prev => ({ ...prev, telefone: null }));
-    }
-    else if (formatado.length !== 15 && formatado.length !== 14) {
-      setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
-      setValidated(false);
-    }
-    else {
-      setErrors(prev => ({ ...prev, telefone: null }));
-    }
-
-    setDoaAlimentos(prev => ({
-      ...prev,
-      telefone: formatado
-    }));
-  }
+  // Campo de telefone removido no formulário de edição
 
   
 
@@ -227,6 +202,28 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
         setShowAlert(false);
       }, 3000);
     };
+  }
+
+  const handleChangeValidade = (e) => {
+    const value = e.target.value;
+    setDoaAlimentos(prev => ({ ...prev, doacao: { ...prev.doacao, validade: value } }));
+    if (!value) {
+      setErrors(prev => ({ ...prev, validade: null }));
+      return;
+    }
+    try {
+      const hoje = new Date();
+      const dataVal = new Date(value);
+      if (dataVal < new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())) {
+        setErrors(prev => ({ ...prev, validade: 'A validade não pode ser no passado' }));
+        setValidated(false);
+      } else {
+        setErrors(prev => ({ ...prev, validade: null }));
+      }
+    } catch {
+      setErrors(prev => ({ ...prev, validade: 'Data de validade inválida' }));
+      setValidated(false);
+    }
   }
 
   return (
@@ -281,11 +278,12 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
               <Form.Group className="mb-3">
                 <Form.Label>Unidade de medida (Obrigatório)</Form.Label>
                 <Form.Select name="unidade_medida" value={unidadeSelecionada} onChange={handleChangeUnidade} required isInvalid={!!errors.unidade_medida}>
-                  <option value="Unidade">Unidade</option>
+                  <option value="Unidade(s)">Unidade(s)</option>
                   <option value="Kg">Kg</option>
                   <option value="L">L</option>
-                  <option value="Pacote">Pacote</option>
-                  <option value="Caixa">Caixa</option>
+                  <option value="Pacotes">Pacotes</option>
+                  <option value="Caixas">Caixas</option>
+                  <option value="m">m</option>
                   <option value="Outro">Outro</option>
                 </Form.Select>
                 {unidadeSelecionada === 'Outro' && (
@@ -293,6 +291,13 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
                 )}
                 <Form.Control.Feedback type="invalid">
                   {errors.unidade_medida}
+                </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Validade (Opcional)</Form.Label>
+                <Form.Control type="date" name="validade" value={doaAlimentos?.doacao?.validade || ''} onChange={handleChangeValidade} isInvalid={!!errors.validade} />
+                <Form.Control.Feedback type="invalid">
+                  {errors.validade}
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
@@ -332,18 +337,7 @@ function FormEditarAlim({ show, doacaoEdit, onEdit }) {
                   selectedDoadorEdit={doaAlimentos.doador}
                 />
               </Form.Group>
-              <Form.Group controlId="telefone" className="mb-3">
-                <Form.Label>Telefone para Contato (Opcional)</Form.Label>
-                <Form.Control name="telefone" autoComplete="off"
-                  onChange={handleChangeTelefone}
-                  value={doaAlimentos.telefone || ""}
-                  maxLength={15}
-                  isInvalid={!!errors.telefone}
-                  type="tel" />
-                  <Form.Control.Feedback type="invalid">
-                  {errors.telefone}
-                </Form.Control.Feedback>
-              </Form.Group>
+              {/* Campo de telefone removido */}
               <Form.Group className="mb-3">
                 <SelectEvento
                   setEvento={(eventoTitulo) => setDoaAlimentos(prev => ({ ...prev, evento: eventoTitulo }))}

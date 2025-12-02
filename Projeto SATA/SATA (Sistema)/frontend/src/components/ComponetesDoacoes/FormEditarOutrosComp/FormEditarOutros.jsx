@@ -13,11 +13,11 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
         tipo: "outros",
         doacao: {
             item: "",
-            qntd: ""
+            qntd: "",
+            estado_conservacao: "Bom"
         },
         destinatario: "",
         doador: { doadorId: 0, nome: "" },
-        telefone: "",
         evento: "",
         eventoId: null,
         obs: ""
@@ -37,12 +37,18 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
             data: (doacaoEdit.data || "").substring(0, 10),
             tipo: doacaoEdit.tipo,
             doacao: {
-                item: doacaoEdit.doacao?.item ?? "",
-                qntd: doacaoEdit.doacao?.qntd ?? ""
+                item: (
+                  doacaoEdit.doacao?.descricao_item ??
+                  doacaoEdit.doacao?.item ??
+                  doacaoEdit.descricao_item ??
+                  doacaoEdit.item ??
+                  ""
+                ),
+                qntd: doacaoEdit.doacao?.qntd ?? doacaoEdit.doacao?.quantidade ?? doacaoEdit.quantidade ?? "",
+                estado_conservacao: doacaoEdit.doacao?.estado_conservacao ?? doacaoEdit.estado_conservacao ?? 'Bom'
             },
             destinatario: doacaoEdit.idoso || "",
             doador: { doadorId: doacaoEdit.doador?.doadorId ?? doacaoEdit.doador?.id ?? 0, nome: doacaoEdit.doador?.nome ?? "" },
-            telefone: doacaoEdit.telefone || "",
             evento: doacaoEdit.evento || "",
             eventoId: doacaoEdit.eventoId ?? null,
             obs: doacaoEdit.obs || ""
@@ -113,7 +119,7 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
 
     // Sincroniza seleção de unidade quando dados da doação mudarem
     useEffect(() => {
-        setUnidadeSelecionada(doaOutros?.doacao?.unidade_medida ?? 'Unidade');
+        setUnidadeSelecionada(doaOutros?.doacao?.unidade_medida ?? 'Unidade(s)');
     }, [doaOutros?.doacao?.unidade_medida]);
 
     const handleChangeUnidade = (e) => {
@@ -143,38 +149,7 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
         }
     }
 
-    const handleChangeTelefone = (e) => {
-        const value = e.target.value;
-        const numeros = value.replace(/\D/g, '');
-
-        let formatado = value; // valor padrão: sem reformatar
-
-        if (e.nativeEvent.inputType !== 'deleteContentBackward') {
-            if (numeros.length <= 10) {
-                // (XX) XXXX-XXXX
-                formatado = numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-            } else {
-                // (XX) 9XXXX-XXXX
-                formatado = numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-            }
-        }
-
-        if (!formatado) {
-            setErrors(prev => ({ ...prev, telefone: null }));
-        }
-        else if (formatado.length !== 15 && formatado.length !== 14) {
-            setErrors(prev => ({ ...prev, telefone: "Telefone inválido" }));
-            setValidated(false);
-        }
-        else {
-            setErrors(prev => ({ ...prev, telefone: null }));
-        }
-
-        setDoaOutros(prev => ({
-            ...prev,
-            telefone: formatado
-        })); // Atualiza o estado com o valor formatado
-    }
+    // Campo de telefone removido no formulário de edição
 
     
 
@@ -265,24 +240,34 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                                             {errors.item}
                                         </Form.Control.Feedback>
                                     </Form.Group>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Quantidade (Somente leitura)</Form.Label>
-                                        <Form.Control name="quantidade" onChange={handleChangeQuantidade} autoComplete="off"
-                                            value={doaOutros.doacao.qntd || ""}
-                                            isInvalid={!!errors.quantidade}
-                                            type="number" readOnly disabled title="Quantidade original da doação é imutável" />
-                                        <Form.Control.Feedback type="invalid">
-                                            {errors.quantidade}
-                                        </Form.Control.Feedback>
-                                    </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Quantidade (Somente leitura)</Form.Label>
+                <Form.Control name="quantidade" onChange={handleChangeQuantidade} autoComplete="off"
+                  value={doaOutros.doacao.qntd || ""}
+                  isInvalid={!!errors.quantidade}
+                  type="number" readOnly disabled title="Quantidade original da doação é imutável" />
+                <Form.Control.Feedback type="invalid">
+                  {errors.quantidade}
+                </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Estado de Conservação</Form.Label>
+                <Form.Select name="estado_conservacao" value={doaOutros?.doacao?.estado_conservacao || 'Bom'} onChange={(e) => setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, estado_conservacao: e.target.value } }))}>
+                  <option value="Novo">Novo</option>
+                  <option value="Bom">Bom</option>
+                  <option value="Regular">Regular</option>
+                  <option value="Ruim">Ruim</option>
+                </Form.Select>
+              </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Unidade de medida (Obrigatório)</Form.Label>
                                         <Form.Select name="unidade_medida" value={unidadeSelecionada} onChange={handleChangeUnidade} required isInvalid={!!errors.unidade_medida}>
-                                            <option value="Unidade">Unidade</option>
+                                            <option value="Unidade(s)">Unidade(s)</option>
                                             <option value="Kg">Kg</option>
                                             <option value="L">L</option>
-                                            <option value="Pacote">Pacote</option>
-                                            <option value="Caixa">Caixa</option>
+                                            <option value="Pacotes">Pacotes</option>
+                                            <option value="Caixas">Caixas</option>
+                                            <option value="m">m</option>
                                             <option value="Outro">Outro</option>
                                         </Form.Select>
                                         {unidadeSelecionada === 'Outro' && (
@@ -328,19 +313,7 @@ function FormEditarOutros({ show, onEdit, doacaoEdit }) {
                                           selectedDoadorEdit={doaOutros.doador}
                                         />
                                     </Form.Group>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Telefone para Contato (Opcional)</Form.Label>
-                                        <Form.Control autoComplete="off"
-                                            onChange={handleChangeTelefone}
-                                            value={doaOutros.telefone || ""}
-                                            name="telefone" type="tel"
-                                            maxLength={15}
-                                            isInvalid={!!errors.telefone}
-                                        />
-                                        <Form.Control.Feedback type="invalid">
-                                    {errors.telefone}
-                                </Form.Control.Feedback>
-                                    </Form.Group>
+                                    {/* Campo de telefone removido */}
                                     <Form.Group className="mb-3">
                                         <SelectEvento
                                           setEvento={(eventoTitulo) => setDoaOutros(prev => ({ ...prev, evento: eventoTitulo }))}

@@ -98,6 +98,38 @@ const MovimentoEstoqueRepository = {
     }
   },
 
+  async createWithConn(conn, mov) {
+    const sql = `INSERT INTO movimentos_estoque
+      (produto_id, tipo, quantidade, saldo_anterior, saldo_posterior, doacao_id, responsavel_id, responsavel_nome, motivo, observacao)
+      VALUES (?,?,?,?,?,?,?,?,?,?)`;
+    const params = [
+      mov.produto_id,
+      mov.tipo,
+      mov.quantidade,
+      mov.saldo_anterior,
+      mov.saldo_posterior,
+      mov.doacao_id ?? null,
+      mov.responsavel_id ?? null,
+      mov.responsavel_nome ?? null,
+      mov.motivo ?? null,
+      mov.observacao ?? null,
+    ];
+    try {
+      const [result] = await conn.execute(sql, params);
+      return result.insertId;
+    } catch (err) {
+      const msg = String(err?.message || '');
+      const code = String(err?.code || '');
+      const isLockTimeout = msg.includes('Lock wait timeout') || code === 'ER_LOCK_WAIT_TIMEOUT';
+      if (isLockTimeout) {
+        try { await new Promise(r => setTimeout(r, 50)); } catch (_) {}
+        const [retry] = await conn.execute(sql, params);
+        return retry.insertId;
+      }
+      throw err;
+    }
+  },
+
   async searchPaginated({ produtoId, startDate, endDate, search, sort = 'data_hora', order = 'DESC', page = 1, pageSize = 10 }) {
     const where = ['produto_id = ?'];
     const params = [produtoId];

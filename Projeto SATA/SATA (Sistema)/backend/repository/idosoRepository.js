@@ -4,11 +4,9 @@ const Idoso = require('../models/idoso');
 class IdosoRepository {
     // Busca todos os idosos no banco de dados
     async findAll() {
-        console.log('Iniciando busca por idosos...');
         try {
             // Executa a query SQL
             const [rows] = await db.query('SELECT * FROM idosos');
-            console.log(`Encontrados ${rows.length} registros`);
                 
             // Mapeia os resultados para objetos Idoso
             return rows.map(row => {
@@ -30,7 +28,6 @@ class IdosoRepository {
                     estado: row.estado_id,
                     cep: row.cep,
                     status: row.status,
-                    observacoes: row.observacoes,
                     dataCadastro: row.data_cadastro,
                     dataAtualizacao: row.data_atualizacao
                 };
@@ -96,7 +93,6 @@ class IdosoRepository {
                 estadoId: row.estado_id,
                 cep: row.cep,
                 status: row.status,
-                observacoes: row.observacoes,
                 dataCadastro: row.data_cadastro,
                 dataAtualizacao: row.data_atualizacao
             };
@@ -113,16 +109,16 @@ class IdosoRepository {
         try {
             // Extrai os campos necessários do objeto idosoData
             const { nome, dataNascimento, genero, rg, cpf, cartaoSus, telefone, rua, numero, 
-                   complemento, cidade, estadoId, cep, status, observacoes } = idosoData;
+                   complemento, cidade, estadoId, cep, status } = idosoData;
             
             // Executa a query de inserção
             const [result] = await db.execute(
                 `INSERT INTO idosos 
                 (nome, data_nascimento, genero, rg, cpf, cartao_sus, telefone, rua, numero, 
-                 complemento, cidade, estado_id, cep, status, observacoes, data_cadastro) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+                 complemento, cidade, estado_id, cep, status, data_cadastro) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
                 [nome, dataNascimento, genero, rg, cpf, cartaoSus, telefone, rua, numero, 
-                 complemento, cidade, estadoId, cep, status, observacoes]
+                 complemento, cidade, estadoId, cep, status]
             );
 
             // Retorna o idoso recém-criado buscando pelo ID
@@ -137,17 +133,17 @@ class IdosoRepository {
         try {
             // Extrai os campos necessários do objeto idosoData
             const { nome, dataNascimento, genero, rg, cpf, cartaoSus, telefone, rua, numero, 
-                   complemento, cidade, estadoId, cep, status, observacoes } = idosoData;
+                   complemento, cidade, estadoId, cep, status } = idosoData;
             
             // Executa a query de atualização
             const [result] = await db.execute(
                 `UPDATE idosos SET 
                 nome = ?, data_nascimento = ?, genero = ?, rg = ?, cpf = ?, cartao_sus = ?, 
                 telefone = ?, rua = ?, numero = ?, complemento = ?, cidade = ?, estado_id = ?, 
-                cep = ?, status = ?, observacoes = ?, data_atualizacao = NOW() 
+                cep = ?, status = ?, data_atualizacao = NOW() 
                 WHERE id = ?`,
                 [nome, dataNascimento, genero, rg, cpf, cartaoSus, telefone, rua, numero, 
-                 complemento, cidade, estadoId, cep, status, observacoes, id]
+                 complemento, cidade, estadoId, cep, status, id]
             );
 
             // Se nenhum registro foi afetado, retorna null

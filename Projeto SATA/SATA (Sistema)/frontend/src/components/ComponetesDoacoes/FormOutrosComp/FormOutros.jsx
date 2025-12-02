@@ -24,7 +24,8 @@ function FormOutros({ onSave }) {
     obs: "",
     doacao: {
       item: "",
-      qntd: ""
+      qntd: "",
+      estado_conservacao: "Novo"
     }
   });
   const [validated, setValidated] = useState(false);
@@ -34,7 +35,7 @@ function FormOutros({ onSave }) {
     doadorId: 0,
     nome: ""
   });
-  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade");
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState("Unidade(s)");
   const [unidadeOutro, setUnidadeOutro] = useState("");
   const [showSimilarDialog, setShowSimilarDialog] = useState(false);
   const [similarOptions, setSimilarOptions] = useState([]);
@@ -186,10 +187,12 @@ function FormOutros({ onSave }) {
     }
   }
 
-  const handleConfirmSimilar = (produtoId) => {
+  const handleConfirmSimilar = (produtoId, newName) => {
     const submission = { ...(pendingSubmission || doaOutros) };
     if (produtoId) {
       submission.doacao = { ...(submission.doacao || {}), produto_id: produtoId };
+    } else if (newName) {
+      submission.doacao = { ...(submission.doacao || {}), item: newName };
     }
     onSave(submission);
     setShowSimilarDialog(false);
@@ -267,13 +270,23 @@ function FormOutros({ onSave }) {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3">
+                <Form.Label>Estado de Conservação</Form.Label>
+                <Form.Select name="estado_conservacao" value={doaOutros?.doacao?.estado_conservacao || 'Bom'} onChange={(e) => setDoaOutros(prev => ({ ...prev, doacao: { ...prev.doacao, estado_conservacao: e.target.value } }))}>
+                  <option value="Novo">Novo</option>
+                  <option value="Bom">Bom</option>
+                  <option value="Regular">Regular</option>
+                  <option value="Ruim">Ruim</option>
+                </Form.Select>
+              </Form.Group>
+              <Form.Group className="mb-3">
                 <Form.Label>Unidade de medida (Obrigatório)</Form.Label>
                 <Form.Select value={unidadeSelecionada} onChange={handleChangeUnidade} required isInvalid={!!errors.unidade_medida}>
-                  <option value="Unidade">Unidade</option>
+                  <option value="Unidade(s)">Unidade(s)</option>
                   <option value="Kg">Kg</option>
                   <option value="L">L</option>
-                  <option value="Pacote">Pacote</option>
-                  <option value="Caixa">Caixa</option>
+                  <option value="Pacotes">Pacotes</option>
+                  <option value="Caixas">Caixas</option>
+                  <option value="m">m</option>
                   <option value="Outro">Outro</option>
                 </Form.Select>
                 {unidadeSelecionada === 'Outro' && (

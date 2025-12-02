@@ -1,6 +1,7 @@
 const InternacaoRepository = require('../repository/internacaoRepository');
 const IdosoRepository = require('../repository/idosoRepository');
 const QuartoRepository = require('../repository/quartoRepository');
+const { getCamaNome } = require('../utils/formatters');
 const db = require('../config/database');
 
 class InternacaoController {
@@ -8,9 +9,13 @@ class InternacaoController {
     async getAll(req, res) {
         try {
             const internacoes = await InternacaoRepository.findAll();
+            const internacoesFormatadas = internacoes.map(i => ({
+                ...i,
+                cama_nome: getCamaNome(i.cama) // Adiciona campo formatado
+            }));
             res.json({
                 success: true,
-                data: internacoes
+                data: internacoesFormatadas
             });
         } catch (error) {
             console.error('Erro no getAll:', error);
@@ -90,7 +95,7 @@ class InternacaoController {
     // Cria uma nova internação
     async create(req, res) {
         try {
-            const { idoso_id, quarto_id, cama, motivo_entrada, observacoes, data_entrada } = req.body;
+            const { idoso_id, quarto_id, cama, motivo_entrada, data_entrada } = req.body;
             
             // Validações
             if (!idoso_id || !quarto_id || !cama) {
@@ -175,7 +180,7 @@ if (camaOcupada) {
                 dataEntradaNormalizada = `${yyyy}-${mm}-${dd}`;
             }
 
-            const internacaoData = { idoso_id, quarto_id, cama, motivo_entrada, observacoes, data_entrada: dataEntradaNormalizada };
+            const internacaoData = { idoso_id, quarto_id, cama, motivo_entrada, data_entrada: dataEntradaNormalizada };
             const novaInternacao = await InternacaoRepository.create(internacaoData);
             
             res.status(201).json({
@@ -194,23 +199,24 @@ if (camaOcupada) {
     }
 
     async getCamasDisponiveis(req, res) {
-    try {
-        const { quartoId } = req.params;
-        const camas = await InternacaoRepository.getCamasDisponiveis(quartoId);
-        
-        res.json({
-            success: true,
-            data: camas
-        });
-    } catch (error) {
-        console.error('Erro ao buscar camas disponíveis:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao buscar camas disponíveis',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        try {
+            const { quartoId } = req.params;
+            const camas = await InternacaoRepository.getCamasDisponiveis(quartoId);
+            const camasFormatadas = camas.map(c => ({ id: c, nome: getCamaNome(c) }));
+
+            res.json({
+                success: true,
+                data: camasFormatadas
+            });
+        } catch (error) {
+            console.error('Erro ao buscar camas disponíveis:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao buscar camas disponíveis',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
     }
-}
 
     // Dar baixa em uma internação (antiga "finalizar")
     async darBaixa(req, res) {

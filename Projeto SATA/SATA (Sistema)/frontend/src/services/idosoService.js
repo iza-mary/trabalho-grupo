@@ -2,6 +2,11 @@ import api from './api';
 
 const resource = '/idosos';
 
+const csrfHeader = () => {
+    const t = typeof localStorage !== 'undefined' ? localStorage.getItem('csrfToken') : null;
+    return t ? { 'x-csrf-token': t } : {};
+};
+
 const getAll = async () => {
     try {
         const { data } = await api.get(resource);
@@ -103,6 +108,56 @@ const updateStatus = async (id, status) => {
     }
 };
 
+const addObservacao = async (id, observacaoData) => {
+    try {
+        const { data } = await api.post(`${resource}/${id}/observacoes`, observacaoData, { headers: csrfHeader() });
+        if (!data?.success) throw new Error(data?.message || 'Erro ao salvar observação');
+        return data.data;
+    } catch (error) {
+        const msg = error?.response?.data?.message || error?.response?.data?.error || error.message || 'Erro ao salvar observação';
+        console.error('Erro ao salvar observação:', msg);
+        throw new Error(msg);
+    }
+};
+
+const getObservacoes = async (id) => {
+    try {
+        const { data } = await api.get(`${resource}/${id}/observacoes`);
+        if (!data?.success) throw new Error(data?.message || 'Erro ao buscar observações');
+        return Array.isArray(data.data) ? data.data : [];
+    } catch (error) {
+        const msg = error?.response?.data?.message || error?.response?.data?.error || error.message || 'Erro ao buscar observações';
+        console.error('Erro ao buscar observações:', msg);
+        throw new Error(msg);
+    }
+};
+
+const updateObservacao = async (id, obsId, payload) => {
+    try {
+        const { data } = await api.put(`${resource}/${id}/observacoes/${obsId}`, payload, { headers: csrfHeader() });
+        if (!data?.success) throw new Error(data?.message || 'Erro ao atualizar observação');
+        return data.data;
+    } catch (error) {
+        const msg = error?.response?.data?.message || error?.response?.data?.error || error.message || 'Erro ao atualizar observação';
+        console.error('Erro ao atualizar observação:', msg);
+        throw new Error(msg);
+    }
+};
+
+const deleteObservacao = async (id, obsId) => {
+    console.log(`Enviando requisição DELETE para ${resource}/${id}/observacoes/${obsId}`);
+    try {
+        const { data } = await api.delete(`${resource}/${id}/observacoes/${obsId}`, { headers: csrfHeader() });
+        console.log('Resposta da API:', data);
+        if (!data?.success) throw new Error(data?.message || 'Erro ao excluir observação');
+        return true;
+    } catch (error) {
+        const msg = error?.response?.data?.message || error?.response?.data?.error || error.message || 'Erro ao excluir observação';
+        console.error('Erro ao excluir observação:', msg, error.response);
+        throw new Error(msg);
+    }
+};
+
 const idosoService = {
     getAll,
     getById,
@@ -110,7 +165,11 @@ const idosoService = {
     update,
     add,
     remove,
-    updateStatus
+    updateStatus,
+    addObservacao,
+    getObservacoes,
+    updateObservacao,
+    deleteObservacao
 };
 
 export default idosoService;

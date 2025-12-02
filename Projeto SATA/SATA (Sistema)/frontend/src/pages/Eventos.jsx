@@ -9,6 +9,7 @@ import { CalendarEvent, PlusCircle, Pencil, Trash, Funnel, Calendar3, Clock, Geo
 import eventoService from '../services/eventoService';
 import Navbar from '../components/Navbar';
 import PageHeader from '../components/ui/PageHeader';
+import HelpButton from '../components/ui/HelpButton';
 import '../styles/Eventos.css';
 import StandardTable from '../components/ui/StandardTable';
 import ActionIconButton from '../components/ui/ActionIconButton';
@@ -425,6 +426,7 @@ export default function Eventos() {
       <PageHeader
         title="Eventos"
         icon={<CalendarEvent />}
+        suffix={<HelpButton inline iconOnly />}
         actions={
           <div className="d-flex gap-2">
             <Button
@@ -589,7 +591,7 @@ export default function Eventos() {
               <InputGroup>
                 <Form.Control
                   type="text"
-                  placeholder="Título, descrição ou local..."
+                  placeholder="Buscar..."
                   value={termoBusca}
                   onChange={(e) => setTermoBusca(e.target.value)}
                   aria-label="Campo de busca"

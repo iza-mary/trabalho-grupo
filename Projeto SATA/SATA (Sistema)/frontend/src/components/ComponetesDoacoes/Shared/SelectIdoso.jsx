@@ -68,7 +68,7 @@ function SelectIdoso({ setIdoso, setErrors, setValidated, errors, selectedIdosoE
         isInvalid={!!errors?.[errorKey]}
         onChange={handleChangeBusca}
         name="idoso"
-        placeholder="Pesquise um Idoso"
+        placeholder="Buscar..."
       />
       <div id="idosoSelect" className="dropdown-menu position-absolute w-100 mt-1" style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}>
         {listaIdosos.map((idoso) => (

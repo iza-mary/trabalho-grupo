@@ -19,18 +19,42 @@ function formatDateBR(v) {
 
 function renderDetalhe(d) {
   const tipo = String(d?.tipo || '').toUpperCase()
-  if (tipo === 'D') {
+  const isMoney = (tipo === 'D' || tipo === 'DINHEIRO')
+  const isAlimento = (tipo === 'A' || tipo === 'ALIMENTO')
+  const isOutros = (tipo === 'O' || tipo === 'OUTROS' || tipo === 'OUTRO')
+  if (isMoney) {
     const valor = d?.doacao?.valor ?? d?.valor
     if (valor == null) return '—'
     const n = Number(valor)
     if (isNaN(n)) return String(valor)
     return `R$ ${n.toFixed(2)}`
   }
-  const q = d?.doacao?.qntd ?? d?.quantidade
+  const q = d?.doacao?.quantidade ?? d?.doacao?.qntd ?? d?.quantidade ?? d?.qntd
   const un = d?.doacao?.unidade_medida ?? d?.unidade_medida
-  const item = d?.doacao?.item ?? d?.item
+  const item = (() => {
+    if (isAlimento) {
+      return d?.doacao?.tipo_alimento ?? d?.tipo_alimento ?? d?.doacao?.item ?? d?.item
+    }
+    if (isOutros) {
+      return d?.doacao?.descricao_item ?? d?.descricao_item ?? d?.doacao?.item ?? d?.item
+    }
+    return d?.doacao?.item ?? d?.item
+  })()
   if (q != null) return `${q} ${un || ''} ${item || ''}`.trim()
   return item || '—'
+}
+
+function renderItemName(d) {
+  const tipo = String(d?.tipo || '').toUpperCase()
+  if (tipo === 'D' || tipo === 'DINHEIRO') return 'Doação em dinheiro'
+  const itemCandidate = d?.doacao?.descricao_item
+    ?? d?.descricao_item
+    ?? d?.doacao?.tipo_alimento
+    ?? d?.tipo_alimento
+    ?? d?.doacao?.item
+    ?? d?.item
+    ?? null
+  return itemCandidate || '—'
 }
 
 const DoacoesPrint = () => {
@@ -159,13 +183,28 @@ const DoacoesPrint = () => {
                 </thead>
                 <tbody>
                   {(visible || []).map((d) => (
-                    <tr key={d.id}>
-                      <td>{formatDateBR(d.data)}</td>
-                      <td>{d?.tipo ?? '—'}</td>
-                      <td>{renderDetalhe(d)}</td>
-                      <td>{d?.doador?.nome ?? d?.doador_nome ?? '—'}</td>
-                      <td>{d?.idoso ?? '—'}</td>
-                    </tr>
+                    <React.Fragment key={d.id}>
+                      <tr>
+                        <td>{formatDateBR(d.data)}</td>
+                        <td>{(() => {
+                          const t = String(d?.tipo || '').toUpperCase();
+                          if (t === 'D' || t === 'DINHEIRO') {
+                            const v = d?.doacao?.valor ?? d?.valor;
+                            const n = Number(v);
+                            return Number.isFinite(n) ? `Dinheiro - R$ ${n.toFixed(2)}` : 'Dinheiro';
+                          }
+                          return d?.tipo ?? '—';
+                        })()}</td>
+                        <td>{renderDetalhe(d)}</td>
+                        <td>{d?.doador?.nome ?? d?.doador_nome ?? '—'}</td>
+                        <td>{d?.idoso ?? '—'}</td>
+                      </tr>
+                      {(['A','O'].includes(String(d?.tipo || '').toUpperCase())) && (
+                        <tr>
+                          <td colSpan={5}><strong>Item:</strong> {renderItemName(d)}</td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                   {(!loading && visible?.length === 0) && (
                     <tr>

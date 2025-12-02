@@ -52,7 +52,7 @@ function SelectDoador({ setDoador, setErrors, setValidated, errors }) {
     return (
         <Form.Group>
             <Form.Label>Doador</Form.Label>
-            <Form.Control isInvalid={!!errors.doador} onChange={(e) => { handleChangeBusca(e) }} name="doador" placeholder="Pesquise um Doador" autoComplete="off" />
+            <Form.Control isInvalid={!!errors.doador} onChange={(e) => { handleChangeBusca(e) }} name="doador" placeholder="Buscar..." autoComplete="off" />
             <div id="doadorSelect" className="dropdown-menu position-absolute w-100 mt-1" style={{maxHeight : '200px', overflowY:'auto', zIndex: 1000}}>
                 {listadoadores.map((doador) => (
                     <button key={doador.id} className="dropdown-item" type="button" onClick={() => {

@@ -68,7 +68,7 @@ CREATE TABLE `produtos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nome` varchar(255) NOT NULL,
   `categoria` enum('Alimentos','Higiene','Medicamentos','Roupas','Limpeza','Outros') NOT NULL,
-  `unidade_medida` enum('Unidade','Kg','L','Pacote','Caixa','Outro') NOT NULL DEFAULT 'Unidade',
+  `unidade_medida` enum('Unidade(s)','Kg','L','Pacotes','Caixas','Outro','m') NOT NULL DEFAULT 'Unidade(s)',
   `estoque_atual` int(11) NOT NULL DEFAULT 0,
   `estoque_minimo` int(11) NOT NULL DEFAULT 0,
   `observacao` text DEFAULT NULL,
@@ -81,6 +81,7 @@ CREATE TABLE `produtos` (
   `data_atualizacao` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `nome_norm` varchar(255) GENERATED ALWAYS AS (LOWER(TRIM(`nome`))) STORED,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_produtos_nome_norm` (`nome_norm`),
   KEY `idx_produtos_nome` (`nome`),
   KEY `idx_produtos_categoria` (`categoria`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -122,7 +123,6 @@ CREATE TABLE `idosos` (
   `estado_id` int(11) NOT NULL,
   `cep` varchar(9) NOT NULL,
   `status` enum('internado','nao_internado') DEFAULT 'nao_internado',
-  `observacoes` text DEFAULT NULL,
   `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp(),
   `data_atualizacao` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
@@ -142,7 +142,6 @@ CREATE TABLE `internacoes` (
   `motivo_entrada` text DEFAULT NULL,
   `motivo_saida` text DEFAULT NULL,
   `status` enum('ativa','finalizada') DEFAULT 'ativa',
-  `observacoes` text DEFAULT NULL,
   `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp(),
   `data_atualizacao` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
@@ -156,7 +155,7 @@ CREATE TABLE `internacoes` (
 CREATE TABLE `doacoes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `data` datetime NOT NULL,
-  `tipo` enum('D','A','O') NOT NULL COMMENT 'D=Doação em Dinheiro, A=Doação em Alimentos/Produtos, O=Outros',
+  `tipo` enum('Dinheiro','Alimento','Outros') NOT NULL,
   `obs` text DEFAULT NULL,
   `doador` int(11) NOT NULL,
   `idoso` varchar(255) DEFAULT NULL,
@@ -175,37 +174,52 @@ CREATE TABLE `doacoes` (
   CONSTRAINT `fk_doacoes_idoso` FOREIGN KEY (`idoso_id`) REFERENCES `idosos` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 10. DoacaoDinheiro (COMUNICAÇÃO COM FINANCEIRO)
-CREATE TABLE `doacaodinheiro` (
+-- 9b. DoacoesDinheiro (TPT)
+CREATE TABLE `doacoes_dinheiro` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `doacao_id` int(11) NOT NULL,
   `valor` decimal(10,2) NOT NULL,
-  `financeiro_id` int(11) NOT NULL,
+  `forma_pagamento` enum('Dinheiro','PIX','Transferência Bancária','Cartão de Débito','Cartão de Crédito','Cheque') NOT NULL DEFAULT 'Dinheiro',
+  `comprovante` varchar(255) DEFAULT NULL,
+  `financeiro_id` int(11) DEFAULT NULL,
   `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp(),
   `data_atualizacao` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_financeiro_id` (`financeiro_id`),
-  KEY `idx_doacaodinheiro_doacao_id` (`doacao_id`),
-  CONSTRAINT `fk_doacaodinheiro_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_doacaodinheiro_financeiro` FOREIGN KEY (`financeiro_id`) REFERENCES `financeiro` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  UNIQUE KEY `uk_doacoes_dinheiro_doacao` (`doacao_id`),
+  KEY `idx_doacoes_dinheiro_doacao_id` (`doacao_id`),
+  CONSTRAINT `fk_doacoes_dinheiro_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_doacoes_dinheiro_financeiro` FOREIGN KEY (`financeiro_id`) REFERENCES `financeiro` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 11. DoacaoProduto
-CREATE TABLE `doacaoproduto` (
+-- 9c. DoacoesAlimentos (TPT)
+CREATE TABLE `doacoes_alimentos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `doacao_id` int(11) NOT NULL,
-  `produto_id` int(11) NOT NULL,
-  `unidade_medida` enum('Unidade','Kg','L','Pacote','Caixa','Outro') NOT NULL DEFAULT 'Unidade',
+  `tipo_alimento` varchar(100) NOT NULL,
   `quantidade` int(11) NOT NULL,
-  `observacao` text DEFAULT NULL,
+  `validade` date DEFAULT NULL,
   `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp(),
   `data_atualizacao` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_doacaoproduto_doacao_produto` (`doacao_id`, `produto_id`),
-  KEY `idx_doacaoproduto_doacao_id` (`doacao_id`),
-  KEY `idx_doacaoproduto_produto_id` (`produto_id`),
-  CONSTRAINT `fk_doacaoproduto_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_doacaoproduto_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON UPDATE CASCADE
+  UNIQUE KEY `uk_doacoes_alimentos_doacao` (`doacao_id`),
+  KEY `idx_doacoes_alimentos_doacao_id` (`doacao_id`),
+  CONSTRAINT `fk_doacoes_alimentos_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 9d. DoacoesItens (TPT)
+CREATE TABLE `doacoes_itens` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `doacao_id` int(11) NOT NULL,
+  `descricao_item` varchar(255) NOT NULL,
+  `quantidade` int(11) NOT NULL,
+  `unidade_medida` enum('Unidade(s)','Kg','L','Pacotes','Caixas','Outro','m') NOT NULL DEFAULT 'Unidade(s)',
+  `estado_conservacao` enum('Novo','Bom','Regular','Ruim') NOT NULL DEFAULT 'Novo',
+  `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp(),
+  `data_atualizacao` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_doacoes_itens_doacao` (`doacao_id`),
+  KEY `idx_doacoes_itens_doacao_id` (`doacao_id`),
+  CONSTRAINT `fk_doacoes_itens_doacao` FOREIGN KEY (`doacao_id`) REFERENCES `doacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 12. Users
@@ -270,3 +284,17 @@ CREATE TABLE `notificacoes` (
   KEY `idx_notificacoes_referencia` (`referencia_tipo`,`referencia_id`),
   CONSTRAINT `fk_notificacoes_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 15. ObservacoesIdosos
+CREATE TABLE `observacoes_idosos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `idoso_id` int(11) NOT NULL,
+  `usuario_id` int(11) DEFAULT NULL,
+  `observacao` text NOT NULL,
+  `data_registro` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_obs_idoso_data` (`idoso_id`, `data_registro`),
+  KEY `fk_obs_usuario` (`usuario_id`),
+  CONSTRAINT `fk_obs_idoso` FOREIGN KEY (`idoso_id`) REFERENCES `idosos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_obs_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

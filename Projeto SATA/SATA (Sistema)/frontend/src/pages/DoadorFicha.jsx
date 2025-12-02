@@ -109,7 +109,7 @@ export default function DoadorFicha() {
     );
   }
 
-  const { dadosPessoais, historicoDoacoes, observacoes } = ficha;
+  const { dadosPessoais, historicoDoacoes } = ficha;
   const docCPF = dadosPessoais?.documentos?.cpf || '';
   const docCNPJ = dadosPessoais?.documentos?.cnpj || '';
   const representante = dadosPessoais?.representante || '';
@@ -222,15 +222,7 @@ export default function DoadorFicha() {
             </table>
           </section>
 
-          {/* Observações */}
-          <section className="ficha-section" aria-labelledby="sec-obs">
-            <h3 id="sec-obs">Observações</h3>
-            <div className="mt-1">
-              <div><strong>Status:</strong> {observacoes?.status ?? '—'}</div>
-              <div className="mt-1"><strong>Anotações:</strong></div>
-              <div>{observacoes?.texto ? String(observacoes.texto) : '—'}</div>
-            </div>
-          </section>
+          
         </main>
       </div>
 
