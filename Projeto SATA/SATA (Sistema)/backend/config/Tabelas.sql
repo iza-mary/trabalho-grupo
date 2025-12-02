@@ -147,7 +147,7 @@ CREATE TABLE `internacoes` (
   PRIMARY KEY (`id`),
   KEY `fk_idoso` (`idoso_id`),
   KEY `fk_quarto` (`quarto_id`),
-  CONSTRAINT `fk_idoso` FOREIGN KEY (`idoso_id`) REFERENCES `idosos` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_idoso` FOREIGN KEY (`idoso_id`) REFERENCES `idosos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_quarto` FOREIGN KEY (`quarto_id`) REFERENCES `quartos` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

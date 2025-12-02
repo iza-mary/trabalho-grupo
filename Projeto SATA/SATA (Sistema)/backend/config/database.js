@@ -437,10 +437,39 @@ async function ensureIntegrity() {
             if (!flag) { try { await conn.query('UPDATE users SET usuario_inicial = 1 WHERE id = ?', [u.id]); updated = true; } catch {} }
           } catch {}
         }
-        if (updated) { changes.push('users.admin_promote_update'); }
+    if (updated) { changes.push('users.admin_promote_update'); }
+    }
+  } catch (e) {
+    errors.push({ action: 'users.seed_admin', error: e.message });
+  }
+
+    // Garantir ON DELETE CASCADE em internacoes -> idosos
+    try {
+      const [fkRows] = await conn.query(
+        `SELECT rc.DELETE_RULE
+         FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+         WHERE rc.CONSTRAINT_SCHEMA=? AND rc.CONSTRAINT_NAME='fk_idoso' AND rc.TABLE_NAME='internacoes'`,
+        [DB_NAME]
+      );
+      const deleteRule = String(fkRows?.[0]?.DELETE_RULE || '').toUpperCase();
+      if (deleteRule !== 'CASCADE') {
+        try {
+          await conn.query('ALTER TABLE `internacoes` DROP FOREIGN KEY `fk_idoso`');
+          changes.push('internacoes.drop_fk_idoso');
+        } catch (e) {
+          errors.push({ action: 'internacoes.drop_fk_idoso', error: e.message });
+        }
+        try {
+          await conn.query(
+            'ALTER TABLE `internacoes` ADD CONSTRAINT `fk_idoso` FOREIGN KEY (`idoso_id`) REFERENCES `idosos`(`id`) ON DELETE CASCADE ON UPDATE CASCADE'
+          );
+          changes.push('internacoes.fk_idoso_on_delete_cascade');
+        } catch (e) {
+          errors.push({ action: 'internacoes.add_fk_idoso_cascade', error: e.message });
+        }
       }
     } catch (e) {
-      errors.push({ action: 'users.seed_admin', error: e.message });
+      errors.push({ action: 'internacoes.ensure_fk_idoso_check', error: e.message });
     }
   } finally {
     conn.release();

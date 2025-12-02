@@ -444,18 +444,24 @@ async updateStatus(req, res) {
             // Desvincula doações do idoso (proteger dados: remove nome textual também)
             await conn.execute('UPDATE doacoes SET idoso_id = NULL, idoso = NULL WHERE idoso_id = ?', [id]);
 
+            await conn.execute('DELETE FROM observacoes_idosos WHERE idoso_id = ?', [id]);
+
             // Deleta o idoso
             const [delRes] = await conn.execute('DELETE FROM idosos WHERE id = ?', [id]);
             const ok = delRes && delRes.affectedRows > 0;
 
-            // Criar notificação de exclusão
+            await conn.commit();
+            conn.release();
+
+            // Criar notificação de exclusão (fora da transação para evitar locks)
             if (ok) {
               try {
                 const notificacaoData = {
-                  tipo: 'cadastro', // Usando 'cadastro' para abranger exclusões
+                  tipo: 'cadastro',
                   titulo: 'Idoso Excluído',
                   descricao: `O idoso ${idoso.nome} (ID: ${id}) foi excluído do sistema.`,
                   referencia_tipo: 'idoso',
+                  referencia_id: Number(id),
                   usuario_id: req.user ? req.user.id : null
                 };
                 await notificacaoController.criarNotificacao(notificacaoData);
@@ -463,9 +469,6 @@ async updateStatus(req, res) {
                 console.error('Erro ao criar notificação de exclusão de idoso:', notificacaoError.message);
               }
             }
-
-            await conn.commit();
-            conn.release();
 
             // Log de auditoria
             try {
