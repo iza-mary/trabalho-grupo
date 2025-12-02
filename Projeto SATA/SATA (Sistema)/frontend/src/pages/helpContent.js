@@ -44,7 +44,7 @@ const helpContent = {
     sections: [
       { title: 'Botões e ações', items: [
         'Nova Internação: cria internação selecionando idoso, quarto e datas.',
-        'Encerrar/Alta: finaliza uma internação indicando motivo e data.',
+        'Dar Baixa: finaliza uma internação e atualiza o status.',
         'Status: filtra por Internações Ativas, Finalizadas ou Todas.'
       ]}
     ]

@@ -127,11 +127,13 @@ const Navbar = ({ children, disableSidebar = false, sidebarInactive = false, sid
                   <BoxSeam className="me-2" size={18} /> <span className="label">Estoque</span>
                 </Link>
               </li>
-              <li>
-                <Link to="/notificacoes" className="nav-item" onClick={closeOnNavigate}>
-                  <BellFill className="me-2" size={18} /> <span className="label">Notificações</span>
-                </Link>
-              </li>
+              {user?.role === 'Admin' && (
+                <li>
+                  <Link to="/notificacoes" className="nav-item" onClick={closeOnNavigate}>
+                    <BellFill className="me-2" size={18} /> <span className="label">Notificações</span>
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link to="/financeiro" className="nav-item" onClick={closeOnNavigate}>
                   <CashStack className="me-2" size={18} /> <span className="label">Financeiro</span>
@@ -234,11 +236,13 @@ const Navbar = ({ children, disableSidebar = false, sidebarInactive = false, sid
                 <BoxSeam className="me-2" size={18} /> <span className="label">Estoque</span>
               </Link>
             </li>
-            <li>
-              <Link to="/notificacoes" className="nav-item" onClick={closeOnNavigate}>
-                <BellFill className="me-2" size={18} /> <span className="label">Notificações</span>
-              </Link>
-            </li>
+            {user?.role === 'Admin' && (
+              <li>
+                <Link to="/notificacoes" className="nav-item" onClick={closeOnNavigate}>
+                  <BellFill className="me-2" size={18} /> <span className="label">Notificações</span>
+                </Link>
+              </li>
+            )}
             <li>
               <Link to="/financeiro" className="nav-item" onClick={closeOnNavigate}>
                 <CashStack className="me-2" size={18} /> <span className="label">Financeiro</span>

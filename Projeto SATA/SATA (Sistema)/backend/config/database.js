@@ -497,8 +497,8 @@ async function testConnection() {
     }
     return schemaStatus;
   } catch (e) {
-    console.error('Erro ao conectar ao banco de dados:', error);
-    throw error;
+    console.error('Erro ao conectar ao banco de dados:', e);
+    throw e;
   }
 }
 

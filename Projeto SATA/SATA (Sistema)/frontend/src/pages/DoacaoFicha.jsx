@@ -50,6 +50,16 @@ function renderItemName(d) {
   return itemCandidate || '—'
 }
 
+function renderComprovante(d) {
+  const tipo = String(d?.tipo || '').toUpperCase()
+  if (!(tipo === 'D' || tipo === 'DINHEIRO')) return '—'
+  const v = d?.doacao?.comprovante ?? d?.comprovante ?? ''
+  if (!v) return '—'
+  const s = String(v).trim()
+  const isUrl = /^https?:\/\//i.test(s)
+  return isUrl ? (<a href={s} target="_blank" rel="noopener noreferrer">{s}</a>) : s
+}
+
 export default function DoacaoFicha() {
   const { id } = useParams()
   const [loading, setLoading] = useState(true)
@@ -152,6 +162,7 @@ export default function DoacaoFicha() {
                     <tr><th>Data</th><td>{formatDateBR(doacao?.data)}</td></tr>
                     <tr><th>Categoria</th><td>{String(doacao?.tipo || '').toUpperCase() === 'D' || String(doacao?.tipo || '').toUpperCase() === 'DINHEIRO' ? 'Dinheiro' : (String(doacao?.tipo || '').toUpperCase() === 'A' || String(doacao?.tipo || '').toUpperCase() === 'ALIMENTO') ? 'Alimentos' : 'Outros Itens'}</td></tr>
                     <tr><th>Item/Valor</th><td>{renderItemOuValor(doacao)}</td></tr>
+                    <tr><th>Comprovante</th><td>{renderComprovante(doacao)}</td></tr>
                     <tr><th>Quantidade</th><td>{renderQuantidade(doacao)}</td></tr>
                     <tr><th>Estado de Conservação</th><td>{doacao?.doacao?.estado_conservacao ?? '—'}</td></tr>
                     <tr><th>Doador</th><td>{doacao?.doador?.nome ?? doacao?.doador_nome ?? '—'}</td></tr>

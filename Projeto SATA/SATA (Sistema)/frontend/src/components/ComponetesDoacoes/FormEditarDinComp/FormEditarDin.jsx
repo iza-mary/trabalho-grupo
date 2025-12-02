@@ -8,7 +8,7 @@ import "./EditarDin.css"
 
 function FormEditarDin({ show, doacaoEdit, onEdit }) {
     // Estados
-    const [doaDinheiro, setDoaDinheiro] = useState({
+  const [doaDinheiro, setDoaDinheiro] = useState({
         id: 0,
         data: "",
         tipo: "D",
@@ -23,7 +23,8 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
         doacao: {
             qntd: 0,
             item: "-",
-            valor: 0
+            valor: 0,
+            comprovante: ""
         }
     });
 
@@ -48,6 +49,7 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
             obs: doacaoEdit?.obs || "",
             doacao: ((doacaoEdit?.tipo || "").toUpperCase() === "D" || (doacaoEdit?.tipo || "").toUpperCase() === "DINHEIRO") ? {
                 valor: parseFloat(doacaoEdit?.doacao?.valor ?? doacaoEdit?.valor) || 0,
+                comprovante: doacaoEdit?.doacao?.comprovante ?? doacaoEdit?.comprovante ?? ""
             } : {
                 qntd: parseInt(doacaoEdit?.doacao?.qntd) || 0,
                 item: doacaoEdit?.doacao?.item || "-",
@@ -86,6 +88,14 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
         } else if (toString(value)) {
             setErrors((prev) => ({ ...prev, obs: null }));
         }
+    }
+
+    const handleChangeComprovante = (e) => {
+        const value = e.target.value;
+        setDoaDinheiro(prev => ({
+            ...prev,
+            doacao: { ...prev.doacao, comprovante: value }
+        }));
     }
 
     
@@ -181,6 +191,16 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
                                             {errors.valor}
                                         </Form.Control.Feedback>
                                     </Form.Group>
+                                    <Form.Group className="mb-3" controlId="comprovante">
+                                        <Form.Label>Comprovante (Opcional)</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Código, referência ou URL"
+                                            name="comprovante"
+                                            value={doaDinheiro?.doacao?.comprovante || ""}
+                                            onChange={handleChangeComprovante}
+                                        />
+                                    </Form.Group>
                                     <Form.Group className="mb-3" controlId="destinatario">
                                         <SelectDoador setDoador={setDoaDinheiro} setErrors={setErrors} setValidated={setValidated} errors={errors} selectedDoadorEdit={doaDinheiro.doador} />
                                         <Form.Control.Feedback type="invalid">
@@ -251,3 +271,4 @@ function FormEditarDin({ show, doacaoEdit, onEdit }) {
 }
 
 export default FormEditarDin
+    

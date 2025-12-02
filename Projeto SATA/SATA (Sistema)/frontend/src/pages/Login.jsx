@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 import Navbar from '../components/Navbar';
@@ -8,8 +8,7 @@ import PasswordField from '../components/ui/PasswordField';
 export default function Login() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/';
+  
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -17,8 +16,8 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) navigate(from, { replace: true });
-  }, [user, from, navigate]);
+    if (user) navigate('/', { replace: true });
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +39,7 @@ export default function Login() {
     setSubmitting(true);
     const res = await login(u, p);
     setSubmitting(false);
-    if (res.ok) navigate(from, { replace: true });
+    if (res.ok) navigate('/', { replace: true });
     else setError(res.error || 'Falha ao autenticar.');
   };
 

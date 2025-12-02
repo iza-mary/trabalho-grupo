@@ -33,7 +33,7 @@ export default function Home() {
     { to: '/financeiro', label: 'Financeiro', icon: <CashStack />, desc: 'Entradas e saídas locais', variant: 'indigo', roles: ['Admin', 'Funcionário'] },
     { to: '/doacoes', label: 'Doações', icon: <GiftFill />, desc: 'Registrar e revisar doações', variant: 'pink', roles: ['Admin', 'Funcionário'] },
     { to: '/doadores', label: 'Doadores', icon: <HeartFill />, desc: 'Cadastro e histórico', variant: 'cyan', roles: ['Admin', 'Funcionário'] },
-    { to: '/notificacoes', label: 'Notificações', icon: <BellFill />, desc: 'Alertas e pendências', variant: 'gray', roles: ['Admin', 'Funcionário'], disabledFor: ['Funcionário'] },
+    { to: '/notificacoes', label: 'Notificações', icon: <BellFill />, desc: 'Alertas e pendências', variant: 'gray', roles: ['Admin'] },
   ]), []);
 
   // Aplica filtro por papel; defensivo para ausência de usuário
