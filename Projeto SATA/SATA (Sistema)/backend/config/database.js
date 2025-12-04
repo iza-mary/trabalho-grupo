@@ -7,6 +7,12 @@ const { log } = require('../utils/auditLogger');
 const DB_NAME = process.env.DB_NAME || 'sistema_idosos';
 const SQL_SCHEMA_FILE = path.resolve(__dirname, 'Tabelas.sql');
 
+const sslEn = String(process.env.DB_SSL || '').toLowerCase();
+const ssl = (sslEn === 'true' || sslEn === '1') ? {
+  rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+  ca: process.env.DB_SSL_CA || undefined,
+} : undefined;
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
@@ -16,6 +22,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: process.env.DB_POOL_SIZE ? Number(process.env.DB_POOL_SIZE) : 10,
   queueLimit: 0,
+  ssl
 });
 
 function parseCreateTables(sql) {
