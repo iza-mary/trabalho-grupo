@@ -12,6 +12,7 @@ import {
   deletarVariasNotificacoes 
 } from '../services/notificacoesService';
 import './Notificacoes.css';
+import api from '../services/api';
 
 const Notificacoes = () => {
   const [notificacoes, setNotificacoes] = useState([]);
@@ -72,12 +73,35 @@ const Notificacoes = () => {
   }, [carregarNotificacoes, carregarContadores]);
 
   useEffect(() => {
-    const es = new EventSource('/api/notificacoes/stream', { withCredentials: true });
-    es.addEventListener('new', () => {
+    let es;
+    let timer;
+    const startPolling = () => {
       carregarNotificacoes();
       carregarContadores();
-    });
-    return () => { if (es && es.close) es.close(); };
+      timer = setInterval(() => {
+        carregarNotificacoes();
+        carregarContadores();
+      }, 30000);
+    };
+    try {
+      const base = (api && api.defaults && api.defaults.baseURL) ? api.defaults.baseURL.replace(/\/$/, '') : '';
+      const url = base ? `${base}/notificacoes/stream` : '/api/notificacoes/stream';
+      es = new EventSource(url, { withCredentials: true });
+      es.addEventListener('new', () => {
+        carregarNotificacoes();
+        carregarContadores();
+      });
+      es.addEventListener('error', () => {
+        if (es && es.close) es.close();
+        startPolling();
+      });
+    } catch {
+      startPolling();
+    }
+    return () => {
+      if (es && es.close) es.close();
+      if (timer) clearInterval(timer);
+    };
   }, [carregarNotificacoes, carregarContadores]);
 
   const handleMarcarComoLida = async (id) => {
